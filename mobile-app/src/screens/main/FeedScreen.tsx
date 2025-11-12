@@ -9,7 +9,10 @@ import {
   Image,
   Dimensions,
   ScrollView,
+  Animated,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { BlurView } from 'expo-blur';
 import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useLanguage } from '../../i18n/LanguageContext';
@@ -20,6 +23,16 @@ import { typography } from '../../theme/typography';
 import { spacing, borderRadius } from '../../theme/spacing';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
+// Mock stories data
+const mockStories = [
+  { id: '1', name: 'Your Story', avatar: null, hasStory: false, isUser: true },
+  { id: '2', name: 'Mai', avatar: null, hasStory: true, isViewed: false },
+  { id: '3', name: 'Tuấn', avatar: null, hasStory: true, isViewed: false },
+  { id: '4', name: 'Linh', avatar: null, hasStory: true, isViewed: true },
+  { id: '5', name: 'Hùng', avatar: null, hasStory: true, isViewed: false },
+  { id: '6', name: 'Thảo', avatar: null, hasStory: true, isViewed: true },
+];
 
 // Mock posts data - Social Media style
 const mockPosts = [
@@ -219,6 +232,50 @@ export const FeedScreen: React.FC = () => {
     setImageViewerVisible(true);
   };
 
+  const renderStoryItem = ({ item }: { item: any }) => {
+    return (
+      <TouchableOpacity style={styles.storyItem} activeOpacity={0.7}>
+        <LinearGradient
+          colors={
+            item.hasStory && !item.isViewed
+              ? ['#F59E0B', '#EF4444', '#EC4899']
+              : ['#E5E7EB', '#E5E7EB']
+          }
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.storyGradientBorder}
+        >
+          <View style={styles.storyAvatarContainer}>
+            <Avatar size={60} uri={item.avatar} />
+            {item.isUser && (
+              <View style={styles.addStoryButton}>
+                <Text style={styles.addStoryIcon}>+</Text>
+              </View>
+            )}
+          </View>
+        </LinearGradient>
+        <Text style={styles.storyName} numberOfLines={1}>
+          {item.name}
+        </Text>
+      </TouchableOpacity>
+    );
+  };
+
+  const renderStories = () => {
+    return (
+      <View style={styles.storiesContainer}>
+        <FlatList
+          data={mockStories}
+          renderItem={renderStoryItem}
+          keyExtractor={(item) => item.id}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.storiesContent}
+        />
+      </View>
+    );
+  };
+
   const renderStars = (rating: number) => {
     return (
       <View style={styles.starsContainer}>
@@ -343,11 +400,16 @@ export const FeedScreen: React.FC = () => {
             </View>
 
             {/* Achievement Content */}
-            <View style={styles.achievementContent}>
+            <LinearGradient
+              colors={['#3B82F615', '#60A5FA15', '#93C5FD15']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.achievementContent}
+            >
               <Text style={styles.achievementBadge}>{item.achievement.badge}</Text>
               <Text style={styles.achievementTitle}>{item.achievement.title}</Text>
               <Text style={styles.achievementCount}>{item.achievement.count}</Text>
-            </View>
+            </LinearGradient>
 
             {/* Caption */}
             {item.caption && (
@@ -492,13 +554,30 @@ export const FeedScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Bảng tin</Text>
-        <TouchableOpacity style={styles.notificationButton}>
-          <Text style={styles.notificationIcon}>🔔</Text>
-        </TouchableOpacity>
-      </View>
+      {/* Header with Gradient */}
+      <LinearGradient
+        colors={['#1E3A8A', '#3B82F6', '#60A5FA']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.headerGradient}
+      >
+        <BlurView intensity={20} tint="light" style={styles.headerBlur}>
+          <View style={styles.header}>
+            <Text style={styles.headerTitle}>✈️ Bảng tin</Text>
+            <View style={styles.headerActions}>
+              <TouchableOpacity style={styles.headerButton}>
+                <Text style={styles.headerIcon}>🔍</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.notificationButton}>
+                <Text style={styles.notificationIcon}>🔔</Text>
+                <View style={styles.notificationBadge}>
+                  <Text style={styles.notificationBadgeText}>3</Text>
+                </View>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </BlurView>
+      </LinearGradient>
 
       {/* Posts Feed */}
       <FlatList
@@ -514,16 +593,38 @@ export const FeedScreen: React.FC = () => {
           />
         }
         showsVerticalScrollIndicator={false}
+        ListHeaderComponent={renderStories()}
         ListEmptyComponent={
           <View style={styles.emptyState}>
-            <Text style={styles.emptyStateIcon}>📰</Text>
-            <Text style={styles.emptyStateText}>Chưa có bài viết nào</Text>
-            <Text style={styles.emptyStateSubtext}>
-              Theo dõi bạn bè để xem hoạt động của họ
-            </Text>
+            <LinearGradient
+              colors={['#F59E0B20', '#EC489920']}
+              style={styles.emptyStateGradient}
+            >
+              <Text style={styles.emptyStateIcon}>🌍</Text>
+              <Text style={styles.emptyStateText}>Chưa có bài viết nào</Text>
+              <Text style={styles.emptyStateSubtext}>
+                Theo dõi bạn bè để xem hoạt động của họ
+              </Text>
+            </LinearGradient>
           </View>
         }
       />
+
+      {/* Floating Action Button */}
+      <TouchableOpacity
+        style={styles.fab}
+        activeOpacity={0.8}
+        onPress={() => navigation.navigate('AddPin')}
+      >
+        <LinearGradient
+          colors={['#F59E0B', '#EF4444']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.fabGradient}
+        >
+          <Text style={styles.fabIcon}>+</Text>
+        </LinearGradient>
+      </TouchableOpacity>
 
       {/* Image Viewer Modal */}
       <ImageViewerModal
@@ -540,38 +641,149 @@ const createStyles = (colors: any) =>
   StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: colors.background.main,
+      backgroundColor: colors.background.secondary,
+    },
+    headerGradient: {
+      paddingTop: spacing.xl + 20,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.15,
+      shadowRadius: 12,
+      elevation: 8,
+    },
+    headerBlur: {
+      overflow: 'hidden',
     },
     header: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
       paddingHorizontal: spacing.lg,
-      paddingTop: spacing.xl + 20,
-      paddingBottom: spacing.md,
-      backgroundColor: colors.background.card,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border.light,
+      paddingVertical: spacing.md,
     },
     headerTitle: {
       fontSize: typography.fontSize['2xl'],
       fontWeight: typography.fontWeight.bold,
-      color: colors.text.primary,
+      color: '#FFFFFF',
+      letterSpacing: 0.5,
+    },
+    headerActions: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+    },
+    headerButton: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: 'rgba(255, 255, 255, 0.2)',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    headerIcon: {
+      fontSize: 20,
     },
     notificationButton: {
-      padding: spacing.xs,
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: 'rgba(255, 255, 255, 0.2)',
+      justifyContent: 'center',
+      alignItems: 'center',
+      position: 'relative',
     },
     notificationIcon: {
-      fontSize: 24,
+      fontSize: 20,
+    },
+    notificationBadge: {
+      position: 'absolute',
+      top: -2,
+      right: -2,
+      backgroundColor: '#EF4444',
+      borderRadius: 10,
+      minWidth: 18,
+      height: 18,
+      justifyContent: 'center',
+      alignItems: 'center',
+      borderWidth: 2,
+      borderColor: '#FFFFFF',
+    },
+    notificationBadgeText: {
+      fontSize: 10,
+      fontWeight: typography.fontWeight.bold,
+      color: '#FFFFFF',
+    },
+    // Stories Section
+    storiesContainer: {
+      backgroundColor: colors.background.card,
+      paddingVertical: spacing.md,
+      marginBottom: spacing.sm,
+      shadowColor: colors.text.primary,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.05,
+      shadowRadius: 8,
+      elevation: 2,
+    },
+    storiesContent: {
+      paddingHorizontal: spacing.md,
+      gap: spacing.md,
+    },
+    storyItem: {
+      alignItems: 'center',
+      width: 80,
+    },
+    storyGradientBorder: {
+      borderRadius: 40,
+      padding: 3,
+      marginBottom: spacing.xs,
+    },
+    storyAvatarContainer: {
+      borderRadius: 37,
+      borderWidth: 3,
+      borderColor: '#FFFFFF',
+      overflow: 'hidden',
+      position: 'relative',
+    },
+    addStoryButton: {
+      position: 'absolute',
+      bottom: 0,
+      right: 0,
+      width: 24,
+      height: 24,
+      borderRadius: 12,
+      backgroundColor: '#3B82F6',
+      borderWidth: 2,
+      borderColor: '#FFFFFF',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    addStoryIcon: {
+      fontSize: 14,
+      fontWeight: typography.fontWeight.bold,
+      color: '#FFFFFF',
+      marginTop: -2,
+    },
+    storyName: {
+      fontSize: typography.fontSize.xs,
+      color: colors.text.secondary,
+      textAlign: 'center',
+      maxWidth: 70,
     },
     listContent: {
-      paddingBottom: 100, // Space for navbar
+      paddingBottom: 120, // Space for navbar and FAB
     },
     // Post Card
     postCard: {
       backgroundColor: colors.background.card,
-      marginBottom: spacing.sm,
-      paddingBottom: spacing.sm,
+      marginHorizontal: spacing.sm,
+      marginBottom: spacing.md,
+      borderRadius: borderRadius.xl,
+      overflow: 'hidden',
+      shadowColor: colors.text.primary,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.08,
+      shadowRadius: 12,
+      elevation: 5,
     },
     postHeader: {
       flexDirection: 'row',
@@ -590,7 +802,7 @@ const createStyles = (colors: any) =>
     },
     userName: {
       fontSize: typography.fontSize.base,
-      fontWeight: typography.fontWeight.semiBold,
+      fontWeight: typography.fontWeight.bold,
       color: colors.text.primary,
     },
     userNameRow: {
@@ -600,8 +812,9 @@ const createStyles = (colors: any) =>
     },
     locationText: {
       fontSize: typography.fontSize.sm,
-      color: colors.primary.main,
+      color: colors.primary.light,
       marginTop: 2,
+      fontWeight: typography.fontWeight.medium,
     },
     timestamp: {
       fontSize: typography.fontSize.xs,
@@ -609,168 +822,240 @@ const createStyles = (colors: any) =>
       marginTop: 2,
     },
     statusBadge: {
-      paddingHorizontal: spacing.sm,
-      paddingVertical: 4,
+      paddingHorizontal: spacing.md,
+      paddingVertical: 6,
       borderRadius: borderRadius.full,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 2,
     },
     visitedBadge: {
-      backgroundColor: colors.status.success + '20',
+      backgroundColor: '#10B98120',
+      borderWidth: 1,
+      borderColor: '#10B98140',
     },
     wantToGoBadge: {
-      backgroundColor: colors.accent.main + '20',
+      backgroundColor: '#F59E0B20',
+      borderWidth: 1,
+      borderColor: '#F59E0B40',
     },
     statusText: {
       fontSize: typography.fontSize.xs,
-      fontWeight: typography.fontWeight.medium,
+      fontWeight: typography.fontWeight.bold,
+      letterSpacing: 0.3,
     },
     // Photo Gallery
     singlePhoto: {
       width: '100%',
-      height: 400,
+      height: 450,
       backgroundColor: colors.background.elevated,
     },
     photoGrid: {
       flexDirection: 'row',
-      height: 300,
-      gap: 2,
+      height: 320,
+      gap: 4,
+      paddingHorizontal: 2,
     },
     halfPhotoContainer: {
       flex: 1,
-      height: 300,
+      height: 320,
+      borderRadius: borderRadius.md,
+      overflow: 'hidden',
     },
     halfPhoto: {
       width: '100%',
-      height: 300,
+      height: 320,
     },
     mainPhoto: {
       flex: 2,
-      height: 300,
+      height: 320,
       marginRight: 2,
+      borderRadius: borderRadius.md,
+      overflow: 'hidden',
     },
     sidePhotos: {
       flex: 1,
-      gap: 2,
+      gap: 4,
     },
     sidePhoto: {
       flex: 1,
       backgroundColor: colors.background.elevated,
+      borderRadius: borderRadius.md,
+      overflow: 'hidden',
     },
     morePhotosOverlay: {
       ...StyleSheet.absoluteFillObject,
-      backgroundColor: 'rgba(0,0,0,0.5)',
+      backgroundColor: 'rgba(0,0,0,0.6)',
       justifyContent: 'center',
       alignItems: 'center',
+      borderRadius: borderRadius.md,
     },
     morePhotosText: {
-      fontSize: typography.fontSize['2xl'],
+      fontSize: typography.fontSize['3xl'],
       fontWeight: typography.fontWeight.bold,
       color: '#fff',
+      textShadowColor: 'rgba(0, 0, 0, 0.3)',
+      textShadowOffset: { width: 0, height: 2 },
+      textShadowRadius: 4,
     },
     // Post Details
     postDetails: {
       paddingHorizontal: spacing.md,
-      paddingTop: spacing.sm,
+      paddingTop: spacing.md,
     },
     ratingRow: {
       flexDirection: 'row',
       alignItems: 'center',
-      marginBottom: spacing.xs,
+      marginBottom: spacing.sm,
+      backgroundColor: colors.background.secondary,
+      paddingHorizontal: spacing.sm,
+      paddingVertical: spacing.xs,
+      borderRadius: borderRadius.full,
+      alignSelf: 'flex-start',
     },
     starsContainer: {
       flexDirection: 'row',
       gap: 2,
     },
     star: {
-      fontSize: 16,
+      fontSize: 14,
     },
     visitDate: {
-      fontSize: typography.fontSize.sm,
+      fontSize: typography.fontSize.xs,
       color: colors.text.secondary,
-      marginLeft: spacing.sm,
+      marginLeft: spacing.xs,
+      fontWeight: typography.fontWeight.medium,
     },
     caption: {
       fontSize: typography.fontSize.base,
       color: colors.text.primary,
-      lineHeight: 20,
+      lineHeight: 22,
+      letterSpacing: 0.2,
     },
     captionUsername: {
-      fontWeight: typography.fontWeight.semiBold,
+      fontWeight: typography.fontWeight.bold,
+      color: colors.text.primary,
     },
     viewMore: {
       fontSize: typography.fontSize.sm,
       color: colors.text.secondary,
       marginTop: spacing.xs,
-      fontWeight: typography.fontWeight.medium,
+      fontWeight: typography.fontWeight.semiBold,
     },
     // Achievement
     achievementContent: {
       alignItems: 'center',
-      paddingVertical: spacing.xl,
-      backgroundColor: colors.primary.main + '10',
+      paddingVertical: spacing.xl * 1.5,
       marginHorizontal: spacing.md,
-      marginVertical: spacing.sm,
-      borderRadius: borderRadius.lg,
+      marginVertical: spacing.md,
+      borderRadius: borderRadius.xl,
+      overflow: 'hidden',
     },
     achievementBadge: {
-      fontSize: 64,
-      marginBottom: spacing.sm,
+      fontSize: 80,
+      marginBottom: spacing.md,
+      textShadowColor: 'rgba(0, 0, 0, 0.1)',
+      textShadowOffset: { width: 0, height: 2 },
+      textShadowRadius: 4,
     },
     achievementTitle: {
-      fontSize: typography.fontSize.lg,
+      fontSize: typography.fontSize.xl,
       fontWeight: typography.fontWeight.bold,
       color: colors.text.primary,
       marginBottom: spacing.xs,
     },
     achievementCount: {
-      fontSize: typography.fontSize['3xl'],
+      fontSize: 48,
       fontWeight: typography.fontWeight.bold,
-      color: colors.primary.main,
+      color: colors.primary.light,
     },
     // Actions Bar
     actionsBar: {
       flexDirection: 'row',
       paddingHorizontal: spacing.md,
-      paddingTop: spacing.sm,
-      gap: spacing.lg,
+      paddingTop: spacing.md,
+      paddingBottom: spacing.sm,
+      gap: spacing.xl,
+      borderTopWidth: 1,
+      borderTopColor: colors.border.light,
+      marginTop: spacing.sm,
     },
     actionButton: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: spacing.xs,
+      paddingVertical: spacing.xs,
     },
     actionIcon: {
-      fontSize: 22,
+      fontSize: 24,
     },
     actionText: {
       fontSize: typography.fontSize.sm,
       color: colors.text.secondary,
-      fontWeight: typography.fontWeight.medium,
+      fontWeight: typography.fontWeight.semiBold,
     },
     actionTextActive: {
-      color: colors.status.error,
-      fontWeight: typography.fontWeight.semiBold,
+      color: '#EF4444',
+      fontWeight: typography.fontWeight.bold,
     },
     // Empty State
     emptyState: {
       alignItems: 'center',
       justifyContent: 'center',
-      paddingVertical: spacing.xl * 3,
+      paddingVertical: spacing.xl * 2,
       paddingHorizontal: spacing.xl,
+      marginHorizontal: spacing.lg,
+      marginTop: spacing.xl,
+    },
+    emptyStateGradient: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: spacing.xl * 2,
+      paddingHorizontal: spacing.xl,
+      borderRadius: borderRadius.xl,
+      width: '100%',
     },
     emptyStateIcon: {
-      fontSize: 64,
+      fontSize: 80,
       marginBottom: spacing.lg,
     },
     emptyStateText: {
-      fontSize: typography.fontSize.lg,
-      fontWeight: typography.fontWeight.semiBold,
+      fontSize: typography.fontSize.xl,
+      fontWeight: typography.fontWeight.bold,
       color: colors.text.primary,
-      marginBottom: spacing.xs,
+      marginBottom: spacing.sm,
     },
     emptyStateSubtext: {
       fontSize: typography.fontSize.base,
       color: colors.text.secondary,
       textAlign: 'center',
+      lineHeight: 22,
+    },
+    // FAB
+    fab: {
+      position: 'absolute',
+      bottom: 100,
+      right: spacing.lg,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 8,
+      elevation: 8,
+    },
+    fabGradient: {
+      width: 60,
+      height: 60,
+      borderRadius: 30,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    fabIcon: {
+      fontSize: 32,
+      color: '#FFFFFF',
+      fontWeight: typography.fontWeight.bold,
+      marginTop: -2,
     },
   });
 

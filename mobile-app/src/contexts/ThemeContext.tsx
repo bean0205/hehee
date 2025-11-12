@@ -47,6 +47,8 @@ const lightColors = {
   status: {
     visited: '#10B981', // Green
     wantToGo: '#F59E0B', // Orange/Yellow
+    success: '#10B981',
+    error: '#EF4444',
   },
   
   // Semantic Colors
@@ -60,6 +62,7 @@ const lightColors = {
     main: '#FFFFFF',
     secondary: '#F9FAFB',
     card: '#FFFFFF',
+    elevated: '#F3F4F6',
   },
   
   // Text
@@ -113,6 +116,8 @@ const darkColors = {
   status: {
     visited: '#34D399',
     wantToGo: '#FBBF24',
+    success: '#34D399',
+    error: '#F87171',
   },
   
   // Semantic Colors
@@ -126,6 +131,7 @@ const darkColors = {
     main: '#0F172A',
     secondary: '#1E293B',
     card: '#1E293B',
+    elevated: '#334155',
   },
   
   // Text

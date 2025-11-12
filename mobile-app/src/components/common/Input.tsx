@@ -7,7 +7,7 @@ import {
   ViewStyle,
   TextInputProps,
 } from 'react-native';
-import { colors } from '../../theme/colors';
+import { useTheme } from '../../contexts/ThemeContext';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius } from '../../theme/spacing';
 
@@ -27,6 +27,9 @@ export const Input: React.FC<InputProps> = ({
   numberOfLines = 1,
   ...props
 }) => {
+  const { colors } = useTheme();
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
+
   return (
     <View style={[styles.container, containerStyle]}>
       {label && <Text style={styles.label}>{label}</Text>}
@@ -36,7 +39,7 @@ export const Input: React.FC<InputProps> = ({
           multiline && { height: numberOfLines * 40, textAlignVertical: 'top' },
           error && styles.inputError,
         ]}
-        placeholderTextColor={colors.neutral.gray400}
+        placeholderTextColor="rgba(255, 255, 255, 0.5)"
         multiline={multiline}
         numberOfLines={multiline ? numberOfLines : 1}
         {...props}
@@ -46,31 +49,36 @@ export const Input: React.FC<InputProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   container: {
     marginBottom: spacing.md,
   },
   label: {
     fontSize: typography.fontSize.sm,
-    fontWeight: typography.fontWeight.medium,
-    color: colors.text.primary,
+    fontWeight: typography.fontWeight.semiBold,
+    color: '#FFFFFF',
     marginBottom: spacing.xs,
+    opacity: 0.9,
   },
   input: {
-    backgroundColor: colors.neutral.white,
-    borderWidth: 1,
-    borderColor: colors.neutral.gray300,
-    borderRadius: borderRadius.md,
-    padding: spacing.md,
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255, 255, 255, 0.4)',
+    borderRadius: borderRadius.xl,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
     fontSize: typography.fontSize.base,
-    color: colors.text.primary,
+    color: '#FFFFFF',
+    fontWeight: typography.fontWeight.medium,
   },
   inputError: {
-    borderColor: colors.error,
+    borderColor: '#EF4444',
+    backgroundColor: 'rgba(239, 68, 68, 0.15)',
   },
   errorText: {
     fontSize: typography.fontSize.xs,
-    color: colors.error,
+    color: '#FEE2E2',
     marginTop: spacing.xs,
+    fontWeight: typography.fontWeight.semiBold,
   },
 });
