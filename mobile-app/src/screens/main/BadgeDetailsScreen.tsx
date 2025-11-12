@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useLanguage } from '../../i18n/LanguageContext';
 import { useBadge, BADGE_RANKS, ACHIEVEMENT_BADGES, POINTS_CONFIG } from '../../contexts/BadgeContext';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius } from '../../theme/spacing';
@@ -18,6 +19,7 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 export const BadgeDetailsScreen: React.FC = () => {
   const navigation = useNavigation();
   const { colors } = useTheme();
+  const { t } = useLanguage();
   const {
     userStats,
     currentRank,
@@ -67,7 +69,7 @@ export const BadgeDetailsScreen: React.FC = () => {
             </View>
 
             <View style={styles.nextRankSection}>
-              <Text style={styles.nextRankLabel}>Cấp độ tiếp theo:</Text>
+              <Text style={styles.nextRankLabel}>{t('badge.nextLevel')}</Text>
               <View style={styles.nextRankInfo}>
                 <Text style={styles.nextRankIcon}>{nextRank.icon}</Text>
                 <View>
@@ -83,7 +85,7 @@ export const BadgeDetailsScreen: React.FC = () => {
 
         {!nextRank && (
           <View style={styles.maxRankBanner}>
-            <Text style={styles.maxRankText}>🎉 Bạn đã đạt cấp độ cao nhất! 🎉</Text>
+            <Text style={styles.maxRankText}>{t('badge.maxRankReached')}</Text>
           </View>
         )}
       </View>
@@ -93,7 +95,7 @@ export const BadgeDetailsScreen: React.FC = () => {
   const renderAllRanks = () => {
     return (
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Tất cả Cấp độ</Text>
+        <Text style={styles.sectionTitle}>{t('badge.allRanks')}</Text>
         {BADGE_RANKS.map((rank, index) => {
           const isCurrentRank = rank.id === currentRank.id;
           const isUnlocked = userStats.totalPoints >= rank.minPoints;
@@ -121,7 +123,7 @@ export const BadgeDetailsScreen: React.FC = () => {
                 </View>
                 {isCurrentRank && (
                   <View style={[styles.currentBadge, { backgroundColor: rank.color }]}>
-                    <Text style={styles.currentBadgeText}>Hiện tại</Text>
+                    <Text style={styles.currentBadgeText}>{t('badge.current')}</Text>
                   </View>
                 )}
                 {!isUnlocked && (
@@ -147,7 +149,7 @@ export const BadgeDetailsScreen: React.FC = () => {
     return (
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>
-          Thành tựu ({earnedBadges.length}/{availableBadges.length})
+          {t('badge.achievements')} ({earnedBadges.length}/{availableBadges.length})
         </Text>
         
         <View style={styles.achievementGrid}>
@@ -191,42 +193,42 @@ export const BadgeDetailsScreen: React.FC = () => {
   const renderPointsGuide = () => {
     const pointsCategories = [
       {
-        title: 'Tạo ghim',
+        title: t('badge.createPin'),
         items: [
-          { label: 'Ghim "Đã đến"', points: POINTS_CONFIG.CREATE_PIN_VISITED },
-          { label: 'Ghim "Muốn đến"', points: POINTS_CONFIG.CREATE_PIN_WANT_TO_GO },
-          { label: 'Thêm ảnh', points: POINTS_CONFIG.ADD_PHOTO },
-          { label: 'Thêm video', points: POINTS_CONFIG.ADD_VIDEO },
-          { label: 'Viết ghi chú chi tiết', points: POINTS_CONFIG.WRITE_DETAILED_NOTE },
-          { label: 'Đánh giá sao', points: POINTS_CONFIG.RATE_PLACE },
+          { label: t('badge.visitedPin'), points: POINTS_CONFIG.CREATE_PIN_VISITED },
+          { label: t('badge.wantToGoPin'), points: POINTS_CONFIG.CREATE_PIN_WANT_TO_GO },
+          { label: t('badge.addPhoto'), points: POINTS_CONFIG.ADD_PHOTO },
+          { label: t('badge.addVideo'), points: POINTS_CONFIG.ADD_VIDEO },
+          { label: t('badge.writeDetailedNote'), points: POINTS_CONFIG.WRITE_DETAILED_NOTE },
+          { label: t('badge.ratePlace'), points: POINTS_CONFIG.RATE_PLACE },
         ],
       },
       {
-        title: 'Hoạt động xã hội',
+        title: t('badge.socialActivity'),
         items: [
-          { label: 'Follow người khác', points: POINTS_CONFIG.FOLLOW_USER },
-          { label: 'Được follow', points: POINTS_CONFIG.GET_FOLLOWER },
-          { label: 'Like bài viết', points: POINTS_CONFIG.LIKE_POST },
-          { label: 'Được like', points: POINTS_CONFIG.GET_LIKE },
-          { label: 'Comment', points: POINTS_CONFIG.COMMENT },
-          { label: 'Được comment', points: POINTS_CONFIG.GET_COMMENT },
-          { label: 'Chia sẻ bài viết', points: POINTS_CONFIG.SHARE_POST },
+          { label: t('badge.followUser'), points: POINTS_CONFIG.FOLLOW_USER },
+          { label: t('badge.getFollower'), points: POINTS_CONFIG.GET_FOLLOWER },
+          { label: t('badge.likePost'), points: POINTS_CONFIG.LIKE_POST },
+          { label: t('badge.getLike'), points: POINTS_CONFIG.GET_LIKE },
+          { label: t('badge.comment'), points: POINTS_CONFIG.COMMENT },
+          { label: t('badge.getComment'), points: POINTS_CONFIG.GET_COMMENT },
+          { label: t('badge.sharePost'), points: POINTS_CONFIG.SHARE_POST },
         ],
       },
       {
-        title: 'Hoạt động hàng ngày',
+        title: t('badge.dailyActivity'),
         items: [
-          { label: 'Đăng nhập hàng ngày', points: POINTS_CONFIG.DAILY_LOGIN },
-          { label: 'Streak 7 ngày', points: POINTS_CONFIG.WEEK_STREAK },
-          { label: 'Streak 30 ngày', points: POINTS_CONFIG.MONTH_STREAK },
-          { label: 'Hoàn thiện profile', points: POINTS_CONFIG.COMPLETE_PROFILE },
+          { label: t('badge.dailyLogin'), points: POINTS_CONFIG.DAILY_LOGIN },
+          { label: t('badge.weekStreak'), points: POINTS_CONFIG.WEEK_STREAK },
+          { label: t('badge.monthStreak'), points: POINTS_CONFIG.MONTH_STREAK },
+          { label: t('badge.completeProfile'), points: POINTS_CONFIG.COMPLETE_PROFILE },
         ],
       },
     ];
 
     return (
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Cách nhận điểm</Text>
+        <Text style={styles.sectionTitle}>{t('badge.howToEarnPoints')}</Text>
         {pointsCategories.map((category, index) => (
           <View key={index} style={styles.pointsCategory}>
             <Text style={styles.categoryTitle}>{category.title}</Text>
@@ -248,7 +250,7 @@ export const BadgeDetailsScreen: React.FC = () => {
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Text style={styles.backButton}>←</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Cấp độ & Thành tựu</Text>
+        <Text style={styles.headerTitle}>{t('badge.ranksAndAchievements')}</Text>
         <View style={{ width: 30 }} />
       </View>
 

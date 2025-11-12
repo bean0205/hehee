@@ -8,13 +8,15 @@ import {
   Image,
   Platform,
   Alert,
+  Animated,
 } from 'react-native';
 import BottomSheet, { BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Rating } from 'react-native-ratings';
 import * as ImagePicker from 'expo-image-picker';
-import { colors } from '../../theme/colors';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useTheme } from '../../contexts/ThemeContext';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius } from '../../theme/spacing';
 import { Button } from '../../components/common/Button';
@@ -27,7 +29,10 @@ export const AddPinScreen: React.FC = () => {
   const route = useRoute<any>();
   const { addPin, updatePin, getPinById } = usePin();
   const { t } = useLanguage();
+  const { colors, isDarkMode } = useTheme();
   const bottomSheetRef = useRef<BottomSheet>(null);
+  
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
 
   // Edit mode
   const editPinId = route.params?.pinId;
@@ -69,7 +74,7 @@ export const AddPinScreen: React.FC = () => {
 
   const pickImage = async () => {
     if (images.length >= 5) {
-      Alert.alert(t('errors.imageLimit'), t('errors.maxImages'));
+      Alert.alert(t('pin.imageLimit'), t('pin.maxImages'));
       return;
     }
 
@@ -116,14 +121,14 @@ export const AddPinScreen: React.FC = () => {
 
       if (isEditMode && editPinId) {
         updatePin(editPinId, pinData);
-        Alert.alert(t('pin.success'), t('pin.pinUpdated'), [
+        Alert.alert(t('common.success'), t('pin.pinUpdated'), [
           { text: 'OK', onPress: () => navigation.goBack() },
         ]);
       } else {
         addPin(pinData);
-        Alert.alert(t('pin.success'), t('pin.pinAdded'), [
-          { text: 'OK', onPress: () => navigation.goBack() },
-        ]);
+      Alert.alert(t('common.success'), t('pin.pinAdded'), [
+        { text: 'OK', onPress: () => navigation.goBack() },
+      ]);
       }
     } catch (error) {
       Alert.alert(t('errors.error'), t('errors.saveFailed'));
@@ -143,145 +148,315 @@ export const AddPinScreen: React.FC = () => {
 
       <BottomSheet
         ref={bottomSheetRef}
-        snapPoints={['80%']}
-        enablePanDownToClose
+        index={0}
+        snapPoints={['88%']}
+        enablePanDownToClose={true}
+        // enableContentPanningGesture={false}
+        animateOnMount={true}
         onClose={() => navigation.goBack()}
         backgroundStyle={styles.bottomSheet}
+        handleIndicatorStyle={styles.handleIndicator}
+        topInset={0}
+        enableDynamicSizing={false}
+       
       >
-        <BottomSheetScrollView style={styles.content}>
-          <View style={styles.header}>
-            <Text style={styles.title}>
-              {isEditMode ? t('pin.editPin') : t('pin.addPin')}
-            </Text>
+        <BottomSheetScrollView 
+          style={styles.content}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Modern Header with Gradient */}
+          <LinearGradient
+            colors={isEditMode 
+              ? [colors.accent.main + '20', colors.accent.main + '05'] 
+              : [colors.primary.main + '20', colors.primary.main + '05']
+            }
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.headerGradient}
+          >
+            <View style={styles.headerContent}>
+              <View style={[
+                styles.headerIconContainer,
+                { backgroundColor: isEditMode ? colors.accent.main + '20' : colors.primary.main + '20' }
+              ]}>
+                <Text style={styles.headerIcon}>
+                  {isEditMode ? '✏️' : '📍'}
+                </Text>
+              </View>
+              <Text style={styles.title}>
+                {isEditMode ? t('pin.editPin') : t('pin.addPin')}
+              </Text>
+              <Text style={styles.subtitle}>
+                {isEditMode ? t('pin.updatePinInfo') : t('pin.createNewMemory')}
+              </Text>
+            </View>
+          </LinearGradient>
+
+          {/* Place Name Card */}
+          <View style={styles.card}>
+            <View style={styles.cardHeader}>
+              <View style={[styles.cardIconWrapper, { backgroundColor: colors.primary.main + '15' }]}>
+                <Text style={styles.cardIcon}>🏷️</Text>
+              </View>
+              <View style={styles.cardHeaderText}>
+                <Text style={styles.cardTitle}>{t('pin.placeInfo')}</Text>
+                <Text style={styles.cardDescription}>{t('pin.nameAndLocation')}</Text>
+              </View>
+            </View>
+            <View style={styles.cardContent}>
+              <Input
+                label={t('pin.placeName')}
+                placeholder={t('pin.placeNamePlaceholder')}
+                value={name}
+                onChangeText={setName}
+              />
+            </View>
           </View>
 
-          {/* Place Name */}
-          <Input
-            label={t('pin.placeName')}
-            placeholder={t('pin.placeNamePlaceholder')}
-            value={name}
-            onChangeText={setName}
-          />
-
-          {/* Status Toggle */}
-          <View style={styles.section}>
-            <Text style={styles.sectionLabel}>{t('pin.status')} *</Text>
-            <View style={styles.statusToggle}>
+          {/* Status Card */}
+          <View style={styles.card}>
+            <View style={styles.cardHeader}>
+              <View style={[styles.cardIconWrapper, { backgroundColor: colors.accent.main + '15' }]}>
+                <Text style={styles.cardIcon}>✨</Text>
+              </View>
+              <View style={styles.cardHeaderText}>
+                <Text style={styles.cardTitle}>{t('pin.status')}</Text>
+                <Text style={styles.cardDescription}>{t('pin.chooseYourStatus')}</Text>
+              </View>
+              <View style={styles.requiredBadge}>
+                <Text style={styles.requiredText}>{t('pin.required')}</Text>
+              </View>
+            </View>
+            <View style={styles.cardContent}>
+              <View style={styles.statusToggle}>
               <TouchableOpacity
                 style={[
                   styles.statusButton,
-                  status === 'visited' && styles.statusButtonActive,
+                  status === 'visited' && styles.statusButtonVisited,
                 ]}
                 onPress={() => handleStatusToggle('visited')}
+                activeOpacity={0.7}
               >
-                <Text
-                  style={[
-                    styles.statusButtonText,
-                    status === 'visited' && styles.statusButtonTextActive,
-                  ]}
-                >
-                  ✓ {t('pin.visited')}
-                </Text>
+                <View style={styles.statusButtonContent}>
+                  <View style={[
+                    styles.statusIcon,
+                    status === 'visited' && styles.statusIconActive
+                  ]}>
+                    <Text style={styles.statusIconText}>✓</Text>
+                  </View>
+                  <Text
+                    style={[
+                      styles.statusButtonText,
+                      status === 'visited' && styles.statusButtonTextActive,
+                    ]}
+                  >
+                    {t('pin.visited')}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.statusButtonSubtext,
+                      status === 'visited' && styles.statusButtonSubtextActive,
+                    ]}
+                  >
+                    Đã đến
+                  </Text>
+                </View>
               </TouchableOpacity>
+              
               <TouchableOpacity
                 style={[
                   styles.statusButton,
-                  status === 'wantToGo' && styles.statusButtonActive,
+                  status === 'wantToGo' && styles.statusButtonWantToGo,
                 ]}
                 onPress={() => handleStatusToggle('wantToGo')}
+                activeOpacity={0.7}
               >
-                <Text
-                  style={[
-                    styles.statusButtonText,
-                    status === 'wantToGo' && styles.statusButtonTextActive,
-                  ]}
-                >
-                  ⭐ {t('pin.wantToGo')}
-                </Text>
+                <View style={styles.statusButtonContent}>
+                  <View style={[
+                    styles.statusIcon,
+                    status === 'wantToGo' && styles.statusIconActive
+                  ]}>
+                    <Text style={styles.statusIconText}>⭐</Text>
+                  </View>
+                  <Text
+                    style={[
+                      styles.statusButtonText,
+                      status === 'wantToGo' && styles.statusButtonTextActive,
+                    ]}
+                  >
+                    {t('pin.wantToGo')}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.statusButtonSubtext,
+                      status === 'wantToGo' && styles.statusButtonSubtextActive,
+                    ]}
+                  >
+                    Muốn đến
+                  </Text>
+                </View>
               </TouchableOpacity>
+              </View>
             </View>
           </View>
 
           {/* Visited Fields */}
           {status === 'visited' && (
             <>
-              {/* Date Picker */}
-              <View style={styles.section}>
-                <Text style={styles.sectionLabel}>{t('pin.visitDate')}</Text>
-                <TouchableOpacity
-                  style={styles.dateButton}
-                  onPress={() => setShowDatePicker(true)}
-                >
-                  <Text style={styles.dateButtonText}>
-                    📅 {visitDate.toLocaleDateString('vi-VN')}
-                  </Text>
-                </TouchableOpacity>
-                {showDatePicker && (
-                  <DateTimePicker
-                    value={visitDate}
-                    mode="date"
-                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                    onChange={handleDateChange}
-                    maximumDate={new Date()}
-                  />
-                )}
-              </View>
+              {/* Date & Rating Card */}
+              <View style={styles.card}>
+                <View style={styles.cardHeader}>
+                  <View style={[styles.cardIconWrapper, { backgroundColor: colors.status.success + '15' }]}>
+                    <Text style={styles.cardIcon}>📅</Text>
+                  </View>
+                  <View style={styles.cardHeaderText}>
+                    <Text style={styles.cardTitle}>{t('pin.dateAndRating')}</Text>
+                    <Text style={styles.cardDescription}>{t('pin.timeAndExperience')}</Text>
+                  </View>
+                </View>
+                <View style={styles.cardContent}>
+                
+                {/* Date Picker */}
+                <View style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>{t('pin.visitDate')}</Text>
+                  <TouchableOpacity
+                    style={styles.dateButton}
+                    onPress={() => setShowDatePicker(true)}
+                    activeOpacity={0.7}
+                  >
+                    <View style={styles.dateButtonContent}>
+                      <Text style={styles.dateButtonIcon}>📅</Text>
+                      <Text style={styles.dateButtonText}>
+                        {visitDate.toLocaleDateString('vi-VN', {
+                          weekday: 'long',
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric'
+                        })}
+                      </Text>
+                      <Text style={styles.dateButtonChevron}>›</Text>
+                    </View>
+                  </TouchableOpacity>
+                  {showDatePicker && (
+                    <DateTimePicker
+                      value={visitDate}
+                      mode="date"
+                      display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                      onChange={handleDateChange}
+                      maximumDate={new Date()}
+                    />
+                  )}
+                </View>
 
-              {/* Star Rating */}
-              <View style={styles.section}>
-                <Text style={styles.sectionLabel}>{t('pin.rating')}</Text>
-                <Rating
-                  type="star"
-                  ratingCount={5}
-                  imageSize={40}
-                  startingValue={rating}
-                  onFinishRating={setRating}
-                  style={styles.rating}
-                  tintColor={colors.neutral.white}
-                />
-                <Text style={styles.ratingText}>
-                  {rating > 0 ? `${rating}/5 ${t('pin.stars')}` : t('pin.noRating')}
-                </Text>
+                {/* Star Rating */}
+                <View style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>{t('pin.rating')}</Text>
+                  <View style={styles.ratingContainer}>
+                    <Rating
+                      type="star"
+                      ratingCount={5}
+                      imageSize={44}
+                      startingValue={rating}
+                      onFinishRating={setRating}
+                      style={styles.rating}
+                      readonly={false}
+                      ratingBackgroundColor={colors.background.card}
+                    />
+                  </View>
+                  <Text style={styles.ratingText}>
+                    {rating > 0 ? (
+                      <>
+                        <Text style={styles.ratingValue}>{rating}</Text>
+                        <Text style={styles.ratingMax}>/5 {t('pin.stars')}</Text>
+                      </>
+                    ) : (
+                      <Text style={styles.ratingEmpty}>{t('pin.tapToRate')}</Text>
+                    )}
+                  </Text>
+                </View>
+                </View>
               </View>
             </>
           )}
 
-          {/* Notes */}
-          <Input
-            label={t('pin.notes')}
-            placeholder={t('pin.notesPlaceholder')}
-            value={notes}
-            onChangeText={setNotes}
-            multiline
-            numberOfLines={5}
-          />
+          {/* Notes Card */}
+          <View style={styles.card}>
+            <View style={styles.cardHeader}>
+              <View style={[styles.cardIconWrapper, { backgroundColor: colors.text.secondary + '15' }]}>
+                <Text style={styles.cardIcon}>📝</Text>
+              </View>
+              <View style={styles.cardHeaderText}>
+                <Text style={styles.cardTitle}>{t('pin.notes')}</Text>
+                <Text style={styles.cardDescription}>{t('pin.notesAndFeelings')}</Text>
+              </View>
+            </View>
+            <View style={styles.cardContent}>
+              <Input
+                placeholder={t('pin.notesPlaceholder')}
+                value={notes}
+                onChangeText={setNotes}
+                multiline
+                numberOfLines={5}
+              />
+            </View>
+          </View>
 
-          {/* Image Uploader */}
-          <View style={styles.section}>
-            <Text style={styles.sectionLabel}>
-              {t('pin.images')} ({images.length}/5)
-            </Text>
-            <ScrollView horizontal style={styles.imageScroll}>
+          {/* Image Uploader Card */}
+          <View style={styles.card}>
+            <View style={styles.cardHeader}>
+              <View style={[styles.cardIconWrapper, { backgroundColor: colors.primary.main + '15' }]}>
+                <Text style={styles.cardIcon}>📷</Text>
+              </View>
+              <View style={styles.cardHeaderText}>
+                <Text style={styles.cardTitle}>{t('pin.images')}</Text>
+                <Text style={styles.cardDescription}>{t('pin.maxImages')}</Text>
+              </View>
+              <View style={styles.imageBadge}>
+                <Text style={styles.imageBadgeText}>{images.length}/5</Text>
+              </View>
+            </View>
+            <View style={styles.cardContent}>
+              <ScrollView 
+              horizontal 
+              style={styles.imageScroll}
+              showsHorizontalScrollIndicator={false}
+            >
               {images.map((uri, index) => (
                 <View key={index} style={styles.imageContainer}>
                   <Image source={{ uri }} style={styles.imageThumb} />
                   <TouchableOpacity
                     style={styles.removeImageButton}
                     onPress={() => removeImage(index)}
+                    activeOpacity={0.8}
                   >
                     <Text style={styles.removeImageText}>✕</Text>
                   </TouchableOpacity>
+                  <View style={styles.imageNumber}>
+                    <Text style={styles.imageNumberText}>{index + 1}</Text>
+                  </View>
                 </View>
               ))}
               {images.length < 5 && (
                 <TouchableOpacity
                   style={styles.addImageButton}
                   onPress={pickImage}
+                  activeOpacity={0.7}
                 >
-                  <Text style={styles.addImageText}>+</Text>
+                  <View style={styles.addImageContent}>
+                    <Text style={styles.addImageIcon}>📸</Text>
+                    <Text style={styles.addImageText}>{t('pin.addPhotos')}</Text>
+                  </View>
                 </TouchableOpacity>
               )}
             </ScrollView>
+              {images.length === 0 && (
+                <View style={styles.emptyImageState}>
+                  <Text style={styles.emptyImageText}>
+                    {t('pin.addImagesToShare')}
+                  </Text>
+                </View>
+              )}
+            </View>
           </View>
 
           {/* Save Button */}
@@ -306,130 +481,415 @@ export const AddPinScreen: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   container: {
     flex: 1,
   },
   backdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: colors.neutral.black + '90',
   },
   bottomSheet: {
-    backgroundColor: colors.neutral.white,
-    borderTopLeftRadius: borderRadius.xl,
-    borderTopRightRadius: borderRadius.xl,
+    backgroundColor: colors.background.main,
+    shadowColor: colors.neutral.black,
+    shadowOffset: { width: 0, height: -8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 20,
+    elevation: 20,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+  },
+  handleIndicator: {
+    backgroundColor: colors.text.disabled,
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    marginTop: 8,
   },
   content: {
-    padding: spacing.xl,
+    paddingBottom: spacing.lg,
   },
-  header: {
-    marginBottom: spacing.lg,
+  
+  // Modern Header with Gradient
+  headerGradient: {
+    marginHorizontal: -spacing.lg,
+    marginTop: spacing.sm,
+    marginBottom: spacing.md,
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.lg,
+    borderBottomLeftRadius: borderRadius['2xl'],
+    borderBottomRightRadius: borderRadius['2xl'],
+  },
+  headerContent: {
+    alignItems: 'center',
+  },
+  headerIconContainer: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.sm,
+    shadowColor: colors.neutral.black,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  headerIcon: {
+    fontSize: 32,
   },
   title: {
     fontSize: typography.fontSize['2xl'],
     fontWeight: typography.fontWeight.bold,
     color: colors.text.primary,
+    marginBottom: spacing.xs,
+    letterSpacing: -0.5,
   },
-  section: {
-    marginBottom: spacing.lg,
-  },
-  sectionLabel: {
+  subtitle: {
     fontSize: typography.fontSize.sm,
-    fontWeight: typography.fontWeight.medium,
-    color: colors.text.primary,
-    marginBottom: spacing.sm,
+    color: colors.text.secondary,
+    textAlign: 'center',
+    paddingHorizontal: spacing.lg,
+    lineHeight: 20,
   },
+  
+  // Modern Card Styles
+  card: {
+    backgroundColor: colors.background.card,
+    borderRadius: borderRadius['2xl'],
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.md,
+    borderWidth: 1.5,
+    borderColor: colors.border.light,
+    shadowColor: colors.neutral.black,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 4,
+    overflow: 'hidden',
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: spacing.md,
+    paddingBottom: spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border.light + '50',
+  },
+  cardIconWrapper: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: spacing.sm,
+  },
+  cardIcon: {
+    fontSize: 20,
+  },
+  cardHeaderText: {
+    flex: 1,
+  },
+  cardTitle: {
+    fontSize: typography.fontSize.base,
+    fontWeight: typography.fontWeight.bold,
+    color: colors.text.primary,
+    marginBottom: 2,
+    letterSpacing: -0.3,
+  },
+  cardDescription: {
+    fontSize: typography.fontSize.xs,
+    color: colors.text.secondary,
+    marginTop: 1,
+  },
+  cardContent: {
+    padding: spacing.md,
+    paddingTop: spacing.sm,
+  },
+  requiredBadge: {
+    backgroundColor: colors.error + '15',
+    paddingHorizontal: spacing.md,
+    paddingVertical: 4,
+    borderRadius: borderRadius.full,
+    borderWidth: 1,
+    borderColor: colors.error + '30',
+  },
+  requiredText: {
+    fontSize: typography.fontSize.xs,
+    color: colors.error,
+    fontWeight: typography.fontWeight.bold,
+    letterSpacing: 0.5,
+  },
+  
+  // Modern Status Toggle
   statusToggle: {
     flexDirection: 'row',
-    gap: spacing.sm,
+    gap: spacing.md,
   },
   statusButton: {
     flex: 1,
-    paddingVertical: spacing.md,
-    borderRadius: borderRadius.md,
-    backgroundColor: colors.neutral.gray100,
+    paddingVertical: spacing.lg,
+    paddingHorizontal: spacing.sm,
+    borderRadius: borderRadius.xl,
+    backgroundColor: colors.background.elevated,
+    borderWidth: 2.5,
+    borderColor: colors.border.main,
     alignItems: 'center',
-    borderWidth: 2,
-    borderColor: 'transparent',
+    shadowColor: colors.neutral.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  statusButtonActive: {
+  statusButtonVisited: {
+    backgroundColor: colors.status.success + '12',
+    borderColor: colors.status.success,
+    shadowColor: colors.status.success,
+    shadowOpacity: 0.2,
+  },
+  statusButtonWantToGo: {
+    backgroundColor: colors.accent.main + '12',
+    borderColor: colors.accent.main,
+    shadowColor: colors.accent.main,
+    shadowOpacity: 0.2,
+  },
+  statusButtonContent: {
+    alignItems: 'center',
+  },
+  statusIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: colors.background.card,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.sm,
+    borderWidth: 2,
+    borderColor: colors.border.light,
+  },
+  statusIconActive: {
     backgroundColor: colors.primary.main,
-    borderColor: colors.primary.dark,
+    borderColor: colors.primary.main,
+  },
+  statusIconText: {
+    fontSize: 24,
   },
   statusButtonText: {
+    fontSize: typography.fontSize.base,
+    fontWeight: typography.fontWeight.bold,
+    color: colors.text.primary,
+    marginBottom: 4,
+    letterSpacing: -0.2,
+  },
+  statusButtonTextActive: {
+    color: colors.primary.main,
+  },
+  statusButtonSubtext: {
+    fontSize: typography.fontSize.xs,
+    color: colors.text.secondary,
+    fontWeight: typography.fontWeight.medium,
+  },
+  statusButtonSubtextActive: {
+    color: colors.primary.main,
+    fontWeight: typography.fontWeight.semiBold,
+  },
+  
+  // Input Group
+  inputGroup: {
+    marginBottom: spacing.md,
+  },
+  inputLabel: {
+    fontSize: typography.fontSize.sm,
+    fontWeight: typography.fontWeight.semiBold,
+    color: colors.text.primary,
+    marginBottom: spacing.xs,
+  },
+  
+  // Modern Date Button
+  dateButton: {
+    backgroundColor: colors.background.elevated,
+    padding: spacing.md,
+    borderRadius: borderRadius.xl,
+    borderWidth: 1.5,
+    borderColor: colors.border.main,
+    shadowColor: colors.neutral.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  dateButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+  },
+  dateButtonIcon: {
+    fontSize: 24,
+  },
+  dateButtonText: {
+    flex: 1,
+    fontSize: typography.fontSize.base,
+    color: colors.text.primary,
+    fontWeight: typography.fontWeight.semiBold,
+    letterSpacing: -0.2,
+  },
+  dateButtonChevron: {
+    fontSize: 28,
+    color: colors.text.secondary,
+    fontWeight: typography.fontWeight.regular,
+  },
+  
+  // Modern Rating
+  ratingContainer: {
+    alignItems: 'center',
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.md,
+    backgroundColor: colors.background.elevated + '80',
+    borderRadius: borderRadius.xl,
+    marginBottom: spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.border.light,
+  },
+  rating: {
+    alignSelf: 'center',
+    paddingVertical: spacing.sm,
+  },
+  ratingText: {
+    fontSize: typography.fontSize.base,
+    color: colors.text.secondary,
+    textAlign: 'center',
+    marginTop: spacing.sm,
+  },
+  ratingValue: {
+    fontSize: typography.fontSize['2xl'],
+    fontWeight: typography.fontWeight.bold,
+    color: colors.accent.main,
+    letterSpacing: -0.5,
+  },
+  ratingMax: {
     fontSize: typography.fontSize.base,
     color: colors.text.secondary,
     fontWeight: typography.fontWeight.medium,
   },
-  statusButtonTextActive: {
-    color: colors.neutral.white,
-    fontWeight: typography.fontWeight.semiBold,
-  },
-  dateButton: {
-    backgroundColor: colors.neutral.gray50,
-    padding: spacing.md,
-    borderRadius: borderRadius.md,
-    borderWidth: 1,
-    borderColor: colors.neutral.gray300,
-  },
-  dateButtonText: {
+  ratingEmpty: {
     fontSize: typography.fontSize.base,
-    color: colors.text.primary,
+    color: colors.text.disabled,
+    fontStyle: 'italic',
   },
-  rating: {
-    alignSelf: 'flex-start',
-    paddingVertical: spacing.sm,
+  
+  // Modern Images
+  imageBadge: {
+    backgroundColor: colors.primary.main + '20',
+    paddingHorizontal: spacing.md,
+    paddingVertical: 4,
+    borderRadius: borderRadius.full,
+    borderWidth: 1,
+    borderColor: colors.primary.main + '40',
   },
-  ratingText: {
-    fontSize: typography.fontSize.sm,
-    color: colors.text.secondary,
-    marginTop: spacing.xs,
+  imageBadgeText: {
+    fontSize: typography.fontSize.xs,
+    color: colors.primary.main,
+    fontWeight: typography.fontWeight.bold,
+    letterSpacing: 0.5,
   },
   imageScroll: {
-    flexDirection: 'row',
+    marginTop: spacing.md,
   },
   imageContainer: {
     position: 'relative',
-    marginRight: spacing.sm,
+    marginRight: spacing.md,
   },
   imageThumb: {
     width: 100,
     height: 100,
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.lg,
+    backgroundColor: colors.background.elevated,
+    borderWidth: 1.5,
+    borderColor: colors.border.light,
   },
   removeImageButton: {
     position: 'absolute',
-    top: -8,
-    right: -8,
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    top: -10,
+    right: -10,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     backgroundColor: colors.error,
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: colors.error,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.4,
+    shadowRadius: 6,
+    elevation: 6,
+    borderWidth: 2,
+    borderColor: colors.background.card,
   },
   removeImageText: {
     color: colors.neutral.white,
-    fontSize: 16,
+    fontSize: 18,
+    fontWeight: typography.fontWeight.bold,
+  },
+  imageNumber: {
+    position: 'absolute',
+    bottom: 10,
+    left: 10,
+    backgroundColor: colors.neutral.black + 'DD',
+    minWidth: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: spacing.xs,
+    borderWidth: 2,
+    borderColor: colors.neutral.white + '40',
+  },
+  imageNumberText: {
+    color: colors.neutral.white,
+    fontSize: typography.fontSize.sm,
     fontWeight: typography.fontWeight.bold,
   },
   addImageButton: {
     width: 100,
     height: 100,
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.lg,
     borderWidth: 2,
-    borderColor: colors.neutral.gray300,
+    borderColor: colors.border.main,
     borderStyle: 'dashed',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.neutral.gray50,
+    backgroundColor: colors.background.elevated,
+  },
+  addImageContent: {
+    alignItems: 'center',
+  },
+  addImageIcon: {
+    fontSize: 32,
+    marginBottom: spacing.xs,
   },
   addImageText: {
-    fontSize: 40,
-    color: colors.neutral.gray400,
+    fontSize: typography.fontSize.sm,
+    color: colors.text.secondary,
+    fontWeight: typography.fontWeight.semiBold,
   },
+  emptyImageState: {
+    paddingVertical: spacing.lg,
+    alignItems: 'center',
+    marginTop: spacing.sm,
+  },
+  emptyImageText: {
+    fontSize: typography.fontSize.sm,
+    color: colors.text.disabled,
+    textAlign: 'center',
+    fontStyle: 'italic',
+  },
+  
   buttonContainer: {
-    marginTop: spacing.lg,
-    marginBottom: spacing.xl,
+    marginHorizontal: spacing.lg,
+    marginTop: spacing.md,
+    marginBottom: spacing.md,
+    gap: spacing.sm,
   },
 });

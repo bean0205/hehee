@@ -12,6 +12,7 @@ import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius } from '../../theme/spacing';
 import { useNavigation } from '@react-navigation/native';
+import { useLanguage } from '../../i18n/LanguageContext';
 
 // Mapping country names to flag emojis
 const COUNTRY_FLAGS: Record<string, string> = {
@@ -58,7 +59,7 @@ const COUNTRY_FLAGS: Record<string, string> = {
 
 // Countries grouped by continent
 const CONTINENTS = {
-  'Châu Á': {
+  'asia': {
     emoji: '🌏',
     countries: ['Afghanistan', 'Armenia', 'Azerbaijan', 'Bahrain', 'Bangladesh', 'Bhutan', 
       'Brunei', 'Cambodia', 'Trung Quốc', 'Síp', 'Georgia', 'Ấn Độ', 'Indonesia', 'Iran', 
@@ -68,7 +69,7 @@ const CONTINENTS = {
       'Sri Lanka', 'Syria', 'Đài Loan', 'Tajikistan', 'Thái Lan', 'Timor-Leste', 'Thổ Nhĩ Kỳ', 
       'Turkmenistan', 'UAE', 'Uzbekistan', 'Việt Nam', 'Yemen']
   },
-  'Châu Âu': {
+  'europe': {
     emoji: '🇪🇺',
     countries: ['Albania', 'Andorra', 'Áo', 'Belarus', 'Bỉ', 'Bosnia và Herzegovina', 'Bulgaria', 
       'Croatia', 'Séc', 'Đan Mạch', 'Estonia', 'Phần Lan', 'Pháp', 'Đức', 'Hy Lạp', 'Hungary', 
@@ -77,7 +78,7 @@ const CONTINENTS = {
       'Romania', 'San Marino', 'Serbia', 'Slovakia', 'Slovenia', 'Tây Ban Nha', 'Thụy Điển', 
       'Thụy Sĩ', 'Ukraine', 'Anh', 'Vatican']
   },
-  'Châu Phi': {
+  'africa': {
     emoji: '🌍',
     countries: ['Algeria', 'Angola', 'Benin', 'Botswana', 'Burkina Faso', 'Burundi', 'Cabo Verde', 
       'Cameroon', 'Trung Phi', 'Chad', 'Comoros', 'Congo', 'Djibouti', 'Ai Cập', 'Eswatini', 
@@ -86,15 +87,19 @@ const CONTINENTS = {
       'Mozambique', 'Namibia', 'Niger', 'Nigeria', 'Rwanda', 'Senegal', 'Seychelles', 'Sierra Leone', 
       'Somalia', 'Nam Phi', 'Sudan', 'Tanzania', 'Togo', 'Tunisia', 'Uganda', 'Zambia', 'Zimbabwe']
   },
-  'Châu Mỹ': {
+  'northAmerica': {
     emoji: '🌎',
-    countries: ['Argentina', 'Bahamas', 'Barbados', 'Belize', 'Bolivia', 'Brazil', 'Canada', 'Chile', 
-      'Colombia', 'Costa Rica', 'Cuba', 'Dominica', 'Cộng hòa Dominica', 'Ecuador', 'El Salvador', 
-      'Grenada', 'Guatemala', 'Guyana', 'Haiti', 'Honduras', 'Jamaica', 'Mexico', 'Nicaragua', 
-      'Panama', 'Paraguay', 'Peru', 'Saint Lucia', 'Suriname', 'Trinidad và Tobago', 'Mỹ', 
+    countries: ['Canada', 'Mỹ']
+  },
+  'southAmerica': {
+    emoji: '🌎',
+    countries: ['Argentina', 'Bahamas', 'Barbados', 'Belize', 'Bolivia', 'Brazil', 'Chile',
+      'Colombia', 'Costa Rica', 'Cuba', 'Dominica', 'Cộng hòa Dominica', 'Ecuador', 'El Salvador',
+      'Grenada', 'Guatemala', 'Guyana', 'Haiti', 'Honduras', 'Jamaica', 'Mexico', 'Nicaragua',
+      'Panama', 'Paraguay', 'Peru', 'Saint Lucia', 'Suriname', 'Trinidad và Tobago',
       'Uruguay', 'Venezuela']
   },
-  'Châu Đại Dương': {
+  'oceania': {
     emoji: '🌏',
     countries: ['Úc', 'Fiji', 'Kiribati', 'Micronesia', 'Nauru', 'New Zealand', 'Palau', 
       'Papua New Guinea', 'Samoa', 'Solomon Islands', 'Tonga', 'Tuvalu', 'Vanuatu']
@@ -107,6 +112,7 @@ const ALL_COUNTRIES = Object.keys(COUNTRY_FLAGS);
 export const CountryExplorationScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const { pins } = usePin();
+  const { t } = useLanguage();
   const [searchQuery, setSearchQuery] = useState('');
   const [filter, setFilter] = useState<'all' | 'visited' | 'notVisited'>('all');
   const [selectedContinent, setSelectedContinent] = useState<string | null>(null);
@@ -203,24 +209,24 @@ export const CountryExplorationScreen: React.FC = () => {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Text style={styles.backButtonText}>← Quay lại</Text>
+          <Text style={styles.backButtonText}>← {t('countryExploration.back')}</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Khám phá thế giới</Text>
+        <Text style={styles.headerTitle}>{t('countryExploration.title')}</Text>
       </View>
 
       {/* Stats Summary */}
       <View style={styles.statsContainer}>
         <View style={styles.statCard}>
           <Text style={styles.statValue}>{explorationPercentage}%</Text>
-          <Text style={styles.statLabel}>Đã khám phá</Text>
+          <Text style={styles.statLabel}>{t('countryExploration.explored')}</Text>
         </View>
         <View style={styles.statCard}>
           <Text style={styles.statValue}>{visitedCount}</Text>
-          <Text style={styles.statLabel}>Đã đến</Text>
+          <Text style={styles.statLabel}>{t('countryExploration.visited')}</Text>
         </View>
         <View style={styles.statCard}>
           <Text style={styles.statValue}>{notVisitedCount}</Text>
-          <Text style={styles.statLabel}>Chưa đến</Text>
+          <Text style={styles.statLabel}>{t('countryExploration.notVisited')}</Text>
         </View>
       </View>
 
@@ -228,7 +234,7 @@ export const CountryExplorationScreen: React.FC = () => {
       <View style={styles.searchContainer}>
         <TextInput
           style={styles.searchInput}
-          placeholder="Tìm kiếm quốc gia..."
+          placeholder={t('countryExploration.searchPlaceholder')}
           value={searchQuery}
           onChangeText={setSearchQuery}
           placeholderTextColor={colors.text.secondary}
@@ -242,7 +248,7 @@ export const CountryExplorationScreen: React.FC = () => {
           onPress={() => setFilter('all')}
         >
           <Text style={[styles.filterText, filter === 'all' && styles.activeFilterText]}>
-            Tất cả ({ALL_COUNTRIES.length})
+            {t('countryExploration.allCountries')} ({ALL_COUNTRIES.length})
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -250,7 +256,7 @@ export const CountryExplorationScreen: React.FC = () => {
           onPress={() => setFilter('visited')}
         >
           <Text style={[styles.filterText, filter === 'visited' && styles.activeFilterText]}>
-            Đã đến ({visitedCount})
+            {t('countryExploration.visitedCountries')} ({visitedCount})
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -258,7 +264,7 @@ export const CountryExplorationScreen: React.FC = () => {
           onPress={() => setFilter('notVisited')}
         >
           <Text style={[styles.filterText, filter === 'notVisited' && styles.activeFilterText]}>
-            Chưa đến ({notVisitedCount})
+            {t('countryExploration.notVisitedCountries')} ({notVisitedCount})
           </Text>
         </TouchableOpacity>
       </View>
@@ -279,7 +285,7 @@ export const CountryExplorationScreen: React.FC = () => {
               <Text style={styles.continentEmoji}>🌍</Text>
             </View>
             <Text style={[styles.continentLabel, !selectedContinent && styles.activeContinentLabel]}>
-              Tất cả
+              {t('countryExploration.continents.all')}
             </Text>
           </TouchableOpacity>
           {Object.entries(CONTINENTS).map(([continent, data]) => (
@@ -293,7 +299,7 @@ export const CountryExplorationScreen: React.FC = () => {
                 <Text style={styles.continentEmoji}>{data.emoji}</Text>
               </View>
               <Text style={[styles.continentLabel, selectedContinent === continent && styles.activeContinentLabel]}>
-                {continent}
+                {t(`countryExploration.continents.${continent}`)}
               </Text>
             </TouchableOpacity>
           ))}
@@ -322,14 +328,14 @@ export const CountryExplorationScreen: React.FC = () => {
                   </Text>
                   {isVisited && pinCount > 0 && (
                     <Text style={styles.pinCount}>
-                      📍 {pinCount} {pinCount === 1 ? 'địa điểm' : 'địa điểm'}
+                      📍 {pinCount} {pinCount === 1 ? t('countryExploration.location') : t('countryExploration.locations')}
                     </Text>
                   )}
                 </View>
               </View>
               {isVisited && (
                 <View style={styles.visitedBadge}>
-                  <Text style={styles.visitedBadgeText}>Đã đến</Text>
+                  <Text style={styles.visitedBadgeText}>{t('countryExploration.visitedBadge')}</Text>
                 </View>
               )}
             </View>
@@ -339,7 +345,7 @@ export const CountryExplorationScreen: React.FC = () => {
         {filteredCountries.length === 0 && (
           <View style={styles.emptyState}>
             <Text style={styles.emptyStateText}>
-              Không tìm thấy quốc gia nào
+              {t('countryExploration.noCountriesFound')}
             </Text>
           </View>
         )}

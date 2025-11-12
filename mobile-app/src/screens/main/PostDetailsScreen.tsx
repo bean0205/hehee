@@ -27,7 +27,7 @@ import { spacing, borderRadius } from '../../theme/spacing';
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 // Mock comments data with replies and badges
-const mockComments = [
+const getMockComments = (t: any) => [
   {
     id: '1',
     user: {
@@ -37,7 +37,7 @@ const mockComments = [
       username: 'tranvanb',
       badge: { icon: '🌍', color: '#10B981' }, // Explorer
     },
-    text: 'Nơi này đẹp quá! Mình cũng muốn đến lắm 😍',
+    text: t('mockData.postDetails.comment1'),
     timestamp: '1 giờ trước',
     likes: 5,
     isLiked: false,
@@ -51,7 +51,7 @@ const mockComments = [
           username: 'nguyenvana',
           badge: { icon: '👑', color: '#F59E0B' }, // Gold/VIP
         },
-        text: 'Cảm ơn bạn! Đến đây nhớ vào buổi sáng sớm nhé, không khí rất trong lành 🌅',
+        text: t('mockData.postDetails.reply1'),
         timestamp: '50 phút trước',
         likes: 2,
         isLiked: false,
@@ -65,7 +65,7 @@ const mockComments = [
           username: 'phamthie',
           badge: { icon: '🗺️', color: '#8B5CF6' }, // Traveler
         },
-        text: 'Mình cũng đã đến đây rồi, thật sự rất đáng để ghé thăm!',
+        text: t('mockData.postDetails.comment2'),
         timestamp: '40 phút trước',
         likes: 1,
         isLiked: false,
@@ -81,7 +81,7 @@ const mockComments = [
       username: 'nguyenthic',
       badge: { icon: '⭐', color: '#3B82F6' }, // Rising Star
     },
-    text: 'Cảm ơn bạn đã chia sẻ! Mình sẽ ghé đây vào tháng sau',
+    text: t('mockData.postDetails.comment3'),
     timestamp: '30 phút trước',
     likes: 3,
     isLiked: true,
@@ -96,7 +96,7 @@ const mockComments = [
       username: 'leminhd',
       badge: { icon: '🏆', color: '#EF4444' }, // Champion
     },
-    text: 'View đẹp thật đấy! Giá vé bao nhiêu nhỉ?',
+    text: t('mockData.postDetails.reply2'),
     timestamp: '15 phút trước',
     likes: 1,
     isLiked: false,
@@ -110,7 +110,7 @@ const mockComments = [
           username: 'nguyenvana',
           badge: { icon: '👑', color: '#F59E0B' }, // Gold/VIP
         },
-        text: 'Mình đến miễn phí luôn bạn ơi! Đây là công viên công cộng',
+        text: t('mockData.postDetails.reply3'),
         timestamp: '10 phút trước',
         likes: 3,
         isLiked: true,
@@ -132,7 +132,7 @@ export const PostDetailsScreen: React.FC = () => {
   const [imageViewerVisible, setImageViewerVisible] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [comments, setComments] = useState(mockComments);
+  const [comments, setComments] = useState(getMockComments(t));
   const [commentText, setCommentText] = useState('');
   const [replyingTo, setReplyingTo] = useState<{commentId: string, userName: string} | null>(null);
 
@@ -141,12 +141,12 @@ export const PostDetailsScreen: React.FC = () => {
   if (!post) {
     return (
       <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>Không tìm thấy bài viết</Text>
+        <Text style={styles.errorText}>{t('postDetails.postNotFound')}</Text>
         <TouchableOpacity
           onPress={() => navigation.goBack()}
           style={styles.errorButton}
         >
-          <Text style={styles.errorButtonText}>Quay lại</Text>
+          <Text style={styles.errorButtonText}>{t('common.back')}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -158,11 +158,11 @@ export const PostDetailsScreen: React.FC = () => {
   };
 
   const handleComment = () => {
-    Alert.alert('Bình luận', 'Tính năng bình luận đang được phát triển');
+    Alert.alert(t('postDetails.comment'), t('postDetails.commentFeatureComingSoon'));
   };
 
   const handleShare = () => {
-    Alert.alert('Chia sẻ', 'Tính năng chia sẻ đang được phát triển');
+    Alert.alert(t('postDetails.share'), t('postDetails.shareFeatureComingSoon'));
   };
 
   const handleCommentLike = (commentId: string) => {
@@ -329,7 +329,7 @@ export const PostDetailsScreen: React.FC = () => {
               onPress={() => handleReply(comment.id, comment.user.name)}
               style={styles.replyButton}
             >
-              <Text style={styles.replyButtonText}>Trả lời</Text>
+              <Text style={styles.replyButtonText}>{t('postDetails.reply')}</Text>
             </TouchableOpacity>
           </View>
 
@@ -456,7 +456,7 @@ export const PostDetailsScreen: React.FC = () => {
           <TouchableOpacity onPress={() => navigation.goBack()}>
             <Text style={styles.backIcon}>←</Text>
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Chi tiết hoạt động</Text>
+          <Text style={styles.headerTitle}>{t('postDetails.activityDetails')}</Text>
           <View style={{ width: 30 }} />
         </View>
 
@@ -506,7 +506,7 @@ export const PostDetailsScreen: React.FC = () => {
             >
               <Text style={styles.actionIconLarge}>{isLiked ? '❤️' : '🤍'}</Text>
               <Text style={[styles.actionTextLarge, isLiked && styles.actionTextActive]}>
-                Thích
+                {t('postDetails.like')}
               </Text>
             </TouchableOpacity>
 
@@ -515,7 +515,7 @@ export const PostDetailsScreen: React.FC = () => {
               onPress={handleComment}
             >
               <Text style={styles.actionIconLarge}>💬</Text>
-              <Text style={styles.actionTextLarge}>Bình luận</Text>
+              <Text style={styles.actionTextLarge}>{t('postDetails.comment')}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -523,13 +523,13 @@ export const PostDetailsScreen: React.FC = () => {
               onPress={handleShare}
             >
               <Text style={styles.actionIconLarge}>📤</Text>
-              <Text style={styles.actionTextLarge}>Chia sẻ</Text>
+              <Text style={styles.actionTextLarge}>{t('postDetails.share')}</Text>
             </TouchableOpacity>
           </View>
 
           {/* Comments Section */}
           <View style={styles.commentsSection}>
-            <Text style={styles.sectionLabel}>Bình luận ({comments.length})</Text>
+            <Text style={styles.sectionLabel}>{t('postDetails.comments')} ({comments.length})</Text>
             {comments.length > 0 ? (
               <View style={styles.commentsList}>
                 {comments.map(comment => renderComment(comment))}
@@ -558,7 +558,7 @@ export const PostDetailsScreen: React.FC = () => {
             <View style={styles.replyingIndicator}>
               <View style={styles.replyingContent}>
                 <Text style={styles.replyingText}>
-                  Đang trả lời <Text style={styles.replyingUserName}>{replyingTo.userName}</Text>
+                  {t('postDetails.replyingTo')} <Text style={styles.replyingUserName}>{replyingTo.userName}</Text>
                 </Text>
                 <TouchableOpacity onPress={handleCancelReply}>
                   <Text style={styles.cancelReplyButton}>✕</Text>
@@ -571,7 +571,7 @@ export const PostDetailsScreen: React.FC = () => {
             <Avatar size={36} uri={undefined} />
             <TextInput
               style={styles.commentInput}
-              placeholder={replyingTo ? `Trả lời ${replyingTo.userName}...` : "Viết bình luận..."}
+              placeholder={replyingTo ? t('postDetails.replyToUser', { user: replyingTo.userName }) : t('postDetails.writeComment')}
               placeholderTextColor={colors.text.disabled}
               value={commentText}
               onChangeText={setCommentText}
@@ -604,7 +604,7 @@ export const PostDetailsScreen: React.FC = () => {
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Text style={styles.backIcon}>←</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Chi tiết bài viết</Text>
+        <Text style={styles.headerTitle}>{t('postDetails.postDetails')}</Text>
         <View style={{ width: 30 }} />
       </View>
 
@@ -653,13 +653,13 @@ export const PostDetailsScreen: React.FC = () => {
           {/* Rating */}
           {post.status === 'visited' && post.rating && (
             <View style={styles.ratingSection}>
-              <Text style={styles.sectionLabel}>Đánh giá</Text>
+              <Text style={styles.sectionLabel}>{t('postDetails.rating')}</Text>
               <View style={styles.ratingRow}>
                 {renderStars(post.rating)}
                 <Text style={styles.ratingValue}>{post.rating}/5</Text>
               </View>
               {post.visitDate && (
-                <Text style={styles.visitDate}>Đã đến: {post.visitDate}</Text>
+                <Text style={styles.visitDate}>{t('postDetails.visited')}: {post.visitDate}</Text>
               )}
             </View>
           )}
@@ -717,7 +717,7 @@ export const PostDetailsScreen: React.FC = () => {
             onPress={handleComment}
           >
             <Text style={styles.actionIconLarge}>💬</Text>
-            <Text style={styles.actionTextLarge}>Bình luận</Text>
+            <Text style={styles.actionTextLarge}>{t('postDetails.comment')}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -725,13 +725,13 @@ export const PostDetailsScreen: React.FC = () => {
             onPress={handleShare}
           >
             <Text style={styles.actionIconLarge}>📤</Text>
-            <Text style={styles.actionTextLarge}>Chia sẻ</Text>
+            <Text style={styles.actionTextLarge}>{t('postDetails.share')}</Text>
           </TouchableOpacity>
         </View>
 
         {/* Comments Section */}
         <View style={styles.commentsSection}>
-          <Text style={styles.sectionLabel}>Bình luận ({comments.length})</Text>
+          <Text style={styles.sectionLabel}>{t('postDetails.comments')} ({comments.length})</Text>
           {comments.length > 0 ? (
             <View style={styles.commentsList}>
               {comments.map(comment => renderComment(comment))}
@@ -842,7 +842,7 @@ const createStyles = (colors: any) =>
       borderRadius: borderRadius.md,
     },
     errorButtonText: {
-      color: '#fff',
+      color: colors.text.inverse,
       fontSize: typography.fontSize.base,
       fontWeight: typography.fontWeight.semiBold,
     },
@@ -919,13 +919,13 @@ const createStyles = (colors: any) =>
       zIndex: 10,
     },
     imageCounter: {
-      backgroundColor: 'rgba(0, 0, 0, 0.7)',
+      backgroundColor: colors.neutral.black + 'B3', // 70% opacity
       paddingHorizontal: spacing.md,
       paddingVertical: spacing.xs,
       borderRadius: borderRadius.full,
     },
     imageCounterText: {
-      color: '#fff',
+      color: colors.neutral.white,
       fontSize: typography.fontSize.sm,
       fontWeight: typography.fontWeight.semiBold,
     },
@@ -942,10 +942,10 @@ const createStyles = (colors: any) =>
       width: 8,
       height: 8,
       borderRadius: 4,
-      backgroundColor: 'rgba(255, 255, 255, 0.5)',
+      backgroundColor: colors.neutral.white + '80', // 50% opacity
     },
     activeDot: {
-      backgroundColor: '#fff',
+      backgroundColor: colors.neutral.white,
       width: 24,
     },
     // Details Section

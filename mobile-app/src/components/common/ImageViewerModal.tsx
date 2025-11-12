@@ -10,6 +10,7 @@ import {
   Text,
 } from 'react-native';
 import Swiper from 'react-native-swiper';
+import { useTheme } from '../../contexts/ThemeContext';
 import { typography } from '../../theme/typography';
 import { spacing } from '../../theme/spacing';
 
@@ -28,6 +29,9 @@ export const ImageViewerModal: React.FC<ImageViewerModalProps> = ({
   initialIndex = 0,
   onClose,
 }) => {
+  const { colors } = useTheme();
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
+
   return (
     <Modal
       visible={visible}
@@ -47,8 +51,8 @@ export const ImageViewerModal: React.FC<ImageViewerModalProps> = ({
           index={initialIndex}
           showsButtons={false}
           loop={false}
-          dotColor="rgba(255, 255, 255, 0.4)"
-          activeDotColor="#fff"
+          dotColor={colors.neutral.white + '66'} // 40% opacity
+          activeDotColor={colors.neutral.white}
           paginationStyle={styles.pagination}
         >
           {images.map((uri, index) => (
@@ -72,10 +76,10 @@ export const ImageViewerModal: React.FC<ImageViewerModalProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: colors.neutral.black,
   },
   closeButton: {
     position: 'absolute',
@@ -85,13 +89,13 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    backgroundColor: colors.neutral.black + '99', // 60% opacity
     alignItems: 'center',
     justifyContent: 'center',
   },
   closeIcon: {
     fontSize: 24,
-    color: '#fff',
+    color: colors.neutral.white,
     fontWeight: typography.fontWeight.bold,
   },
   slide: {
@@ -110,13 +114,13 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 50,
     left: spacing.lg,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    backgroundColor: colors.neutral.black + '99', // 60% opacity
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs,
     borderRadius: 20,
   },
   counterText: {
-    color: '#fff',
+    color: colors.neutral.white,
     fontSize: typography.fontSize.sm,
     fontWeight: typography.fontWeight.medium,
   },

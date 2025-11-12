@@ -27,7 +27,7 @@ export const Input: React.FC<InputProps> = ({
   numberOfLines = 1,
   ...props
 }) => {
-  const { colors } = useTheme();
+  const { colors, isDarkMode } = useTheme();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
 
   return (
@@ -39,7 +39,7 @@ export const Input: React.FC<InputProps> = ({
           multiline && { height: numberOfLines * 40, textAlignVertical: 'top' },
           error && styles.inputError,
         ]}
-        placeholderTextColor="rgba(255, 255, 255, 0.5)"
+        placeholderTextColor={colors.text.disabled}
         multiline={multiline}
         numberOfLines={multiline ? numberOfLines : 1}
         {...props}
@@ -56,28 +56,27 @@ const createStyles = (colors: any) => StyleSheet.create({
   label: {
     fontSize: typography.fontSize.sm,
     fontWeight: typography.fontWeight.semiBold,
-    color: '#FFFFFF',
+    color: colors.text.primary,
     marginBottom: spacing.xs,
-    opacity: 0.9,
   },
   input: {
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    backgroundColor: colors.background.elevated,
     borderWidth: 1.5,
-    borderColor: 'rgba(255, 255, 255, 0.4)',
+    borderColor: colors.border.main,
     borderRadius: borderRadius.xl,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.md,
     fontSize: typography.fontSize.base,
-    color: '#FFFFFF',
+    color: colors.text.primary,
     fontWeight: typography.fontWeight.medium,
   },
   inputError: {
-    borderColor: '#EF4444',
-    backgroundColor: 'rgba(239, 68, 68, 0.15)',
+    borderColor: colors.error,
+    backgroundColor: colors.error + '26', // 15% opacity
   },
   errorText: {
     fontSize: typography.fontSize.xs,
-    color: '#FEE2E2',
+    color: colors.error,
     marginTop: spacing.xs,
     fontWeight: typography.fontWeight.semiBold,
   },

@@ -280,7 +280,7 @@ export const ProfileScreen: React.FC = () => {
 
       {activeTab === 'map' && (
         <View style={styles.mapPlaceholder}>
-          <Text style={styles.mapPlaceholderText}>🗺️ Map View sẽ hiển thị ở đây</Text>
+          <Text style={styles.mapPlaceholderText}>{t('profile.mapViewPlaceholder')}</Text>
         </View>
       )}
 

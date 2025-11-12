@@ -8,6 +8,7 @@ import {
   Switch,
 } from 'react-native';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useLanguage } from '../../i18n/LanguageContext';
 import { spacing } from '../../theme/spacing';
 import { typography } from '../../theme/typography';
 
@@ -15,6 +16,7 @@ type VisibilityOption = 'me' | 'followers' | 'everyone';
 
 export const PrivacySettingsScreen = ({ navigation }: any) => {
   const { colors } = useTheme();
+  const { t } = useLanguage();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
   
   const [isPrivateProfile, setIsPrivateProfile] = useState(false);
@@ -26,9 +28,9 @@ export const PrivacySettingsScreen = ({ navigation }: any) => {
   const [dataCollection, setDataCollection] = useState(true);
 
   const visibilityOptions: { value: VisibilityOption; label: string; icon: string }[] = [
-    { value: 'me', label: 'Chỉ mình tôi', icon: '🔒' },
-    { value: 'followers', label: 'Người theo dõi', icon: '👥' },
-    { value: 'everyone', label: 'Mọi người', icon: '🌍' },
+    { value: 'me', label: t('privacy.onlyMe'), icon: '🔒' },
+    { value: 'followers', label: t('privacy.followers'), icon: '👥' },
+    { value: 'everyone', label: t('privacy.everyone'), icon: '🌍' },
   ];
 
   const SettingToggle = ({
@@ -99,63 +101,63 @@ export const PrivacySettingsScreen = ({ navigation }: any) => {
     <View style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Text style={styles.backText}>‹ Quay lại</Text>
+          <Text style={styles.backText}>‹ {t('common.back')}</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Quyền riêng tư</Text>
+        <Text style={styles.headerTitle}>{t('privacy.privacy')}</Text>
       </View>
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Hiển thị Hồ sơ</Text>
+          <Text style={styles.sectionTitle}>{t('privacy.profileDisplay')}</Text>
           <SettingToggle
-            title="Hồ sơ công khai"
-            subtitle="Cho phép người khác xem hồ sơ của bạn"
+            title={t('privacy.publicProfile')}
+            subtitle={t('privacy.allowOthersToView')}
             value={!isPrivateProfile}
             onValueChange={(value) => setIsPrivateProfile(!value)}
           />
           <SettingToggle
-            title="Hiển thị email"
-            subtitle="Hiển thị địa chỉ email trên hồ sơ"
+            title={t('privacy.showEmail')}
+            subtitle={t('privacy.displayEmailOnProfile')}
             value={showEmail}
             onValueChange={setShowEmail}
           />
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Tương tác</Text>
+          <Text style={styles.sectionTitle}>{t('privacy.interactions')}</Text>
           <SettingToggle
-            title="Cho phép tin nhắn"
-            subtitle="Nhận tin nhắn từ người dùng khác"
+            title={t('privacy.allowMessages')}
+            subtitle={t('privacy.receiveMessagesFromUsers')}
             value={allowMessages}
             onValueChange={setAllowMessages}
           />
           <SettingToggle
-            title="Chia sẻ hoạt động"
-            subtitle="Cho phép người khác xem hoạt động của bạn"
+            title={t('privacy.shareActivity')}
+            subtitle={t('privacy.allowOthersToSeeActivity')}
             value={shareActivity}
             onValueChange={setShareActivity}
           />
         </View>
 
         {renderVisibilitySelector(
-          '📝 Ai có thể xem Ghi chú của tôi?',
-          'Ghi chú cá nhân và nhật ký du lịch của bạn',
+          t('privacy.whoCanSeeNotes'),
+          t('privacy.personalNotesAndJournals'),
           notesVisibility,
           setNotesVisibility
         )}
 
         {renderVisibilitySelector(
-          '⭐ Ai có thể xem Bucket List của tôi?',
-          'Danh sách những nơi bạn muốn đến',
+          t('privacy.whoCanSeeBucketList'),
+          t('privacy.placesYouWantToVisit'),
           bucketListVisibility,
           setBucketListVisibility
         )}
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Dữ liệu</Text>
+          <Text style={styles.sectionTitle}>{t('privacy.data')}</Text>
           <SettingToggle
-            title="Thu thập dữ liệu"
-            subtitle="Cho phép thu thập dữ liệu để cải thiện trải nghiệm"
+            title={t('privacy.dataCollection')}
+            subtitle={t('privacy.allowDataCollection')}
             value={dataCollection}
             onValueChange={setDataCollection}
           />
@@ -163,8 +165,7 @@ export const PrivacySettingsScreen = ({ navigation }: any) => {
 
         <View style={styles.infoSection}>
           <Text style={styles.infoText}>
-            Chúng tôi cam kết bảo vệ quyền riêng tư của bạn. Dữ liệu của bạn được mã hóa
-            và bảo mật theo các tiêu chuẩn cao nhất.
+            {t('privacy.privacyCommitment')}
           </Text>
         </View>
       </ScrollView>

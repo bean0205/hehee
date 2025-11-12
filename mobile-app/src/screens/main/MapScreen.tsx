@@ -150,6 +150,7 @@ export const MapScreen: React.FC = () => {
         customMapStyle={isDarkMode ? darkMapStyle : []}
         showsUserLocation
         showsMyLocationButton
+        
       >
         {pins.map((pin) => (
           <Marker

@@ -26,7 +26,7 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 // Mock stories data
 const mockStories = [
-  { id: '1', name: 'Your Story', avatar: null, hasStory: false, isUser: true },
+  { id: '1', nameKey: 'feed.yourStory', avatar: null, hasStory: false, isUser: true },
   { id: '2', name: 'Mai', avatar: null, hasStory: true, isViewed: false },
   { id: '3', name: 'Tuấn', avatar: null, hasStory: true, isViewed: false },
   { id: '4', name: 'Linh', avatar: null, hasStory: true, isViewed: true },
@@ -34,23 +34,22 @@ const mockStories = [
   { id: '6', name: 'Thảo', avatar: null, hasStory: true, isViewed: true },
 ];
 
-// Mock posts data - Social Media style
-const mockPosts = [
+const getMockPosts = (t: any) => [
   {
     id: '1',
     type: 'pin_with_photos',
-    user: { 
-      id: 'u1', 
-      name: 'Nguyễn Văn A', 
-      avatar: null, 
-      username: 'nguyenvana' 
+    user: {
+      id: 'u1',
+      name: t('mockData.feed.user1Name'),
+      avatar: null,
+      username: t('mockData.feed.user1Username')
     },
     location: {
-      name: 'Hồ Hoàn Kiếm',
-      city: 'Hà Nội',
-      country: 'Việt Nam',
+      name: t('mockData.feed.location1'),
+      city: t('mockData.feed.city1'),
+      country: t('mockData.feed.country1'),
     },
-    caption: 'Buổi sáng tuyệt vời ở Hồ Hoàn Kiếm! Không khí trong lành, view đẹp như tranh 🌅',
+    caption: t('mockData.feed.user1Caption'),
     photos: [
       'https://images.unsplash.com/photo-1555400038-63f5ba517a47?w=800',
       'https://images.unsplash.com/photo-1583417319070-4a69db38a482?w=800',
@@ -67,18 +66,18 @@ const mockPosts = [
   {
     id: '2',
     type: 'pin_with_photos',
-    user: { 
-      id: 'u2', 
-      name: 'Trần Thị B', 
-      avatar: null, 
-      username: 'tranthib' 
+    user: {
+      id: 'u2',
+      name: t('mockData.feed.user2Name'),
+      avatar: null,
+      username: t('mockData.feed.user2Username')
     },
     location: {
-      name: 'Vịnh Hạ Long',
-      city: 'Quảng Ninh',
-      country: 'Việt Nam',
+      name: t('mockData.feed.location2'),
+      city: t('mockData.feed.city2'),
+      country: t('mockData.feed.country2'),
     },
-    caption: 'Di sản thế giới! Cảnh đẹp không thể tả 🏝️✨',
+    caption: t('mockData.feed.user2Caption'),
     photos: [
       'https://images.unsplash.com/photo-1528127269322-539801943592?w=800',
     ],
@@ -94,18 +93,18 @@ const mockPosts = [
   {
     id: '3',
     type: 'bucket_list',
-    user: { 
-      id: 'u3', 
-      name: 'Lê Văn C', 
-      avatar: null, 
-      username: 'levanc' 
+    user: {
+      id: 'u3',
+      name: t('mockData.feed.user3Name'),
+      avatar: null,
+      username: t('mockData.feed.user3Username')
     },
     location: {
-      name: 'Tháp Eiffel',
-      city: 'Paris',
-      country: 'Pháp',
+      name: t('mockData.feed.location3'),
+      city: t('mockData.feed.city3'),
+      country: t('mockData.feed.country3'),
     },
-    caption: 'Ước mơ của tôi! Ai đã từng đến đây chưa? 🗼❤️',
+    caption: t('mockData.feed.user3Caption'),
     photos: [
       'https://images.unsplash.com/photo-1511739001486-6bfe10ce785f?w=800',
     ],
@@ -119,19 +118,19 @@ const mockPosts = [
   {
     id: '4',
     type: 'achievement',
-    user: { 
-      id: 'u4', 
-      name: 'Phạm Minh D', 
-      avatar: null, 
-      username: 'phamminhd' 
+    user: {
+      id: 'u4',
+      name: t('mockData.feed.user4Name'),
+      avatar: null,
+      username: t('mockData.feed.user4Username')
     },
     achievement: {
       type: 'countries',
       count: 10,
       badge: '🌍',
-      title: 'Khám phá 10 quốc gia',
+      title: t('mockData.feed.achievementTitle', { count: 10 }),
     },
-    caption: 'Milestone mới! 10 quốc gia đầu tiên rồi 🎉',
+    caption: t('mockData.feed.user4Caption'),
     likes: 178,
     comments: 34,
     isLiked: true,
@@ -140,18 +139,18 @@ const mockPosts = [
   {
     id: '5',
     type: 'pin_with_photos',
-    user: { 
-      id: 'u5', 
-      name: 'Hoàng Thị E', 
-      avatar: null, 
-      username: 'hoangthie' 
+    user: {
+      id: 'u5',
+      name: t('mockData.feed.user5Name'),
+      avatar: null,
+      username: t('mockData.feed.user5Username')
     },
     location: {
-      name: 'Phố cổ Hội An',
-      city: 'Quảng Nam',
-      country: 'Việt Nam',
+      name: t('mockData.feed.location6'),
+      city: t('mockData.feed.city6'),
+      country: t('mockData.feed.country6'),
     },
-    caption: 'Phố cổ lung linh về đêm 🏮 Lần nào đến cũng thích!',
+    caption: t('mockData.feed.user5Caption'),
     photos: [
       'https://images.unsplash.com/photo-1583417319070-4a69db38a482?w=800',
       'https://images.unsplash.com/photo-1559592413-7cec4d0cae2b?w=800',
@@ -173,7 +172,7 @@ export const FeedScreen: React.FC = () => {
   const { colors } = useTheme();
   const { t } = useLanguage();
   const [refreshing, setRefreshing] = useState(false);
-  const [posts, setPosts] = useState(mockPosts);
+  const [posts, setPosts] = useState(getMockPosts(t));
   const [imageViewerVisible, setImageViewerVisible] = useState(false);
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
@@ -255,7 +254,7 @@ export const FeedScreen: React.FC = () => {
           </View>
         </LinearGradient>
         <Text style={styles.storyName} numberOfLines={1}>
-          {item.name}
+          {item.nameKey ? t(item.nameKey) : item.name}
         </Text>
       </TouchableOpacity>
     );
@@ -441,7 +440,7 @@ export const FeedScreen: React.FC = () => {
                 onPress={() => handleShare(item.id)}
               >
                 <Text style={styles.actionIcon}>📤</Text>
-                <Text style={styles.actionText}>Chia sẻ</Text>
+                <Text style={styles.actionText}>{t('feed.share')}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -483,7 +482,7 @@ export const FeedScreen: React.FC = () => {
             ]}
           >
             <Text style={styles.statusText}>
-              {item.status === 'visited' ? '✓ Đã đến' : '⭐ Muốn đến'}
+              {item.status === 'visited' ? t('feed.visited') : t('feed.wantToGo')}
             </Text>
           </View>
         </View>
@@ -515,7 +514,7 @@ export const FeedScreen: React.FC = () => {
 
             {/* View more link */}
             {item.caption && item.caption.length > 100 && (
-              <Text style={styles.viewMore}>Xem thêm</Text>
+              <Text style={styles.viewMore}>{t('feed.viewMore')}</Text>
             )}
           </View>
         </TouchableOpacity>
@@ -545,7 +544,7 @@ export const FeedScreen: React.FC = () => {
             onPress={() => handleShare(item.id)}
           >
             <Text style={styles.actionIcon}>📤</Text>
-            <Text style={styles.actionText}>Chia sẻ</Text>
+            <Text style={styles.actionText}>{t('feed.share')}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -563,7 +562,7 @@ export const FeedScreen: React.FC = () => {
       >
         <BlurView intensity={20} tint="light" style={styles.headerBlur}>
           <View style={styles.header}>
-            <Text style={styles.headerTitle}>✈️ Bảng tin</Text>
+            <Text style={styles.headerTitle}>{t('feed.feed')}</Text>
             <View style={styles.headerActions}>
               <TouchableOpacity style={styles.headerButton}>
                 <Text style={styles.headerIcon}>🔍</Text>
@@ -601,9 +600,9 @@ export const FeedScreen: React.FC = () => {
               style={styles.emptyStateGradient}
             >
               <Text style={styles.emptyStateIcon}>🌍</Text>
-              <Text style={styles.emptyStateText}>Chưa có bài viết nào</Text>
+              <Text style={styles.emptyStateText}>{t('feed.noPostsYet')}</Text>
               <Text style={styles.emptyStateSubtext}>
-                Theo dõi bạn bè để xem hoạt động của họ
+                {t('feed.followFriends')}
               </Text>
             </LinearGradient>
           </View>
@@ -664,7 +663,7 @@ const createStyles = (colors: any) =>
     headerTitle: {
       fontSize: typography.fontSize['2xl'],
       fontWeight: typography.fontWeight.bold,
-      color: '#FFFFFF',
+      color: colors.neutral.white,
       letterSpacing: 0.5,
     },
     headerActions: {
@@ -676,7 +675,7 @@ const createStyles = (colors: any) =>
       width: 40,
       height: 40,
       borderRadius: 20,
-      backgroundColor: 'rgba(255, 255, 255, 0.2)',
+      backgroundColor: colors.neutral.white + '33', // 20% opacity
       justifyContent: 'center',
       alignItems: 'center',
     },
@@ -687,7 +686,7 @@ const createStyles = (colors: any) =>
       width: 40,
       height: 40,
       borderRadius: 20,
-      backgroundColor: 'rgba(255, 255, 255, 0.2)',
+      backgroundColor: colors.neutral.white + '33', // 20% opacity
       justifyContent: 'center',
       alignItems: 'center',
       position: 'relative',
@@ -699,19 +698,19 @@ const createStyles = (colors: any) =>
       position: 'absolute',
       top: -2,
       right: -2,
-      backgroundColor: '#EF4444',
+      backgroundColor: colors.error,
       borderRadius: 10,
       minWidth: 18,
       height: 18,
       justifyContent: 'center',
       alignItems: 'center',
       borderWidth: 2,
-      borderColor: '#FFFFFF',
+      borderColor: colors.neutral.white,
     },
     notificationBadgeText: {
       fontSize: 10,
       fontWeight: typography.fontWeight.bold,
-      color: '#FFFFFF',
+      color: colors.neutral.white,
     },
     // Stories Section
     storiesContainer: {
@@ -740,7 +739,7 @@ const createStyles = (colors: any) =>
     storyAvatarContainer: {
       borderRadius: 37,
       borderWidth: 3,
-      borderColor: '#FFFFFF',
+      borderColor: colors.background.card,
       overflow: 'hidden',
       position: 'relative',
     },
@@ -751,16 +750,16 @@ const createStyles = (colors: any) =>
       width: 24,
       height: 24,
       borderRadius: 12,
-      backgroundColor: '#3B82F6',
+      backgroundColor: colors.primary.light,
       borderWidth: 2,
-      borderColor: '#FFFFFF',
+      borderColor: colors.background.card,
       justifyContent: 'center',
       alignItems: 'center',
     },
     addStoryIcon: {
       fontSize: 14,
       fontWeight: typography.fontWeight.bold,
-      color: '#FFFFFF',
+      color: colors.neutral.white,
       marginTop: -2,
     },
     storyName: {
@@ -887,7 +886,7 @@ const createStyles = (colors: any) =>
     },
     morePhotosOverlay: {
       ...StyleSheet.absoluteFillObject,
-      backgroundColor: 'rgba(0,0,0,0.6)',
+      backgroundColor: colors.neutral.black + '99', // 60% opacity
       justifyContent: 'center',
       alignItems: 'center',
       borderRadius: borderRadius.md,
@@ -895,8 +894,8 @@ const createStyles = (colors: any) =>
     morePhotosText: {
       fontSize: typography.fontSize['3xl'],
       fontWeight: typography.fontWeight.bold,
-      color: '#fff',
-      textShadowColor: 'rgba(0, 0, 0, 0.3)',
+      color: colors.neutral.white,
+      textShadowColor: colors.neutral.black + '4D', // 30% opacity
       textShadowOffset: { width: 0, height: 2 },
       textShadowRadius: 4,
     },
@@ -1053,7 +1052,7 @@ const createStyles = (colors: any) =>
     },
     fabIcon: {
       fontSize: 32,
-      color: '#FFFFFF',
+      color: colors.neutral.white,
       fontWeight: typography.fontWeight.bold,
       marginTop: -2,
     },

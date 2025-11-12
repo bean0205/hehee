@@ -359,12 +359,18 @@ const MainNavigator = () => {
         name="AddPin"
         component={AddPinScreen}
         options={{
-          title: t('pin.addPin'),
-          presentation: 'modal',
-          headerStyle: {
-            backgroundColor: colors.background.card,
-          },
-          headerTintColor: colors.text.primary,
+          headerShown: false,
+          presentation: 'transparentModal',
+          cardStyle: { backgroundColor: 'transparent' },
+          cardOverlayEnabled: true,
+          cardStyleInterpolator: ({ current: { progress } }) => ({
+            cardStyle: {
+              opacity: progress.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0, 1],
+              }),
+            },
+          }),
         }}
       />
       <Stack.Screen

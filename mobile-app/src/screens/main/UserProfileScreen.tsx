@@ -21,13 +21,13 @@ import { spacing, borderRadius } from '../../theme/spacing';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 
 // Mock user data
-const mockUser = {
+const getMockUser = (t: any) => ({
   id: 'u1',
-  name: 'Nguyễn Văn A',
-  username: 'nguyenvana',
+  name: t('mockData.userProfile.name'),
+  username: t('mockData.userProfile.username'),
   avatar: null,
   coverImage: null,
-  bio: 'Yêu thích du lịch khắp Việt Nam 🇻🇳\nMơ ước chinh phục 50 quốc gia 🌍',
+  bio: t('mockData.userProfile.bio'),
   stats: {
     visited_countries_count: 12,
     visited_cities_count: 45,
@@ -37,7 +37,7 @@ const mockUser = {
   },
   isFollowing: false,
   isPrivate: false,
-};
+});
 
 export const UserProfileScreen: React.FC = () => {
   const route = useRoute<any>();
@@ -47,6 +47,7 @@ export const UserProfileScreen: React.FC = () => {
   const { pins } = usePin();
   const [activeTab, setActiveTab] = useState<'map' | 'list'>('map');
   const [filter, setFilter] = useState<'all' | 'visited' | 'wantToGo'>('all');
+  const mockUser = getMockUser(t);
   const [isFollowing, setIsFollowing] = useState(mockUser.isFollowing);
 
   const styles = React.useMemo(() => createStyles(colors), [colors]);
@@ -112,7 +113,7 @@ export const UserProfileScreen: React.FC = () => {
         {/* Follow Button */}
         <View style={styles.actionButtonContainer}>
           <Button
-            title={isFollowing ? 'Đang theo dõi' : 'Theo dõi'}
+            title={isFollowing ? t('userProfile.following') : t('userProfile.follow')}
             onPress={handleFollowToggle}
             variant={isFollowing ? 'outline' : 'primary'}
             fullWidth
@@ -124,17 +125,17 @@ export const UserProfileScreen: React.FC = () => {
       <View style={styles.statsBar}>
         <View style={styles.statItem}>
           <Text style={styles.statValue}>{user.stats.visited_countries_count}</Text>
-          <Text style={styles.statLabel}>Quốc gia</Text>
+          <Text style={styles.statLabel}>{t('userProfile.countries')}</Text>
         </View>
         <View style={styles.statDivider} />
         <View style={styles.statItem}>
           <Text style={styles.statValue}>{user.stats.visited_cities_count}</Text>
-          <Text style={styles.statLabel}>Thành phố</Text>
+          <Text style={styles.statLabel}>{t('userProfile.cities')}</Text>
         </View>
         <View style={styles.statDivider} />
         <View style={styles.statItem}>
           <Text style={styles.statValue}>{user.stats.total_pins_count}</Text>
-          <Text style={styles.statLabel}>Ghim</Text>
+          <Text style={styles.statLabel}>{t('userProfile.pins')}</Text>
         </View>
       </View>
 
@@ -142,12 +143,12 @@ export const UserProfileScreen: React.FC = () => {
       <View style={styles.followStatsContainer}>
         <TouchableOpacity style={styles.followStat} onPress={handleFollowersList}>
           <Text style={styles.followStatValue}>{user.stats.followers_count}</Text>
-          <Text style={styles.followStatLabel}> Người theo dõi</Text>
+          <Text style={styles.followStatLabel}> {t('userProfile.followers')}</Text>
         </TouchableOpacity>
         <Text style={styles.followStatSeparator}>•</Text>
         <TouchableOpacity style={styles.followStat} onPress={handleFollowingList}>
           <Text style={styles.followStatValue}>{user.stats.following_count}</Text>
-          <Text style={styles.followStatLabel}> Đang theo dõi</Text>
+          <Text style={styles.followStatLabel}> {t('userProfile.following')}</Text>
         </TouchableOpacity>
       </View>
 
@@ -158,7 +159,7 @@ export const UserProfileScreen: React.FC = () => {
           onPress={() => setActiveTab('map')}
         >
           <Text style={[styles.tabButtonText, activeTab === 'map' && styles.tabButtonTextActive]}>
-            🗺️ Bản đồ
+            🗺️ {t('userProfile.map')}
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -166,7 +167,7 @@ export const UserProfileScreen: React.FC = () => {
           onPress={() => setActiveTab('list')}
         >
           <Text style={[styles.tabButtonText, activeTab === 'list' && styles.tabButtonTextActive]}>
-            📋 Danh sách
+            📋 {t('userProfile.list')}
           </Text>
         </TouchableOpacity>
       </View>
@@ -210,7 +211,7 @@ export const UserProfileScreen: React.FC = () => {
                   filter === 'all' && styles.filterButtonTextActive,
                 ]}
               >
-                Tất cả
+                {t('userProfile.all')}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -223,7 +224,7 @@ export const UserProfileScreen: React.FC = () => {
                   filter === 'visited' && styles.filterButtonTextActive,
                 ]}
               >
-                Đã đến
+                {t('userProfile.visited')}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -236,7 +237,7 @@ export const UserProfileScreen: React.FC = () => {
                   filter === 'wantToGo' && styles.filterButtonTextActive,
                 ]}
               >
-                Muốn đến
+                {t('userProfile.wantToGo')}
               </Text>
             </TouchableOpacity>
           </View>
@@ -273,7 +274,7 @@ const createStyles = (colors: any) =>
     },
     coverOverlay: {
       ...StyleSheet.absoluteFillObject,
-      backgroundColor: 'rgba(0, 0, 0, 0.3)',
+      backgroundColor: colors.neutral.black + '4D', // 30% opacity
     },
     avatarContainer: {
       position: 'absolute',

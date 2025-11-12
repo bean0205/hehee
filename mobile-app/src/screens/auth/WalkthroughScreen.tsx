@@ -11,6 +11,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useLanguage } from '../../i18n/LanguageContext';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius } from '../../theme/spacing';
 
@@ -20,40 +21,41 @@ interface WalkthroughScreenProps {
   onComplete: () => void;
 }
 
-const slides = [
-  {
-    icon: '🌍',
-    title: 'Khám phá Thế giới',
-    description: 'Ghi lại từng khoảnh khắc đáng nhớ và chia sẻ những trải nghiệm tuyệt vời của bạn',
-    gradient: ['#667eea', '#764ba2', '#f093fb'],
-    decorEmoji: ['✈️', '🗺️', '📸'],
-  },
-  {
-    icon: '📍',
-    title: 'Đánh dấu địa điểm',
-    description: 'Thêm pin vào bản đồ, lưu ảnh và tạo kỷ niệm cho mỗi chuyến đi của bạn',
-    gradient: ['#f093fb', '#f5576c', '#ffd676'],
-    decorEmoji: ['🏔️', '🏖️', '🌆'],
-  },
-  {
-    icon: '🎯',
-    title: 'Lập kế hoạch chuyến đi',
-    description: 'Tạo danh sách ước mơ và lên kế hoạch cho những cuộc phiêu lưu tiếp theo',
-    gradient: ['#ffd676', '#43e97b', '#38f9d7'],
-    decorEmoji: ['🎒', '🧭', '⛺'],
-  },
-  {
-    icon: '👥',
-    title: 'Kết nối bạn bè',
-    description: 'Theo dõi bạn bè, xem hoạt động và cùng nhau khám phá thế giới',
-    gradient: ['#38f9d7', '#667eea', '#a8edea'],
-    decorEmoji: ['🤝', '💬', '❤️'],
-  },
-];
-
 export const WalkthroughScreen: React.FC<WalkthroughScreenProps> = ({ onComplete }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const { colors, isDarkMode } = useTheme();
+  const { t } = useLanguage();
+
+  const slides = [
+    {
+      icon: '🌍',
+      title: t('walkthrough.discoverWorld'),
+      description: t('walkthrough.discoverDescription'),
+      gradient: ['#667eea', '#764ba2', '#f093fb'],
+      decorEmoji: ['✈️', '🗺️', '📸'],
+    },
+    {
+      icon: '📍',
+      title: t('walkthrough.markPlaces'),
+      description: t('walkthrough.markPlacesDescription'),
+      gradient: ['#f093fb', '#f5576c', '#ffd676'],
+      decorEmoji: ['🏔️', '🏖️', '🌆'],
+    },
+    {
+      icon: '🎯',
+      title: t('walkthrough.planTrip'),
+      description: t('walkthrough.planTripDescription'),
+      gradient: ['#ffd676', '#43e97b', '#38f9d7'],
+      decorEmoji: ['🎒', '🧭', '⛺'],
+    },
+    {
+      icon: '👥',
+      title: t('walkthrough.connectFriends'),
+      description: t('walkthrough.connectFriendsDescription'),
+      gradient: ['#38f9d7', '#667eea', '#a8edea'],
+      decorEmoji: ['🤝', '💬', '❤️'],
+    },
+  ];
   const scrollViewRef = useRef<ScrollView>(null);
   const fadeAnim = useRef(new Animated.Value(1)).current;
 
@@ -97,7 +99,7 @@ export const WalkthroughScreen: React.FC<WalkthroughScreenProps> = ({ onComplete
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={slides[currentIndex].gradient}
+        colors={slides[currentIndex].gradient as any}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={StyleSheet.absoluteFillObject}
@@ -107,7 +109,7 @@ export const WalkthroughScreen: React.FC<WalkthroughScreenProps> = ({ onComplete
       {currentIndex < slides.length - 1 && (
         <TouchableOpacity style={styles.skipButton} onPress={handleSkip}>
           <BlurView intensity={80} tint={isDarkMode ? 'dark' : 'light'} style={styles.skipBlur}>
-            <Text style={styles.skipText}>Bỏ qua</Text>
+            <Text style={styles.skipText}>{t('common.skip')}</Text>
           </BlurView>
         </TouchableOpacity>
       )}
@@ -198,7 +200,7 @@ const createStyles = (colors: any) => StyleSheet.create({
   skipText: {
     fontSize: typography.fontSize.sm,
     fontWeight: typography.fontWeight.semiBold,
-    color: '#FFFFFF',
+    color: colors.neutral.white,
   },
   decorContainer: {
     ...StyleSheet.absoluteFillObject,
@@ -238,10 +240,10 @@ const createStyles = (colors: any) => StyleSheet.create({
     width: 140,
     height: 140,
     borderRadius: 70,
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    backgroundColor: colors.neutral.white + '40', // 25% opacity
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
+    shadowColor: colors.neutral.black,
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.3,
     shadowRadius: 20,
@@ -253,20 +255,20 @@ const createStyles = (colors: any) => StyleSheet.create({
   title: {
     fontSize: typography.fontSize['3xl'],
     fontWeight: typography.fontWeight.bold,
-    color: '#FFFFFF',
+    color: colors.neutral.white,
     textAlign: 'center',
     marginBottom: spacing.md,
-    textShadowColor: 'rgba(0, 0, 0, 0.2)',
+    textShadowColor: colors.neutral.black + '33', // 20% opacity
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 4,
   },
   description: {
     fontSize: typography.fontSize.lg,
-    color: '#FFFFFF',
+    color: colors.neutral.white,
     textAlign: 'center',
     lineHeight: 28,
     opacity: 0.95,
-    textShadowColor: 'rgba(0, 0, 0, 0.15)',
+    textShadowColor: colors.neutral.black + '26', // 15% opacity
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 3,
     paddingHorizontal: spacing.md,
@@ -289,17 +291,17 @@ const createStyles = (colors: any) => StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    backgroundColor: colors.neutral.white + '4D', // 30% opacity
     marginHorizontal: 5,
   },
   activeDot: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.neutral.white,
     width: 30,
   },
   button: {
     borderRadius: borderRadius.xl,
     overflow: 'hidden',
-    shadowColor: '#000',
+    shadowColor: colors.neutral.black,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
@@ -312,7 +314,7 @@ const createStyles = (colors: any) => StyleSheet.create({
   buttonText: {
     fontSize: typography.fontSize.lg,
     fontWeight: typography.fontWeight.bold,
-    color: '#FFFFFF',
+    color: colors.neutral.white,
     letterSpacing: 0.5,
   },
 });

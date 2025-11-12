@@ -13,6 +13,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useLanguage } from '../../i18n/LanguageContext';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius } from '../../theme/spacing';
 
@@ -21,6 +22,7 @@ const { width, height } = Dimensions.get('window');
 export const AuthHomeScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const { colors, isDarkMode } = useTheme();
+  const { t } = useLanguage();
   
   // Animations
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -105,8 +107,8 @@ export const AuthHomeScreen: React.FC = () => {
             </LinearGradient>
           </View>
           <Text style={styles.title}>PinYourWord</Text>
-          <Text style={styles.subtitle}>Khám phá thế giới, lưu giữ kỷ niệm</Text>
-          <Text style={styles.tagline}>Ghi lại từng khoảnh khắc đáng nhớ ✨</Text>
+          <Text style={styles.subtitle}>{t('auth.exploreWorld')}</Text>
+          <Text style={styles.tagline}>{t('auth.captureMoments')}</Text>
         </Animated.View>
 
         {/* Buttons Section */}
@@ -125,7 +127,7 @@ export const AuthHomeScreen: React.FC = () => {
             <BlurView intensity={isDarkMode ? 60 : 100} tint={isDarkMode ? 'dark' : 'light'} style={styles.buttonBlur}>
               <View style={styles.socialButtonContent}>
                 <Text style={styles.socialIcon}>🔍</Text>
-                <Text style={styles.socialButtonText}>Tiếp tục với Google</Text>
+                <Text style={styles.socialButtonText}>{t('auth.continueWithGoogle')}</Text>
               </View>
             </BlurView>
           </TouchableOpacity>
@@ -138,7 +140,7 @@ export const AuthHomeScreen: React.FC = () => {
             <BlurView intensity={isDarkMode ? 60 : 100} tint={isDarkMode ? 'dark' : 'light'} style={styles.buttonBlur}>
               <View style={styles.socialButtonContent}>
                 <Text style={styles.socialIcon}>🍎</Text>
-                <Text style={styles.socialButtonText}>Tiếp tục với Apple</Text>
+                <Text style={styles.socialButtonText}>{t('auth.continueWithApple')}</Text>
               </View>
             </BlurView>
           </TouchableOpacity>
@@ -146,7 +148,7 @@ export const AuthHomeScreen: React.FC = () => {
           {/* Divider */}
           <View style={styles.divider}>
             <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>hoặc</Text>
+            <Text style={styles.dividerText}>{t('auth.or')}</Text>
             <View style={styles.dividerLine} />
           </View>
 
@@ -163,7 +165,7 @@ export const AuthHomeScreen: React.FC = () => {
               style={styles.emailButtonGradient}
             >
               <Text style={styles.emailButtonIcon}>📧</Text>
-              <Text style={styles.emailButtonText}>Đăng nhập với Email</Text>
+              <Text style={styles.emailButtonText}>{t('auth.loginWithEmail')}</Text>
             </LinearGradient>
           </TouchableOpacity>
 
@@ -173,14 +175,13 @@ export const AuthHomeScreen: React.FC = () => {
             onPress={() => navigation.navigate('Register')}
           >
             <Text style={styles.registerText}>
-              Chưa có tài khoản? <Text style={styles.registerTextBold}>Đăng ký ngay 🚀</Text>
+              {t('auth.noAccountRegister')}
             </Text>
           </TouchableOpacity>
 
           {/* Terms */}
           <Text style={styles.terms}>
-            Bằng việc tiếp tục, bạn đồng ý với{'\n'}
-            <Text style={styles.termsLink}>Điều khoản</Text> và <Text style={styles.termsLink}>Chính sách</Text> của chúng tôi
+            {t('auth.agreeToTerms')}
           </Text>
         </Animated.View>
       </KeyboardAvoidingView>
@@ -245,13 +246,13 @@ const createStyles = (colors: any) => StyleSheet.create({
     borderRadius: 65,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
+    shadowColor: colors.neutral.black,
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.3,
     shadowRadius: 20,
     elevation: 10,
     borderWidth: 3,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
+    borderColor: colors.neutral.white + '4D', // 30% opacity
   },
   logo: {
     fontSize: 70,
@@ -259,27 +260,27 @@ const createStyles = (colors: any) => StyleSheet.create({
   title: {
     fontSize: 42,
     fontWeight: typography.fontWeight.bold,
-    color: '#FFFFFF',
+    color: colors.neutral.white,
     marginBottom: spacing.sm,
     textAlign: 'center',
     letterSpacing: 1,
-    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowColor: colors.neutral.black + '4D', // 30% opacity
     textShadowOffset: { width: 0, height: 3 },
     textShadowRadius: 6,
   },
   subtitle: {
     fontSize: typography.fontSize.xl,
-    color: '#FFFFFF',
+    color: colors.neutral.white,
     textAlign: 'center',
     marginBottom: spacing.xs,
     opacity: 0.95,
-    textShadowColor: 'rgba(0, 0, 0, 0.2)',
+    textShadowColor: colors.neutral.black + '33', // 20% opacity
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 4,
   },
   tagline: {
     fontSize: typography.fontSize.base,
-    color: '#FFFFFF',
+    color: colors.neutral.white,
     textAlign: 'center',
     opacity: 0.85,
     fontStyle: 'italic',
@@ -294,7 +295,7 @@ const createStyles = (colors: any) => StyleSheet.create({
     borderRadius: borderRadius.xl,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
+    borderColor: colors.neutral.white + '4D', // 30% opacity
   },
   buttonBlur: {
     overflow: 'hidden',
@@ -312,7 +313,7 @@ const createStyles = (colors: any) => StyleSheet.create({
   socialButtonText: {
     fontSize: typography.fontSize.base,
     fontWeight: typography.fontWeight.semiBold,
-    color: '#FFFFFF',
+    color: colors.neutral.white,
   },
   divider: {
     flexDirection: 'row',
@@ -322,12 +323,12 @@ const createStyles = (colors: any) => StyleSheet.create({
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    backgroundColor: colors.neutral.white + '4D', // 30% opacity
   },
   dividerText: {
     marginHorizontal: spacing.md,
     fontSize: typography.fontSize.sm,
-    color: '#FFFFFF',
+    color: colors.neutral.white,
     fontWeight: typography.fontWeight.medium,
     opacity: 0.8,
   },
@@ -335,7 +336,7 @@ const createStyles = (colors: any) => StyleSheet.create({
     borderRadius: borderRadius.xl,
     overflow: 'hidden',
     marginBottom: spacing.md,
-    shadowColor: '#000',
+    shadowColor: colors.neutral.black,
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.3,
     shadowRadius: 10,
@@ -354,7 +355,7 @@ const createStyles = (colors: any) => StyleSheet.create({
   emailButtonText: {
     fontSize: typography.fontSize.lg,
     fontWeight: typography.fontWeight.bold,
-    color: '#FFFFFF',
+    color: colors.neutral.white,
     letterSpacing: 0.5,
   },
   registerLink: {
@@ -364,18 +365,18 @@ const createStyles = (colors: any) => StyleSheet.create({
   },
   registerText: {
     fontSize: typography.fontSize.base,
-    color: '#FFFFFF',
+    color: colors.neutral.white,
     textAlign: 'center',
     opacity: 0.9,
   },
   registerTextBold: {
     fontWeight: typography.fontWeight.bold,
-    color: '#FFFFFF',
+    color: colors.neutral.white,
     textDecorationLine: 'underline',
   },
   terms: {
     fontSize: typography.fontSize.xs,
-    color: '#FFFFFF',
+    color: colors.neutral.white,
     textAlign: 'center',
     opacity: 0.7,
     lineHeight: 18,

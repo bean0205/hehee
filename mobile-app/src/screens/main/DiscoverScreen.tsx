@@ -16,31 +16,31 @@ import { typography } from '../../theme/typography';
 import { spacing, borderRadius } from '../../theme/spacing';
 
 // Mock user data
-const mockUsers = [
+const getMockUsers = (t: any) => [
   {
     id: 'u1',
-    name: 'Nguyễn Văn A',
-    username: 'nguyenvana',
+    name: t('mockData.discover.user1Name'),
+    username: t('mockData.discover.user1Username'),
     avatar: null,
-    bio: 'Yêu thích du lịch khắp Việt Nam',
+    bio: t('mockData.discover.user1Bio'),
     followersCount: 234,
     isFollowing: false,
   },
   {
     id: 'u2',
-    name: 'Trần Thị B',
-    username: 'tranthib',
+    name: t('mockData.discover.user2Name'),
+    username: t('mockData.discover.user2Username'),
     avatar: null,
-    bio: 'Travel blogger | 30+ quốc gia',
+    bio: t('mockData.discover.user2Bio'),
     followersCount: 1205,
     isFollowing: true,
   },
   {
     id: 'u3',
-    name: 'Lê Văn C',
-    username: 'levanc',
+    name: t('mockData.discover.user3Name'),
+    username: t('mockData.discover.user3Username'),
     avatar: null,
-    bio: 'Nhiếp ảnh gia phong cảnh',
+    bio: t('mockData.discover.user3Bio'),
     followersCount: 567,
     isFollowing: false,
   },
@@ -52,6 +52,7 @@ export const DiscoverScreen: React.FC = () => {
   const { t } = useLanguage();
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
+  const mockUsers = getMockUsers(t);
   const [followingUsers, setFollowingUsers] = useState<Set<string>>(
     new Set(mockUsers.filter((u) => u.isFollowing).map((u) => u.id))
   );
@@ -106,7 +107,7 @@ export const DiscoverScreen: React.FC = () => {
           <Text style={styles.userUsername}>@{item.username}</Text>
           {item.bio && <Text style={styles.userBio} numberOfLines={1}>{item.bio}</Text>}
           <Text style={styles.userStats}>
-            {item.followersCount} người theo dõi
+            {item.followersCount} {t('discover.followers')}
           </Text>
         </View>
 
@@ -123,7 +124,7 @@ export const DiscoverScreen: React.FC = () => {
               isFollowing && styles.followButtonTextActive,
             ]}
           >
-            {isFollowing ? 'Đang theo dõi' : 'Theo dõi'}
+            {isFollowing ? t('discover.following') : t('discover.follow')}
           </Text>
         </TouchableOpacity>
       </TouchableOpacity>
@@ -134,7 +135,7 @@ export const DiscoverScreen: React.FC = () => {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Khám phá</Text>
+        <Text style={styles.headerTitle}>{t('discover.discover')}</Text>
       </View>
 
       {/* Search Bar */}
@@ -143,7 +144,7 @@ export const DiscoverScreen: React.FC = () => {
           <Text style={styles.searchIcon}>🔍</Text>
           <TextInput
             style={styles.searchInput}
-            placeholder="Tìm kiếm người dùng (@username)"
+            placeholder={t('discover.searchUsers')}
             placeholderTextColor={colors.text.secondary}
             value={searchQuery}
             onChangeText={handleSearch}
@@ -168,17 +169,17 @@ export const DiscoverScreen: React.FC = () => {
             {searchQuery.length === 0 ? (
               <>
                 <Text style={styles.emptyStateIcon}>🔎</Text>
-                <Text style={styles.emptyStateText}>Tìm kiếm người dùng</Text>
+                <Text style={styles.emptyStateText}>{t('discover.searchUsers')}</Text>
                 <Text style={styles.emptyStateSubtext}>
-                  Nhập tên hoặc @username để tìm kiếm
+                  {t('discover.searchPlaceholder')}
                 </Text>
               </>
             ) : (
               <>
                 <Text style={styles.emptyStateIcon}>😕</Text>
-                <Text style={styles.emptyStateText}>Không tìm thấy kết quả</Text>
+                <Text style={styles.emptyStateText}>{t('discover.noResults')}</Text>
                 <Text style={styles.emptyStateSubtext}>
-                  Thử tìm kiếm với từ khóa khác
+                  {t('discover.tryDifferentKeyword')}
                 </Text>
               </>
             )}

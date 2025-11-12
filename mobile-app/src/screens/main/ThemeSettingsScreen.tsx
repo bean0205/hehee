@@ -6,12 +6,14 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useLanguage } from '../../i18n/LanguageContext';
 import { spacing } from '../../theme/spacing';
 import { typography } from '../../theme/typography';
 
 export const ThemeSettingsScreen = ({ navigation }: any) => {
   const { themeMode, setThemeMode, colors } = useTheme();
-  
+  const { t } = useLanguage();
+
   const styles = React.useMemo(() => createStyles(colors), [colors]);
 
   const ThemeOption = ({
@@ -46,38 +48,38 @@ export const ThemeSettingsScreen = ({ navigation }: any) => {
     <View style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Text style={styles.backText}>‹ Quay lại</Text>
+          <Text style={styles.backText}>‹ {t('common.back')}</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Giao diện</Text>
+        <Text style={styles.headerTitle}>{t('theme.appearance')}</Text>
       </View>
 
       <View style={styles.content}>
         <View style={styles.previewSection}>
-          <Text style={styles.sectionTitle}>Chế độ hiển thị</Text>
+          <Text style={styles.sectionTitle}>{t('theme.displayMode')}</Text>
           <Text style={styles.sectionDescription}>
-            Chọn giao diện phù hợp với sở thích của bạn
+            {t('theme.chooseTheme')}
           </Text>
         </View>
 
         <View style={styles.optionsContainer}>
           <ThemeOption
             icon="☀️"
-            title="Sáng"
-            description="Giao diện sáng cho môi trường đầy đủ ánh sáng"
+            title={t('theme.light')}
+            description={t('theme.lightDescription')}
             value="light"
             selected={themeMode === 'light'}
           />
           <ThemeOption
             icon="🌙"
-            title="Tối"
-            description="Giao diện tối dễ chịu cho mắt trong điều kiện ánh sáng yếu"
+            title={t('theme.dark')}
+            description={t('theme.darkDescription')}
             value="dark"
             selected={themeMode === 'dark'}
           />
           <ThemeOption
             icon="🌓"
-            title="Tự động"
-            description="Tự động chuyển đổi theo cài đặt hệ thống của thiết bị"
+            title={t('theme.auto')}
+            description={t('theme.autoDescription')}
             value="auto"
             selected={themeMode === 'auto'}
           />
@@ -86,8 +88,7 @@ export const ThemeSettingsScreen = ({ navigation }: any) => {
         <View style={styles.infoBox}>
           <Text style={styles.infoIcon}>💡</Text>
           <Text style={styles.infoText}>
-            Chế độ tự động sẽ tự động thay đổi giao diện dựa trên cài đặt hệ thống
-            của thiết bị. Điều này giúp tiết kiệm pin và bảo vệ mắt bạn.
+            {t('theme.tip')}
           </Text>
         </View>
       </View>

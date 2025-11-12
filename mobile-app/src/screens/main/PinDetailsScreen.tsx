@@ -12,7 +12,8 @@ import {
 import { useNavigation, useRoute } from '@react-navigation/native';
 import Swiper from 'react-native-swiper';
 import { Rating } from 'react-native-ratings';
-import { colors } from '../../theme/colors';
+import { useTheme } from '../../contexts/ThemeContext';
+import { useLanguage } from '../../i18n/LanguageContext';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius } from '../../theme/spacing';
 import { Button } from '../../components/common/Button';
@@ -24,17 +25,21 @@ export const PinDetailsScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
   const { deletePin, getPinById } = usePin();
+  const { colors } = useTheme();
+  const { t } = useLanguage();
 
   const pinId = route.params?.pinId;
   const pin = getPinById(pinId);
 
   const [isDeleting, setIsDeleting] = useState(false);
+  
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
 
   if (!pin) {
     return (
       <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>Không tìm thấy ghim</Text>
-        <Button title="Quay lại" onPress={() => navigation.goBack()} />
+        <Text style={styles.errorText}>{t('pin.pinNotFound')}</Text>
+        <Button title={t('pin.back')} onPress={() => navigation.goBack()} />
       </View>
     );
   }
@@ -45,25 +50,25 @@ export const PinDetailsScreen: React.FC = () => {
 
   const handleDelete = () => {
     Alert.alert(
-      'Xóa ghim',
-      'Bạn có chắc chắn muốn xóa ghim này?',
+      t('pin.deletePinTitle'),
+      t('pin.deletePinMessage'),
       [
-        { text: 'Hủy', style: 'cancel' },
+        { text: t('pin.cancel'), style: 'cancel' },
         {
-          text: 'Xóa',
+          text: t('pin.delete'),
           style: 'destructive',
           onPress: async () => {
             setIsDeleting(true);
             try {
               deletePin(pin.id);
-              Alert.alert('Thành công', 'Đã xóa ghim', [
+              Alert.alert(t('pin.success'), t('pin.pinDeleted'), [
                 {
                   text: 'OK',
                   onPress: () => navigation.goBack(),
                 },
               ]);
             } catch (error) {
-              Alert.alert('Lỗi', 'Không thể xóa ghim');
+              Alert.alert(t('pin.error'), t('pin.deletePinError'));
               setIsDeleting(false);
             }
           },
@@ -74,12 +79,12 @@ export const PinDetailsScreen: React.FC = () => {
 
   const statusConfig = {
     visited: {
-      label: 'Đã đến',
+      label: t('pin.visitedStatus'),
       icon: '✓',
       color: colors.status.visited,
     },
     wantToGo: {
-      label: 'Muốn đến',
+      label: t('pin.wantToGoStatus'),
       icon: '⭐',
       color: colors.status.wantToGo,
     },
@@ -111,7 +116,7 @@ export const PinDetailsScreen: React.FC = () => {
         ) : (
           <View style={styles.noImageContainer}>
             <Text style={styles.noImageText}>📷</Text>
-            <Text style={styles.noImageLabel}>Chưa có hình ảnh</Text>
+            <Text style={styles.noImageLabel}>{t('pin.noImagesYet')}</Text>
           </View>
         )}
 
@@ -155,7 +160,7 @@ export const PinDetailsScreen: React.FC = () => {
               {/* Date */}
               {pin.visitDate && (
                 <View style={styles.infoRow}>
-                  <Text style={styles.infoLabel}>📅 Ngày đi</Text>
+                  <Text style={styles.infoLabel}>{t('pin.visitDateLabel')}</Text>
                   <Text style={styles.infoValue}>
                     {new Date(pin.visitDate).toLocaleDateString('vi-VN', {
                       year: 'numeric',
@@ -169,15 +174,16 @@ export const PinDetailsScreen: React.FC = () => {
               {/* Rating */}
               {pin.rating !== undefined && pin.rating > 0 && (
                 <View style={styles.infoRow}>
-                  <Text style={styles.infoLabel}>⭐ Đánh giá</Text>
+                  <Text style={styles.infoLabel}>{t('pin.ratingLabel')}</Text>
                   <View style={styles.ratingContainer}>
                     <Rating
                       type="star"
                       ratingCount={5}
-                      imageSize={20}
+                      imageSize={18}
                       startingValue={pin.rating}
                       readonly
-                      tintColor={colors.neutral.gray50}
+                      style={styles.rating}
+                      ratingBackgroundColor={colors.background.card}
                     />
                     <Text style={styles.ratingText}>
                       {pin.rating}/5
@@ -188,7 +194,7 @@ export const PinDetailsScreen: React.FC = () => {
 
               {/* Location coordinates */}
               <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>📍 Tọa độ</Text>
+                <Text style={styles.infoLabel}>{t('pin.coordinatesLabel')}</Text>
                 <Text style={styles.infoValue}>
                   {pin.latitude.toFixed(6)}, {pin.longitude.toFixed(6)}
                 </Text>
@@ -199,7 +205,7 @@ export const PinDetailsScreen: React.FC = () => {
           {/* Notes/Journal */}
           {pin.notes && pin.notes.trim() !== '' && (
             <View style={styles.journalSection}>
-              <Text style={styles.journalLabel}>📝 Ghi chú</Text>
+              <Text style={styles.journalLabel}>{t('pin.notesLabel')}</Text>
               <Text style={styles.journalText}>{pin.notes}</Text>
             </View>
           )}
@@ -209,10 +215,10 @@ export const PinDetailsScreen: React.FC = () => {
             <View style={styles.emptyState}>
               <Text style={styles.emptyStateIcon}>🌟</Text>
               <Text style={styles.emptyStateText}>
-                Địa điểm trong danh sách mơ ước của bạn
+                {t('pin.dreamLocation')}
               </Text>
               <Text style={styles.emptyStateSubtext}>
-                Khi bạn đến đây, hãy đánh dấu "Đã đến" và thêm ảnh cùng đánh giá!
+                {t('pin.wantToGoMessage')}
               </Text>
             </View>
           )}
@@ -222,13 +228,13 @@ export const PinDetailsScreen: React.FC = () => {
       {/* Bottom Action Bar */}
       <View style={styles.bottomBar}>
         <Button
-          title="Chỉnh sửa"
+          title={t('pin.edit')}
           onPress={handleEdit}
           variant="primary"
           style={styles.bottomButton}
         />
         <Button
-          title="Xóa"
+          title={t('pin.delete')}
           onPress={handleDelete}
           variant="outline"
           loading={isDeleting}
@@ -239,10 +245,10 @@ export const PinDetailsScreen: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.neutral.white,
+    backgroundColor: colors.background.main,
   },
   scrollView: {
     flex: 1,
@@ -252,6 +258,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     padding: spacing.xl,
+    backgroundColor: colors.background.main,
   },
   errorText: {
     fontSize: typography.fontSize.lg,
@@ -282,7 +289,7 @@ const styles = StyleSheet.create({
   noImageContainer: {
     width: SCREEN_WIDTH,
     height: 200,
-    backgroundColor: colors.neutral.gray100,
+    backgroundColor: colors.background.elevated,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -332,29 +339,33 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: borderRadius.md,
-    backgroundColor: colors.neutral.gray100,
+    backgroundColor: colors.background.elevated,
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: colors.border.main,
   },
   deleteButton: {
-    backgroundColor: colors.error + '20',
+    backgroundColor: colors.error + '15',
+    borderColor: colors.error + '40',
   },
   actionIcon: {
     fontSize: 20,
   },
   infoSection: {
-    backgroundColor: colors.neutral.gray50,
+    backgroundColor: colors.background.card,
     padding: spacing.lg,
     borderRadius: borderRadius.lg,
     marginBottom: spacing.lg,
+    borderWidth: 1,
+    borderColor: colors.border.light,
   },
   infoRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.neutral.gray200,
+    paddingVertical: spacing.md,
+    marginBottom: spacing.xs,
   },
   infoLabel: {
     fontSize: typography.fontSize.base,
@@ -370,13 +381,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.sm,
   },
+  rating: {
+    backgroundColor: 'transparent',
+  },
   ratingText: {
     fontSize: typography.fontSize.sm,
     color: colors.text.secondary,
     fontWeight: typography.fontWeight.medium,
   },
   journalSection: {
+    backgroundColor: colors.background.card,
+    padding: spacing.lg,
+    borderRadius: borderRadius.lg,
     marginBottom: spacing.lg,
+    borderWidth: 1,
+    borderColor: colors.border.light,
   },
   journalLabel: {
     fontSize: typography.fontSize.lg,
@@ -392,6 +411,11 @@ const styles = StyleSheet.create({
   emptyState: {
     alignItems: 'center',
     paddingVertical: spacing['2xl'],
+    backgroundColor: colors.background.card,
+    borderRadius: borderRadius.lg,
+    marginTop: spacing.lg,
+    borderWidth: 1,
+    borderColor: colors.border.light,
   },
   emptyStateIcon: {
     fontSize: 60,
@@ -413,9 +437,9 @@ const styles = StyleSheet.create({
   bottomBar: {
     flexDirection: 'row',
     padding: spacing.lg,
-    backgroundColor: colors.neutral.white,
+    backgroundColor: colors.background.card,
     borderTopWidth: 1,
-    borderTopColor: colors.neutral.gray200,
+    borderTopColor: colors.border.main,
     gap: spacing.md,
   },
   bottomButton: {

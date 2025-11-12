@@ -88,7 +88,7 @@ export const LoginScreen: React.FC = () => {
             style={styles.backButton}
             onPress={() => navigation.goBack()}
           >
-            <Text style={styles.backButtonText}>← Quay lại</Text>
+            <Text style={styles.backButtonText}>{t('auth.back')}</Text>
           </TouchableOpacity>
 
           {/* Header */}
@@ -137,14 +137,14 @@ export const LoginScreen: React.FC = () => {
                   style={styles.loginButtonGradient}
                 >
                   <Text style={styles.loginButtonText}>
-                    {isLoading ? 'Đang đăng nhập...' : '🚀 ' + t('auth.login')}
+                    {isLoading ? t('auth.loggingIn') : '🚀 ' + t('auth.login')}
                   </Text>
                 </LinearGradient>
               </TouchableOpacity>
 
               {/* Demo Account Info */}
               <View style={styles.demoInfo}>
-                <Text style={styles.demoInfoText}>💡 Tài khoản demo đã được điền sẵn</Text>
+                <Text style={styles.demoInfoText}>{t('auth.demoAccountFilled')}</Text>
               </View>
             </View>
           </BlurView>
@@ -153,16 +153,16 @@ export const LoginScreen: React.FC = () => {
           <View style={styles.socialContainer}>
             <View style={styles.divider}>
               <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>hoặc</Text>
+              <Text style={styles.dividerText}>{t('auth.or')}</Text>
               <View style={styles.dividerLine} />
             </View>
 
             <View style={styles.socialButtons}>
               <TouchableOpacity style={styles.socialButton}>
-                <Text style={styles.socialButtonText}>🔍 Google</Text>
+                <Text style={styles.socialButtonText}>{t('auth.google')}</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.socialButton}>
-                <Text style={styles.socialButtonText}>🍎 Apple</Text>
+                <Text style={styles.socialButtonText}>{t('auth.apple')}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -209,7 +209,7 @@ const createStyles = (colors: any) => StyleSheet.create({
   backButtonText: {
     fontSize: typography.fontSize.base,
     fontWeight: typography.fontWeight.semiBold,
-    color: '#FFFFFF',
+    color: colors.neutral.white,
   },
   header: {
     alignItems: 'center',
@@ -222,16 +222,16 @@ const createStyles = (colors: any) => StyleSheet.create({
   title: {
     fontSize: typography.fontSize['3xl'],
     fontWeight: typography.fontWeight.bold,
-    color: '#FFFFFF',
+    color: colors.neutral.white,
     marginBottom: spacing.sm,
     textAlign: 'center',
-    textShadowColor: 'rgba(0, 0, 0, 0.2)',
+    textShadowColor: colors.neutral.black + '33', // 20% opacity
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 4,
   },
   subtitle: {
     fontSize: typography.fontSize.lg,
-    color: '#FFFFFF',
+    color: colors.neutral.white,
     opacity: 0.9,
     textAlign: 'center',
   },
@@ -239,7 +239,7 @@ const createStyles = (colors: any) => StyleSheet.create({
     borderRadius: borderRadius['2xl'],
     overflow: 'hidden',
     padding: spacing.xl,
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    backgroundColor: colors.neutral.white + '26', // 15% opacity
     marginBottom: spacing.lg,
   },
   form: {
@@ -251,7 +251,7 @@ const createStyles = (colors: any) => StyleSheet.create({
   },
   forgotPasswordText: {
     fontSize: typography.fontSize.sm,
-    color: '#FFFFFF',
+    color: colors.neutral.white,
     fontWeight: typography.fontWeight.semiBold,
     opacity: 0.9,
   },
@@ -259,7 +259,7 @@ const createStyles = (colors: any) => StyleSheet.create({
     borderRadius: borderRadius.xl,
     overflow: 'hidden',
     marginTop: spacing.sm,
-    shadowColor: '#000',
+    shadowColor: colors.neutral.black,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
@@ -272,19 +272,19 @@ const createStyles = (colors: any) => StyleSheet.create({
   loginButtonText: {
     fontSize: typography.fontSize.lg,
     fontWeight: typography.fontWeight.bold,
-    color: '#FFFFFF',
+    color: colors.neutral.white,
     letterSpacing: 0.5,
   },
   demoInfo: {
     marginTop: spacing.md,
     padding: spacing.sm,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: colors.neutral.white + '33', // 20% opacity
     borderRadius: borderRadius.md,
     alignItems: 'center',
   },
   demoInfoText: {
     fontSize: typography.fontSize.sm,
-    color: '#FFFFFF',
+    color: colors.neutral.white,
     opacity: 0.85,
   },
   socialContainer: {
@@ -298,12 +298,12 @@ const createStyles = (colors: any) => StyleSheet.create({
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    backgroundColor: colors.neutral.white + '4D', // 30% opacity
   },
   dividerText: {
     marginHorizontal: spacing.md,
     fontSize: typography.fontSize.sm,
-    color: '#FFFFFF',
+    color: colors.neutral.white,
     opacity: 0.8,
   },
   socialButtons: {
@@ -312,17 +312,17 @@ const createStyles = (colors: any) => StyleSheet.create({
   },
   socialButton: {
     flex: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: colors.neutral.white + '33', // 20% opacity
     paddingVertical: spacing.md,
     borderRadius: borderRadius.xl,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
+    borderColor: colors.neutral.white + '4D', // 30% opacity
   },
   socialButtonText: {
     fontSize: typography.fontSize.base,
     fontWeight: typography.fontWeight.semiBold,
-    color: '#FFFFFF',
+    color: colors.neutral.white,
   },
   registerLink: {
     paddingVertical: spacing.md,
@@ -330,12 +330,12 @@ const createStyles = (colors: any) => StyleSheet.create({
   },
   registerText: {
     fontSize: typography.fontSize.base,
-    color: '#FFFFFF',
+    color: colors.neutral.white,
     opacity: 0.9,
   },
   registerTextBold: {
     fontWeight: typography.fontWeight.bold,
-    color: '#FFFFFF',
+    color: colors.neutral.white,
     textDecorationLine: 'underline',
   },
 });
