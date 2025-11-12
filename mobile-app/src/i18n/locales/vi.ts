@@ -163,7 +163,7 @@ export default {
   },
 
   feed: {
-    feed: '✈️ Bảng tin',
+    feed: 'Bảng tin',
     share: 'Chia sẻ',
     visited: '✓ Đã đến',
     wantToGo: '⭐ Muốn đến',

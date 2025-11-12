@@ -163,7 +163,7 @@ export default {
   },
 
   feed: {
-    feed: '✈️ Feed',
+    feed: 'Feed',
     share: 'Share',
     visited: '✓ Visited',
     wantToGo: '⭐ Want to go',

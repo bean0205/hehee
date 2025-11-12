@@ -13,6 +13,7 @@ import { useTheme } from '../../contexts/ThemeContext';
 import { useLanguage } from '../../i18n/LanguageContext';
 import { Avatar } from '../../components/common/Avatar';
 import { Button } from '../../components/common/Button';
+import { Header } from '../../components/common/Header';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius } from '../../theme/spacing';
 
@@ -134,10 +135,11 @@ export const DiscoverScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>{t('discover.discover')}</Text>
-      </View>
+      <Header
+        title={t('discover.discover')}
+        gradient={false}
+        blur={false}
+      />
 
       {/* Search Bar */}
       <View style={styles.searchContainer}>
@@ -204,19 +206,6 @@ const createStyles = (colors: any) =>
     container: {
       flex: 1,
       backgroundColor: colors.background.main,
-    },
-    header: {
-      paddingHorizontal: spacing.lg,
-      paddingTop: spacing.xl + 20,
-      paddingBottom: spacing.md,
-      backgroundColor: colors.background.card,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border.light,
-    },
-    headerTitle: {
-      fontSize: typography.fontSize['2xl'],
-      fontWeight: typography.fontWeight.bold,
-      color: colors.text.primary,
     },
     searchContainer: {
       paddingHorizontal: spacing.lg,

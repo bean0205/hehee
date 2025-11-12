@@ -127,10 +127,6 @@ export const SettingsScreen = ({ navigation }: any) => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>{t('settings.settings')}</Text>
-      </View>
-
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {/* User Info Section */}
         <View style={styles.userSection}>
@@ -371,21 +367,9 @@ const createStyles = (colors: any) => StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background.secondary,
   },
-  header: {
-    backgroundColor: colors.background.card,
-    paddingTop: spacing.xl + 20,
-    paddingBottom: spacing.md,
-    paddingHorizontal: spacing.lg,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border.main,
-  },
-  headerTitle: {
-    fontSize: typography.fontSize['2xl'],
-    fontWeight: typography.fontWeight.bold as any,
-    color: colors.text.primary,
-  },
   scrollView: {
     flex: 1,
+  
   },
   userSection: {
     flexDirection: 'row',

@@ -12,7 +12,6 @@ import {
   Animated,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { BlurView } from 'expo-blur';
 import { MaterialCommunityIcons, FontAwesome } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -20,6 +19,7 @@ import { useLanguage } from '../../i18n/LanguageContext';
 import { Avatar } from '../../components/common/Avatar';
 import { BadgeIcon } from '../../components/common/BadgeIcon';
 import { ImageViewerModal } from '../../components/common/ImageViewerModal';
+import { Header } from '../../components/common/Header';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius } from '../../theme/spacing';
 
@@ -587,38 +587,29 @@ export const FeedScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      {/* Header with Gradient */}
-      <LinearGradient
-        colors={['#1E3A8A', '#3B82F6', '#60A5FA']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.headerGradient}
-      >
-        <BlurView intensity={20} tint="light" style={styles.headerBlur}>
-          <View style={styles.header}>
-            <Text style={styles.headerTitle}>{t('feed.feed')}</Text>
-            <View style={styles.headerActions}>
-              <TouchableOpacity style={styles.headerButton}>
-                <MaterialCommunityIcons
-                  name="magnify"
-                  size={20}
-                  color={colors.neutral.white}
-                />
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.notificationButton}>
-                <MaterialCommunityIcons
-                  name="bell-outline"
-                  size={20}
-                  color={colors.neutral.white}
-                />
-                <View style={styles.notificationBadge}>
-                  <Text style={styles.notificationBadgeText}>3</Text>
-                </View>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </BlurView>
-      </LinearGradient>
+      <Header
+        title={t('feed.feed')}
+        gradient={true}
+        blur={true}
+        gradientColors={['#1E3A8A', '#3B82F6', '#60A5FA']}
+        actions={[
+          {
+            icon: 'magnify',
+            onPress: () => {
+              // TODO: Navigate to search
+              console.log('Search pressed');
+            },
+          },
+          {
+            icon: 'bell-outline',
+            onPress: () => {
+              // TODO: Navigate to notifications
+              console.log('Notifications pressed');
+            },
+            badge: 3,
+          },
+        ]}
+      />
 
       {/* Posts Feed */}
       <FlatList
@@ -688,70 +679,6 @@ const createStyles = (colors: any) =>
     container: {
       flex: 1,
       backgroundColor: colors.background.secondary,
-    },
-    headerGradient: {
-      paddingTop: spacing.xl + 20,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.15,
-      shadowRadius: 12,
-      elevation: 8,
-    },
-    headerBlur: {
-      overflow: 'hidden',
-    },
-    header: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      paddingHorizontal: spacing.lg,
-      paddingVertical: spacing.md,
-    },
-    headerTitle: {
-      fontSize: typography.fontSize['2xl'],
-      fontWeight: typography.fontWeight.bold,
-      color: colors.neutral.white,
-      letterSpacing: 0.5,
-    },
-    headerActions: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: spacing.sm,
-    },
-    headerButton: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      backgroundColor: colors.neutral.white + '33', // 20% opacity
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    notificationButton: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      backgroundColor: colors.neutral.white + '33', // 20% opacity
-      justifyContent: 'center',
-      alignItems: 'center',
-      position: 'relative',
-    },
-    notificationBadge: {
-      position: 'absolute',
-      top: -2,
-      right: -2,
-      backgroundColor: colors.error,
-      borderRadius: 10,
-      minWidth: 18,
-      height: 18,
-      justifyContent: 'center',
-      alignItems: 'center',
-      borderWidth: 2,
-      borderColor: colors.neutral.white,
-    },
-    notificationBadgeText: {
-      fontSize: 10,
-      fontWeight: typography.fontWeight.bold,
-      color: colors.neutral.white,
     },
     // Stories Section
     storiesContainer: {

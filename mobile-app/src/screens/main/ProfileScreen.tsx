@@ -7,9 +7,6 @@ import {
   TouchableOpacity,
   Image,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { BlurView } from 'expo-blur';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '../../contexts/AuthContext';
 import { usePin } from '../../contexts/PinContext';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -21,6 +18,7 @@ import { Avatar } from '../../components/common/Avatar';
 import { PinCard } from '../../components/common/PinCard';
 import { BadgeRank } from '../../components/common/BadgeRank';
 import { BadgeIcon } from '../../components/common/BadgeIcon';
+import { Header } from '../../components/common/Header';
 import { useNavigation } from '@react-navigation/native';
 
 export const ProfileScreen: React.FC = () => {
@@ -100,31 +98,18 @@ export const ProfileScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      {/* Header with Gradient */}
-      <LinearGradient
-        colors={['#3B82F6', '#60A5FA', '#93C5FD']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.headerGradient}
-      >
-        <BlurView intensity={20} tint="light" style={styles.headerBlur}>
-          <View style={styles.header}>
-            <Text style={styles.headerTitle}>{t('profile.profile') || 'Profile'}</Text>
-            <View style={styles.headerActions}>
-              <TouchableOpacity 
-                style={styles.headerButton}
-                onPress={() => navigation.navigate('Settings')}
-              >
-                <MaterialCommunityIcons
-                  name="cog-outline"
-                  size={20}
-                  color={colors.neutral.white}
-                />
-              </TouchableOpacity>
-            </View>
-          </View>
-        </BlurView>
-      </LinearGradient>
+      <Header
+        title={t('profile.profile') || 'Profile'}
+        gradient={true}
+        blur={true}
+        gradientColors={['#3B82F6', '#60A5FA', '#93C5FD']}
+        actions={[
+          {
+            icon: 'cog-outline',
+            onPress: () => navigation.navigate('Settings'),
+          },
+        ]}
+      />
 
       <ScrollView style={styles.scrollView}>
         {/* Profile Header */}
@@ -321,43 +306,6 @@ const createStyles = (colors: any) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background.main,
-  },
-  headerGradient: {
-    paddingTop: spacing.xl + 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 8,
-  },
-  headerBlur: {
-    overflow: 'hidden',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-  },
-  headerTitle: {
-    fontSize: typography.fontSize['2xl'],
-    fontWeight: typography.fontWeight.bold,
-    color: colors.neutral.white,
-    letterSpacing: 0.5,
-  },
-  headerActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  headerButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.neutral.white + '33', // 20% opacity
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   scrollView: {
     flex: 1,
