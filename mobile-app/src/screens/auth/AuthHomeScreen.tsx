@@ -12,6 +12,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import { useNavigation } from '@react-navigation/native';
+import { MaterialCommunityIcons, FontAwesome } from '@expo/vector-icons';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useLanguage } from '../../i18n/LanguageContext';
 import { typography } from '../../theme/typography';
@@ -126,7 +127,7 @@ export const AuthHomeScreen: React.FC = () => {
           >
             <BlurView intensity={isDarkMode ? 60 : 100} tint={isDarkMode ? 'dark' : 'light'} style={styles.buttonBlur}>
               <View style={styles.socialButtonContent}>
-                <Text style={styles.socialIcon}>🔍</Text>
+                <MaterialCommunityIcons name="google" size={24} color={colors.neutral.white} />
                 <Text style={styles.socialButtonText}>{t('auth.continueWithGoogle')}</Text>
               </View>
             </BlurView>
@@ -139,7 +140,7 @@ export const AuthHomeScreen: React.FC = () => {
           >
             <BlurView intensity={isDarkMode ? 60 : 100} tint={isDarkMode ? 'dark' : 'light'} style={styles.buttonBlur}>
               <View style={styles.socialButtonContent}>
-                <Text style={styles.socialIcon}>🍎</Text>
+                <FontAwesome name="apple" size={24} color={colors.neutral.white} />
                 <Text style={styles.socialButtonText}>{t('auth.continueWithApple')}</Text>
               </View>
             </BlurView>
@@ -306,9 +307,6 @@ const createStyles = (colors: any) => StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: spacing.md + 2,
     gap: spacing.sm,
-  },
-  socialIcon: {
-    fontSize: 24,
   },
   socialButtonText: {
     fontSize: typography.fontSize.base,

@@ -11,6 +11,7 @@ import {
   Animated,
 } from 'react-native';
 import BottomSheet, { BottomSheetScrollView } from '@gorhom/bottom-sheet';
+import { MaterialCommunityIcons, FontAwesome } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Rating } from 'react-native-ratings';
@@ -179,9 +180,11 @@ export const AddPinScreen: React.FC = () => {
                 styles.headerIconContainer,
                 { backgroundColor: isEditMode ? colors.accent.main + '20' : colors.primary.main + '20' }
               ]}>
-                <Text style={styles.headerIcon}>
-                  {isEditMode ? '✏️' : '📍'}
-                </Text>
+                <MaterialCommunityIcons
+                  name={isEditMode ? 'pencil' : 'map-marker'}
+                  size={32}
+                  color={isEditMode ? colors.accent.main : colors.primary.main}
+                />
               </View>
               <Text style={styles.title}>
                 {isEditMode ? t('pin.editPin') : t('pin.addPin')}
@@ -196,7 +199,11 @@ export const AddPinScreen: React.FC = () => {
           <View style={styles.card}>
             <View style={styles.cardHeader}>
               <View style={[styles.cardIconWrapper, { backgroundColor: colors.primary.main + '15' }]}>
-                <Text style={styles.cardIcon}>🏷️</Text>
+                <MaterialCommunityIcons
+                  name="tag"
+                  size={24}
+                  color={colors.primary.main}
+                />
               </View>
               <View style={styles.cardHeaderText}>
                 <Text style={styles.cardTitle}>{t('pin.placeInfo')}</Text>
@@ -217,7 +224,11 @@ export const AddPinScreen: React.FC = () => {
           <View style={styles.card}>
             <View style={styles.cardHeader}>
               <View style={[styles.cardIconWrapper, { backgroundColor: colors.accent.main + '15' }]}>
-                <Text style={styles.cardIcon}>✨</Text>
+                <MaterialCommunityIcons
+                  name="star-outline"
+                  size={24}
+                  color={colors.accent.main}
+                />
               </View>
               <View style={styles.cardHeaderText}>
                 <Text style={styles.cardTitle}>{t('pin.status')}</Text>
@@ -242,7 +253,11 @@ export const AddPinScreen: React.FC = () => {
                     styles.statusIcon,
                     status === 'visited' && styles.statusIconActive
                   ]}>
-                    <Text style={styles.statusIconText}>✓</Text>
+                    <MaterialCommunityIcons
+                      name="check"
+                      size={24}
+                      color={status === 'visited' ? colors.neutral.white : colors.text.secondary}
+                    />
                   </View>
                   <Text
                     style={[
@@ -276,7 +291,11 @@ export const AddPinScreen: React.FC = () => {
                     styles.statusIcon,
                     status === 'wantToGo' && styles.statusIconActive
                   ]}>
-                    <Text style={styles.statusIconText}>⭐</Text>
+                    <FontAwesome
+                      name="star"
+                      size={24}
+                      color={status === 'wantToGo' ? colors.neutral.white : colors.text.secondary}
+                    />
                   </View>
                   <Text
                     style={[
@@ -307,7 +326,11 @@ export const AddPinScreen: React.FC = () => {
               <View style={styles.card}>
                 <View style={styles.cardHeader}>
                   <View style={[styles.cardIconWrapper, { backgroundColor: colors.status.success + '15' }]}>
-                    <Text style={styles.cardIcon}>📅</Text>
+                    <MaterialCommunityIcons
+                      name="calendar"
+                      size={24}
+                      color={colors.status.success}
+                    />
                   </View>
                   <View style={styles.cardHeaderText}>
                     <Text style={styles.cardTitle}>{t('pin.dateAndRating')}</Text>
@@ -383,7 +406,11 @@ export const AddPinScreen: React.FC = () => {
           <View style={styles.card}>
             <View style={styles.cardHeader}>
               <View style={[styles.cardIconWrapper, { backgroundColor: colors.text.secondary + '15' }]}>
-                <Text style={styles.cardIcon}>📝</Text>
+                <MaterialCommunityIcons
+                  name="note-text-outline"
+                  size={24}
+                  color={colors.text.secondary}
+                />
               </View>
               <View style={styles.cardHeaderText}>
                 <Text style={styles.cardTitle}>{t('pin.notes')}</Text>
@@ -405,7 +432,11 @@ export const AddPinScreen: React.FC = () => {
           <View style={styles.card}>
             <View style={styles.cardHeader}>
               <View style={[styles.cardIconWrapper, { backgroundColor: colors.primary.main + '15' }]}>
-                <Text style={styles.cardIcon}>📷</Text>
+                <MaterialCommunityIcons
+                  name="camera-outline"
+                  size={24}
+                  color={colors.primary.main}
+                />
               </View>
               <View style={styles.cardHeaderText}>
                 <Text style={styles.cardTitle}>{t('pin.images')}</Text>
@@ -429,7 +460,11 @@ export const AddPinScreen: React.FC = () => {
                     onPress={() => removeImage(index)}
                     activeOpacity={0.8}
                   >
-                    <Text style={styles.removeImageText}>✕</Text>
+                    <MaterialCommunityIcons
+                      name="close"
+                      size={16}
+                      color={colors.neutral.white}
+                    />
                   </TouchableOpacity>
                   <View style={styles.imageNumber}>
                     <Text style={styles.imageNumberText}>{index + 1}</Text>
@@ -443,7 +478,11 @@ export const AddPinScreen: React.FC = () => {
                   activeOpacity={0.7}
                 >
                   <View style={styles.addImageContent}>
-                    <Text style={styles.addImageIcon}>📸</Text>
+                    <MaterialCommunityIcons
+                      name="camera-plus"
+                      size={24}
+                      color={colors.primary.main}
+                    />
                     <Text style={styles.addImageText}>{t('pin.addPhotos')}</Text>
                   </View>
                 </TouchableOpacity>

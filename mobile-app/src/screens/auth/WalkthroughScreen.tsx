@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useLanguage } from '../../i18n/LanguageContext';
 import { typography } from '../../theme/typography';
@@ -28,32 +29,48 @@ export const WalkthroughScreen: React.FC<WalkthroughScreenProps> = ({ onComplete
 
   const slides = [
     {
-      icon: '🌍',
+      icon: 'earth',
       title: t('walkthrough.discoverWorld'),
       description: t('walkthrough.discoverDescription'),
       gradient: ['#667eea', '#764ba2', '#f093fb'],
-      decorEmoji: ['✈️', '🗺️', '📸'],
+      decorIcons: [
+        { name: 'airplane', library: 'MaterialCommunityIcons' },
+        { name: 'map', library: 'MaterialCommunityIcons' },
+        { name: 'camera', library: 'MaterialCommunityIcons' },
+      ],
     },
     {
-      icon: '📍',
+      icon: 'map-marker',
       title: t('walkthrough.markPlaces'),
       description: t('walkthrough.markPlacesDescription'),
       gradient: ['#f093fb', '#f5576c', '#ffd676'],
-      decorEmoji: ['🏔️', '🏖️', '🌆'],
+      decorIcons: [
+        { name: 'terrain', library: 'MaterialCommunityIcons' },
+        { name: 'beach', library: 'MaterialCommunityIcons' },
+        { name: 'city-variant', library: 'MaterialCommunityIcons' },
+      ],
     },
     {
-      icon: '🎯',
+      icon: 'target',
       title: t('walkthrough.planTrip'),
       description: t('walkthrough.planTripDescription'),
       gradient: ['#ffd676', '#43e97b', '#38f9d7'],
-      decorEmoji: ['🎒', '🧭', '⛺'],
+      decorIcons: [
+        { name: 'bag-personal', library: 'MaterialCommunityIcons' },
+        { name: 'compass', library: 'MaterialCommunityIcons' },
+        { name: 'tent', library: 'MaterialCommunityIcons' },
+      ],
     },
     {
-      icon: '👥',
+      icon: 'account-group',
       title: t('walkthrough.connectFriends'),
       description: t('walkthrough.connectFriendsDescription'),
       gradient: ['#38f9d7', '#667eea', '#a8edea'],
-      decorEmoji: ['🤝', '💬', '❤️'],
+      decorIcons: [
+        { name: 'handshake', library: 'MaterialCommunityIcons' },
+        { name: 'comment', library: 'MaterialCommunityIcons' },
+        { name: 'heart', library: 'MaterialCommunityIcons' },
+      ],
     },
   ];
   const scrollViewRef = useRef<ScrollView>(null);
@@ -114,12 +131,16 @@ export const WalkthroughScreen: React.FC<WalkthroughScreenProps> = ({ onComplete
         </TouchableOpacity>
       )}
 
-      {/* Decorative emojis */}
+      {/* Decorative icons */}
       <View style={styles.decorContainer} pointerEvents="none">
-        {slides[currentIndex].decorEmoji.map((emoji, idx) => (
-          <Text key={idx} style={[styles.decorEmoji, styles[`decorEmoji${idx + 1}` as keyof typeof styles]]}>
-            {emoji}
-          </Text>
+        {slides[currentIndex].decorIcons.map((icon, idx) => (
+          <MaterialCommunityIcons
+            key={idx}
+            name={icon.name as any}
+            size={40}
+            color={colors.neutral.white}
+            style={[styles.decorIcon, styles[`decorIcon${idx + 1}` as keyof typeof styles]]}
+          />
         ))}
       </View>
 
@@ -136,7 +157,11 @@ export const WalkthroughScreen: React.FC<WalkthroughScreenProps> = ({ onComplete
             <View key={index} style={[styles.slide, { width }]}>
               <View style={styles.iconContainer}>
                 <View style={styles.iconBackground}>
-                  <Text style={styles.icon}>{slide.icon}</Text>
+                  <MaterialCommunityIcons
+                    name={slide.icon as any}
+                    size={70}
+                    color={colors.neutral.white}
+                  />
                 </View>
               </View>
               <Text style={styles.title}>{slide.title}</Text>
@@ -170,8 +195,14 @@ export const WalkthroughScreen: React.FC<WalkthroughScreenProps> = ({ onComplete
             end={{ x: 1, y: 1 }}
             style={styles.buttonGradient}
           >
+            <MaterialCommunityIcons
+              name={currentIndex === slides.length - 1 ? 'rocket-launch' : 'arrow-right'}
+              size={20}
+              color={colors.neutral.white}
+              style={{ marginRight: spacing.xs }}
+            />
             <Text style={styles.buttonText}>
-              {currentIndex === slides.length - 1 ? '🚀 Bắt đầu ngay' : 'Tiếp tục'}
+              {currentIndex === slides.length - 1 ? 'Bắt đầu ngay' : 'Tiếp tục'}
             </Text>
           </LinearGradient>
         </TouchableOpacity>
@@ -206,20 +237,19 @@ const createStyles = (colors: any) => StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     zIndex: 1,
   },
-  decorEmoji: {
+  decorIcon: {
     position: 'absolute',
-    fontSize: 40,
     opacity: 0.15,
   },
-  decorEmoji1: {
+  decorIcon1: {
     top: height * 0.15,
     left: width * 0.1,
   },
-  decorEmoji2: {
+  decorIcon2: {
     top: height * 0.25,
     right: width * 0.15,
   },
-  decorEmoji3: {
+  decorIcon3: {
     bottom: height * 0.35,
     left: width * 0.2,
   },
@@ -248,9 +278,6 @@ const createStyles = (colors: any) => StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 20,
     elevation: 10,
-  },
-  icon: {
-    fontSize: 70,
   },
   title: {
     fontSize: typography.fontSize['3xl'],
@@ -309,7 +336,9 @@ const createStyles = (colors: any) => StyleSheet.create({
   },
   buttonGradient: {
     paddingVertical: spacing.md + 4,
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
   },
   buttonText: {
     fontSize: typography.fontSize.lg,

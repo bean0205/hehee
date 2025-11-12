@@ -9,6 +9,7 @@ import {
   Alert,
   Dimensions,
 } from 'react-native';
+import { MaterialCommunityIcons, FontAwesome } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import Swiper from 'react-native-swiper';
 import { Rating } from 'react-native-ratings';
@@ -80,12 +81,14 @@ export const PinDetailsScreen: React.FC = () => {
   const statusConfig = {
     visited: {
       label: t('pin.visitedStatus'),
-      icon: '✓',
+      icon: 'check',
+      iconLibrary: 'MaterialCommunityIcons' as const,
       color: colors.status.visited,
     },
     wantToGo: {
       label: t('pin.wantToGoStatus'),
-      icon: '⭐',
+      icon: 'star',
+      iconLibrary: 'FontAwesome' as const,
       color: colors.status.wantToGo,
     },
   };
@@ -115,7 +118,12 @@ export const PinDetailsScreen: React.FC = () => {
           </View>
         ) : (
           <View style={styles.noImageContainer}>
-            <Text style={styles.noImageText}>📷</Text>
+            <MaterialCommunityIcons
+              name="camera-outline"
+              size={60}
+              color={colors.text.secondary}
+              style={{ marginBottom: spacing.sm }}
+            />
             <Text style={styles.noImageLabel}>{t('pin.noImagesYet')}</Text>
           </View>
         )}
@@ -132,9 +140,24 @@ export const PinDetailsScreen: React.FC = () => {
                   { backgroundColor: currentStatus.color },
                 ]}
               >
-                <Text style={styles.statusText}>
-                  {currentStatus.icon} {currentStatus.label}
-                </Text>
+                <View style={styles.statusRow}>
+                  {currentStatus.iconLibrary === 'MaterialCommunityIcons' ? (
+                    <MaterialCommunityIcons
+                      name={currentStatus.icon as any}
+                      size={16}
+                      color={colors.neutral.white}
+                    />
+                  ) : (
+                    <FontAwesome
+                      name={currentStatus.icon as any}
+                      size={16}
+                      color={colors.neutral.white}
+                    />
+                  )}
+                  <Text style={styles.statusText}>
+                    {' '}{currentStatus.label}
+                  </Text>
+                </View>
               </View>
             </View>
             <View style={styles.actions}>
@@ -142,14 +165,22 @@ export const PinDetailsScreen: React.FC = () => {
                 style={styles.actionButton}
                 onPress={handleEdit}
               >
-                <Text style={styles.actionIcon}>✏️</Text>
+                <MaterialCommunityIcons
+                  name="pencil"
+                  size={20}
+                  color={colors.text.primary}
+                />
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.actionButton, styles.deleteButton]}
                 onPress={handleDelete}
                 disabled={isDeleting}
               >
-                <Text style={styles.actionIcon}>🗑️</Text>
+                <MaterialCommunityIcons
+                  name="delete-outline"
+                  size={20}
+                  color={colors.error}
+                />
               </TouchableOpacity>
             </View>
           </View>
@@ -213,7 +244,12 @@ export const PinDetailsScreen: React.FC = () => {
           {/* Empty state for want to go */}
           {pin.status === 'wantToGo' && (
             <View style={styles.emptyState}>
-              <Text style={styles.emptyStateIcon}>🌟</Text>
+              <FontAwesome
+                name="star"
+                size={60}
+                color={colors.accent.main}
+                style={{ marginBottom: spacing.md }}
+              />
               <Text style={styles.emptyStateText}>
                 {t('pin.dreamLocation')}
               </Text>
@@ -293,10 +329,6 @@ const createStyles = (colors: any) => StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  noImageText: {
-    fontSize: 60,
-    marginBottom: spacing.sm,
-  },
   noImageLabel: {
     fontSize: typography.fontSize.base,
     color: colors.text.secondary,
@@ -326,6 +358,10 @@ const createStyles = (colors: any) => StyleSheet.create({
     paddingVertical: spacing.xs,
     borderRadius: borderRadius.full,
   },
+  statusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   statusText: {
     fontSize: typography.fontSize.sm,
     fontWeight: typography.fontWeight.semiBold,
@@ -348,9 +384,6 @@ const createStyles = (colors: any) => StyleSheet.create({
   deleteButton: {
     backgroundColor: colors.error + '15',
     borderColor: colors.error + '40',
-  },
-  actionIcon: {
-    fontSize: 20,
   },
   infoSection: {
     backgroundColor: colors.background.card,
@@ -416,10 +449,6 @@ const createStyles = (colors: any) => StyleSheet.create({
     marginTop: spacing.lg,
     borderWidth: 1,
     borderColor: colors.border.light,
-  },
-  emptyStateIcon: {
-    fontSize: 60,
-    marginBottom: spacing.md,
   },
   emptyStateText: {
     fontSize: typography.fontSize.lg,

@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '../../contexts/ThemeContext';
 import { typography } from '../../theme/typography';
@@ -68,10 +69,30 @@ export const LoginScreen: React.FC = () => {
 
       {/* Decorative Elements */}
       <View style={styles.decorContainer} pointerEvents="none">
-        <Text style={[styles.decorEmoji, { top: 120, left: 40 }]}>🗺️</Text>
-        <Text style={[styles.decorEmoji, { top: 180, right: 40 }]}>📸</Text>
-        <Text style={[styles.decorEmoji, { bottom: 220, left: 60 }]}>🧭</Text>
-        <Text style={[styles.decorEmoji, { bottom: 280, right: 50 }]}>✈️</Text>
+        <MaterialCommunityIcons
+          name="map"
+          size={50}
+          color={colors.neutral.white}
+          style={[styles.decorIcon, { top: 120, left: 40, opacity: 0.1 }]}
+        />
+        <MaterialCommunityIcons
+          name="camera"
+          size={50}
+          color={colors.neutral.white}
+          style={[styles.decorIcon, { top: 180, right: 40, opacity: 0.1 }]}
+        />
+        <MaterialCommunityIcons
+          name="compass"
+          size={50}
+          color={colors.neutral.white}
+          style={[styles.decorIcon, { bottom: 220, left: 60, opacity: 0.1 }]}
+        />
+        <MaterialCommunityIcons
+          name="airplane"
+          size={50}
+          color={colors.neutral.white}
+          style={[styles.decorIcon, { bottom: 280, right: 50, opacity: 0.1 }]}
+        />
       </View>
 
       <KeyboardAvoidingView
@@ -93,7 +114,12 @@ export const LoginScreen: React.FC = () => {
 
           {/* Header */}
           <View style={styles.header}>
-            <Text style={styles.headerIcon}>👋</Text>
+            <MaterialCommunityIcons
+              name="hand-wave"
+              size={64}
+              color={colors.neutral.white}
+              style={{ marginBottom: spacing.md }}
+            />
             <Text style={styles.title}>{t('auth.login')}</Text>
             <Text style={styles.subtitle}>{t('auth.welcomeBack')}</Text>
           </View>
@@ -136,8 +162,14 @@ export const LoginScreen: React.FC = () => {
                   end={{ x: 1, y: 1 }}
                   style={styles.loginButtonGradient}
                 >
+                  <MaterialCommunityIcons
+                    name="rocket-launch"
+                    size={20}
+                    color={colors.neutral.white}
+                    style={{ marginRight: spacing.xs }}
+                  />
                   <Text style={styles.loginButtonText}>
-                    {isLoading ? t('auth.loggingIn') : '🚀 ' + t('auth.login')}
+                    {isLoading ? t('auth.loggingIn') : t('auth.login')}
                   </Text>
                 </LinearGradient>
               </TouchableOpacity>
@@ -150,7 +182,7 @@ export const LoginScreen: React.FC = () => {
           </BlurView>
 
           {/* Social Login */}
-          <View style={styles.socialContainer}>
+          {/* <View style={styles.socialContainer}>
             <View style={styles.divider}>
               <View style={styles.dividerLine} />
               <Text style={styles.dividerText}>{t('auth.or')}</Text>
@@ -165,7 +197,7 @@ export const LoginScreen: React.FC = () => {
                 <Text style={styles.socialButtonText}>{t('auth.apple')}</Text>
               </TouchableOpacity>
             </View>
-          </View>
+          </View> */}
 
           {/* Register Link */}
           <TouchableOpacity
@@ -191,10 +223,8 @@ const createStyles = (colors: any) => StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     zIndex: 1,
   },
-  decorEmoji: {
+  decorIcon: {
     position: 'absolute',
-    fontSize: 50,
-    opacity: 0.1,
   },
   scrollContent: {
     flexGrow: 1,
@@ -214,10 +244,6 @@ const createStyles = (colors: any) => StyleSheet.create({
   header: {
     alignItems: 'center',
     marginBottom: spacing.xl,
-  },
-  headerIcon: {
-    fontSize: 64,
-    marginBottom: spacing.md,
   },
   title: {
     fontSize: typography.fontSize['3xl'],
@@ -267,7 +293,9 @@ const createStyles = (colors: any) => StyleSheet.create({
   },
   loginButtonGradient: {
     paddingVertical: spacing.md + 4,
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
   },
   loginButtonText: {
     fontSize: typography.fontSize.lg,

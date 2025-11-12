@@ -7,6 +7,7 @@ import {
   FlatList,
   TouchableOpacity,
 } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useLanguage } from '../../i18n/LanguageContext';
@@ -141,7 +142,11 @@ export const DiscoverScreen: React.FC = () => {
       {/* Search Bar */}
       <View style={styles.searchContainer}>
         <View style={styles.searchBar}>
-          <Text style={styles.searchIcon}>🔍</Text>
+          <MaterialCommunityIcons
+            name="magnify"
+            size={20}
+            color={colors.text.secondary}
+          />
           <TextInput
             style={styles.searchInput}
             placeholder={t('discover.searchUsers')}
@@ -152,7 +157,11 @@ export const DiscoverScreen: React.FC = () => {
           />
           {searchQuery.length > 0 && (
             <TouchableOpacity onPress={() => handleSearch('')}>
-              <Text style={styles.clearIcon}>✕</Text>
+              <MaterialCommunityIcons
+                name="close"
+                size={20}
+                color={colors.text.secondary}
+              />
             </TouchableOpacity>
           )}
         </View>

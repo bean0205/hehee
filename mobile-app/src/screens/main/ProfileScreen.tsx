@@ -7,6 +7,9 @@ import {
   TouchableOpacity,
   Image,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { BlurView } from 'expo-blur';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '../../contexts/AuthContext';
 import { usePin } from '../../contexts/PinContext';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -96,20 +99,41 @@ export const ProfileScreen: React.FC = () => {
   };
 
   return (
-    <ScrollView style={styles.container}>
-      {/* Profile Header */}
-      <View style={styles.header}>
-        <Image
-          source={{ uri: 'https://picsum.photos/400/150' }}
-          style={styles.coverImage}
-        />
-        <TouchableOpacity 
-          style={styles.settingsButton}
-          onPress={() => navigation.navigate('Settings')}
-        >
-          <Text style={styles.settingsIcon}>⚙️</Text>
-        </TouchableOpacity>
-        <View style={styles.profileInfo}>
+    <View style={styles.container}>
+      {/* Header with Gradient */}
+      <LinearGradient
+        colors={['#3B82F6', '#60A5FA', '#93C5FD']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.headerGradient}
+      >
+        <BlurView intensity={20} tint="light" style={styles.headerBlur}>
+          <View style={styles.header}>
+            <Text style={styles.headerTitle}>{t('profile.profile') || 'Profile'}</Text>
+            <View style={styles.headerActions}>
+              <TouchableOpacity 
+                style={styles.headerButton}
+                onPress={() => navigation.navigate('Settings')}
+              >
+                <MaterialCommunityIcons
+                  name="cog-outline"
+                  size={20}
+                  color={colors.neutral.white}
+                />
+              </TouchableOpacity>
+            </View>
+          </View>
+        </BlurView>
+      </LinearGradient>
+
+      <ScrollView style={styles.scrollView}>
+        {/* Profile Header */}
+        <View style={styles.profileHeader}>
+          <Image
+            source={{ uri: 'https://picsum.photos/400/150' }}
+            style={styles.coverImage}
+          />
+          <View style={styles.profileInfo}>
           <Avatar uri={user?.avatar} size={80} style={styles.avatar} />
           <View style={styles.nameRow}>
             <Text style={styles.displayName}>{user?.displayName || 'User'}</Text>
@@ -285,10 +309,11 @@ export const ProfileScreen: React.FC = () => {
       )}
 
       {/* Logout Button */}
-      <TouchableOpacity style={styles.logoutButton} onPress={logout}>
+      {/* <TouchableOpacity style={styles.logoutButton} onPress={logout}>
         <Text style={styles.logoutText}>{t('auth.logout')}</Text>
-      </TouchableOpacity>
-    </ScrollView>
+      </TouchableOpacity> */}
+      </ScrollView>
+    </View>
   );
 };
 
@@ -297,7 +322,47 @@ const createStyles = (colors: any) => StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background.main,
   },
+  headerGradient: {
+    paddingTop: spacing.xl + 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  headerBlur: {
+    overflow: 'hidden',
+  },
   header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+  },
+  headerTitle: {
+    fontSize: typography.fontSize['2xl'],
+    fontWeight: typography.fontWeight.bold,
+    color: colors.neutral.white,
+    letterSpacing: 0.5,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  headerButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: colors.neutral.white + '33', // 20% opacity
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  scrollView: {
+    flex: 1,
+  },
+  profileHeader: {
     marginBottom: spacing.md,
   },
   coverImage: {
@@ -306,7 +371,7 @@ const createStyles = (colors: any) => StyleSheet.create({
   },
   settingsButton: {
     position: 'absolute',
-    top: spacing.md + 20,
+    top: spacing.md,
     right: spacing.md,
     width: 40,
     height: 40,

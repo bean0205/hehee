@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
+import { MaterialCommunityIcons, FontAwesome } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useLanguage } from '../../i18n/LanguageContext';
@@ -279,9 +280,12 @@ export const FeedScreen: React.FC = () => {
     return (
       <View style={styles.starsContainer}>
         {[1, 2, 3, 4, 5].map(star => (
-          <Text key={star} style={styles.star}>
-            {star <= rating ? '⭐' : '☆'}
-          </Text>
+          <FontAwesome
+            key={star}
+            name={star <= rating ? 'star' : 'star-o'}
+            size={14}
+            color={star <= rating ? '#F59E0B' : colors.text.disabled}
+          />
         ))}
       </View>
     );
@@ -421,7 +425,11 @@ export const FeedScreen: React.FC = () => {
                 style={styles.actionButton}
                 onPress={() => handleLike(item.id)}
               >
-                <Text style={styles.actionIcon}>{item.isLiked ? '❤️' : '🤍'}</Text>
+                <MaterialCommunityIcons
+                  name={item.isLiked ? 'heart' : 'heart-outline'}
+                  size={24}
+                  color={item.isLiked ? '#EF4444' : colors.text.secondary}
+                />
                 <Text style={[styles.actionText, item.isLiked && styles.actionTextActive]}>
                   {item.likes}
                 </Text>
@@ -431,7 +439,11 @@ export const FeedScreen: React.FC = () => {
                 style={styles.actionButton}
                 onPress={() => handleComment(item.id)}
               >
-                <Text style={styles.actionIcon}>💬</Text>
+                <MaterialCommunityIcons
+                  name="comment-outline"
+                  size={24}
+                  color={colors.text.secondary}
+                />
                 <Text style={styles.actionText}>{item.comments}</Text>
               </TouchableOpacity>
 
@@ -439,7 +451,11 @@ export const FeedScreen: React.FC = () => {
                 style={styles.actionButton}
                 onPress={() => handleShare(item.id)}
               >
-                <Text style={styles.actionIcon}>📤</Text>
+                <MaterialCommunityIcons
+                  name="share-variant"
+                  size={24}
+                  color={colors.text.secondary}
+                />
                 <Text style={styles.actionText}>{t('feed.share')}</Text>
               </TouchableOpacity>
             </View>
@@ -463,9 +479,15 @@ export const FeedScreen: React.FC = () => {
                 <Text style={styles.userName}>{item.user.name}</Text>
                 <BadgeIcon size="small" />
               </View>
-              <TouchableOpacity onPress={() => handleLocationPress(item)}>
+              <TouchableOpacity onPress={() => handleLocationPress(item)} style={styles.locationRow}>
+                <MaterialCommunityIcons
+                  name="map-marker"
+                  size={16}
+                  color={colors.primary.light}
+                  style={{ marginRight: 4 }}
+                />
                 <Text style={styles.locationText}>
-                  📍 {item.location.name}, {item.location.city}
+                  {item.location.name}, {item.location.city}
                 </Text>
               </TouchableOpacity>
               <Text style={styles.timestamp}>{item.timestamp}</Text>
@@ -525,7 +547,11 @@ export const FeedScreen: React.FC = () => {
             style={styles.actionButton}
             onPress={() => handleLike(item.id)}
           >
-            <Text style={styles.actionIcon}>{item.isLiked ? '❤️' : '🤍'}</Text>
+            <MaterialCommunityIcons
+              name={item.isLiked ? 'heart' : 'heart-outline'}
+              size={24}
+              color={item.isLiked ? '#EF4444' : colors.text.secondary}
+            />
             <Text style={[styles.actionText, item.isLiked && styles.actionTextActive]}>
               {item.likes}
             </Text>
@@ -535,7 +561,11 @@ export const FeedScreen: React.FC = () => {
             style={styles.actionButton}
             onPress={() => handleComment(item.id)}
           >
-            <Text style={styles.actionIcon}>💬</Text>
+            <MaterialCommunityIcons
+              name="comment-outline"
+              size={24}
+              color={colors.text.secondary}
+            />
             <Text style={styles.actionText}>{item.comments}</Text>
           </TouchableOpacity>
 
@@ -543,7 +573,11 @@ export const FeedScreen: React.FC = () => {
             style={styles.actionButton}
             onPress={() => handleShare(item.id)}
           >
-            <Text style={styles.actionIcon}>📤</Text>
+            <MaterialCommunityIcons
+              name="share-variant"
+              size={24}
+              color={colors.text.secondary}
+            />
             <Text style={styles.actionText}>{t('feed.share')}</Text>
           </TouchableOpacity>
         </View>
@@ -565,10 +599,18 @@ export const FeedScreen: React.FC = () => {
             <Text style={styles.headerTitle}>{t('feed.feed')}</Text>
             <View style={styles.headerActions}>
               <TouchableOpacity style={styles.headerButton}>
-                <Text style={styles.headerIcon}>🔍</Text>
+                <MaterialCommunityIcons
+                  name="magnify"
+                  size={20}
+                  color={colors.neutral.white}
+                />
               </TouchableOpacity>
               <TouchableOpacity style={styles.notificationButton}>
-                <Text style={styles.notificationIcon}>🔔</Text>
+                <MaterialCommunityIcons
+                  name="bell-outline"
+                  size={20}
+                  color={colors.neutral.white}
+                />
                 <View style={styles.notificationBadge}>
                   <Text style={styles.notificationBadgeText}>3</Text>
                 </View>
@@ -599,7 +641,12 @@ export const FeedScreen: React.FC = () => {
               colors={['#F59E0B20', '#EC489920']}
               style={styles.emptyStateGradient}
             >
-              <Text style={styles.emptyStateIcon}>🌍</Text>
+              <MaterialCommunityIcons
+                name="earth"
+                size={80}
+                color={colors.text.secondary}
+                style={{ marginBottom: spacing.lg }}
+              />
               <Text style={styles.emptyStateText}>{t('feed.noPostsYet')}</Text>
               <Text style={styles.emptyStateSubtext}>
                 {t('feed.followFriends')}
@@ -679,9 +726,6 @@ const createStyles = (colors: any) =>
       justifyContent: 'center',
       alignItems: 'center',
     },
-    headerIcon: {
-      fontSize: 20,
-    },
     notificationButton: {
       width: 40,
       height: 40,
@@ -690,9 +734,6 @@ const createStyles = (colors: any) =>
       justifyContent: 'center',
       alignItems: 'center',
       position: 'relative',
-    },
-    notificationIcon: {
-      fontSize: 20,
     },
     notificationBadge: {
       position: 'absolute',
@@ -809,10 +850,14 @@ const createStyles = (colors: any) =>
       alignItems: 'center',
       gap: spacing.xs,
     },
+    locationRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginTop: 2,
+    },
     locationText: {
       fontSize: typography.fontSize.sm,
       color: colors.primary.light,
-      marginTop: 2,
       fontWeight: typography.fontWeight.medium,
     },
     timestamp: {
@@ -918,9 +963,6 @@ const createStyles = (colors: any) =>
       flexDirection: 'row',
       gap: 2,
     },
-    star: {
-      fontSize: 14,
-    },
     visitDate: {
       fontSize: typography.fontSize.xs,
       color: colors.text.secondary,
@@ -987,9 +1029,6 @@ const createStyles = (colors: any) =>
       gap: spacing.xs,
       paddingVertical: spacing.xs,
     },
-    actionIcon: {
-      fontSize: 24,
-    },
     actionText: {
       fontSize: typography.fontSize.sm,
       color: colors.text.secondary,
@@ -1015,10 +1054,6 @@ const createStyles = (colors: any) =>
       paddingHorizontal: spacing.xl,
       borderRadius: borderRadius.xl,
       width: '100%',
-    },
-    emptyStateIcon: {
-      fontSize: 80,
-      marginBottom: spacing.lg,
     },
     emptyStateText: {
       fontSize: typography.fontSize.xl,

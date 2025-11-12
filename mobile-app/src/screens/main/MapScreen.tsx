@@ -8,6 +8,7 @@ import {
   Modal,
   FlatList,
 } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useLanguage } from '../../i18n/LanguageContext';
@@ -171,7 +172,11 @@ export const MapScreen: React.FC = () => {
                 },
               ]}
             >
-              <Text style={styles.markerText}>📍</Text>
+              <MaterialCommunityIcons
+                name="map-marker"
+                size={24}
+                color={colors.neutral.white}
+              />
             </View>
           </Marker>
         ))}
@@ -183,7 +188,11 @@ export const MapScreen: React.FC = () => {
           style={styles.searchBar}
           onPress={() => setSearchModalVisible(true)}
         >
-          <Text style={styles.searchIcon}>🔍</Text>
+          <MaterialCommunityIcons
+            name="magnify"
+            size={20}
+            color={colors.text.secondary}
+          />
           <Text style={styles.searchPlaceholder}>{t('map.searchPlaceholder')}</Text>
         </TouchableOpacity>
       </View>
@@ -197,7 +206,11 @@ export const MapScreen: React.FC = () => {
         <View style={styles.modalContainer}>
           <View style={styles.modalHeader}>
             <TouchableOpacity onPress={() => setSearchModalVisible(false)}>
-              <Text style={styles.modalCloseButton}>✕</Text>
+              <MaterialCommunityIcons
+                name="close"
+                size={24}
+                color={colors.text.primary}
+              />
             </TouchableOpacity>
             <TextInput
               style={styles.modalSearchInput}
@@ -224,7 +237,11 @@ export const MapScreen: React.FC = () => {
                   });
                 }}
               >
-                <Text style={styles.searchResultIcon}>📍</Text>
+                <MaterialCommunityIcons
+                  name="map-marker"
+                  size={20}
+                  color={colors.primary.main}
+                />
                 <Text style={styles.searchResultName}>{item.name}</Text>
               </TouchableOpacity>
             )}

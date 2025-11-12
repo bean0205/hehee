@@ -14,6 +14,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { MaterialCommunityIcons, FontAwesome } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useLanguage } from '../../i18n/LanguageContext';
@@ -279,9 +280,12 @@ export const PostDetailsScreen: React.FC = () => {
     return (
       <View style={styles.starsContainer}>
         {[1, 2, 3, 4, 5].map(star => (
-          <Text key={star} style={styles.star}>
-            {star <= rating ? '⭐' : '☆'}
-          </Text>
+          <FontAwesome
+            key={star}
+            name={star <= rating ? 'star' : 'star-o'}
+            size={20}
+            color={star <= rating ? '#F59E0B' : colors.text.disabled}
+          />
         ))}
       </View>
     );
@@ -311,9 +315,11 @@ export const PostDetailsScreen: React.FC = () => {
               onPress={() => handleCommentLike(comment.id)}
               style={styles.commentLikeButton}
             >
-              <Text style={styles.commentLikeIcon}>
-                {comment.isLiked ? '❤️' : '🤍'}
-              </Text>
+              <MaterialCommunityIcons
+                name={comment.isLiked ? 'heart' : 'heart-outline'}
+                size={14}
+                color={comment.isLiked ? '#EF4444' : colors.text.secondary}
+              />
               {comment.likes > 0 && (
                 <Text
                   style={[
@@ -359,9 +365,11 @@ export const PostDetailsScreen: React.FC = () => {
                         onPress={() => handleReplyLike(comment.id, reply.id)}
                         style={styles.commentLikeButton}
                       >
-                        <Text style={styles.replyLikeIcon}>
-                          {reply.isLiked ? '❤️' : '🤍'}
-                        </Text>
+                        <MaterialCommunityIcons
+                          name={reply.isLiked ? 'heart' : 'heart-outline'}
+                          size={12}
+                          color={reply.isLiked ? '#EF4444' : colors.text.secondary}
+                        />
                         {reply.likes > 0 && (
                           <Text
                             style={[
@@ -504,7 +512,11 @@ export const PostDetailsScreen: React.FC = () => {
               style={styles.actionButtonLarge}
               onPress={handleLike}
             >
-              <Text style={styles.actionIconLarge}>{isLiked ? '❤️' : '🤍'}</Text>
+              <MaterialCommunityIcons
+                name={isLiked ? 'heart' : 'heart-outline'}
+                size={24}
+                color={isLiked ? '#EF4444' : colors.text.secondary}
+              />
               <Text style={[styles.actionTextLarge, isLiked && styles.actionTextActive]}>
                 {t('postDetails.like')}
               </Text>
@@ -514,7 +526,11 @@ export const PostDetailsScreen: React.FC = () => {
               style={styles.actionButtonLarge}
               onPress={handleComment}
             >
-              <Text style={styles.actionIconLarge}>💬</Text>
+              <MaterialCommunityIcons
+                name="comment-outline"
+                size={24}
+                color={colors.text.secondary}
+              />
               <Text style={styles.actionTextLarge}>{t('postDetails.comment')}</Text>
             </TouchableOpacity>
 
@@ -522,7 +538,11 @@ export const PostDetailsScreen: React.FC = () => {
               style={styles.actionButtonLarge}
               onPress={handleShare}
             >
-              <Text style={styles.actionIconLarge}>📤</Text>
+              <MaterialCommunityIcons
+                name="share-variant"
+                size={24}
+                color={colors.text.secondary}
+              />
               <Text style={styles.actionTextLarge}>{t('postDetails.share')}</Text>
             </TouchableOpacity>
           </View>
@@ -536,7 +556,12 @@ export const PostDetailsScreen: React.FC = () => {
               </View>
             ) : (
               <View style={styles.emptyComments}>
-                <Text style={styles.emptyCommentsIcon}>💬</Text>
+                <MaterialCommunityIcons
+                  name="comment-outline"
+                  size={48}
+                  color={colors.text.secondary}
+                  style={{ marginBottom: spacing.md }}
+                />
                 <Text style={styles.emptyCommentsText}>
                   Chưa có bình luận nào
                 </Text>
@@ -561,7 +586,11 @@ export const PostDetailsScreen: React.FC = () => {
                   {t('postDetails.replyingTo')} <Text style={styles.replyingUserName}>{replyingTo.userName}</Text>
                 </Text>
                 <TouchableOpacity onPress={handleCancelReply}>
-                  <Text style={styles.cancelReplyButton}>✕</Text>
+                  <MaterialCommunityIcons
+                    name="close"
+                    size={20}
+                    color={colors.text.secondary}
+                  />
                 </TouchableOpacity>
               </View>
             </View>
@@ -586,9 +615,11 @@ export const PostDetailsScreen: React.FC = () => {
               onPress={handleSendComment}
               disabled={commentText.trim() === ''}
             >
-              <Text style={styles.sendButtonText}>
-                {commentText.trim() === '' ? '📤' : '✈️'}
-              </Text>
+            <MaterialCommunityIcons
+              name={commentText.trim() === '' ? 'send-outline' : 'send'}
+              size={20}
+              color={commentText.trim() === '' ? colors.text.disabled : colors.neutral.white}
+            />
             </TouchableOpacity>
           </View>
         </KeyboardAvoidingView>
@@ -602,7 +633,11 @@ export const PostDetailsScreen: React.FC = () => {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={styles.backIcon}>←</Text>
+          <MaterialCommunityIcons
+            name="arrow-left"
+            size={28}
+            color={colors.text.primary}
+          />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t('postDetails.postDetails')}</Text>
         <View style={{ width: 30 }} />
@@ -621,9 +656,15 @@ export const PostDetailsScreen: React.FC = () => {
                 <Text style={styles.userName}>{post.user.name}</Text>
                 <BadgeIcon size="small" />
               </View>
-              <TouchableOpacity onPress={handleLocationPress}>
+              <TouchableOpacity onPress={handleLocationPress} style={styles.locationRow}>
+                <MaterialCommunityIcons
+                  name="map-marker"
+                  size={16}
+                  color={colors.primary.main}
+                  style={{ marginRight: 4 }}
+                />
                 <Text style={styles.locationText}>
-                  📍 {post.location.name}, {post.location.city}
+                  {post.location.name}, {post.location.city}
                 </Text>
               </TouchableOpacity>
               <Text style={styles.timestamp}>{post.timestamp}</Text>
@@ -639,9 +680,16 @@ export const PostDetailsScreen: React.FC = () => {
                 : styles.wantToGoBadge,
             ]}
           >
-            <Text style={styles.statusText}>
-              {post.status === 'visited' ? '✓ Đã đến' : '⭐ Muốn đến'}
-            </Text>
+            <View style={styles.statusRow}>
+              {post.status === 'visited' ? (
+                <MaterialCommunityIcons name="check" size={16} color={colors.neutral.white} />
+              ) : (
+                <FontAwesome name="star" size={16} color={colors.neutral.white} />
+              )}
+              <Text style={styles.statusText}>
+                {post.status === 'visited' ? ' Đã đến' : ' Muốn đến'}
+              </Text>
+            </View>
           </View>
         </View>
 
@@ -681,14 +729,23 @@ export const PostDetailsScreen: React.FC = () => {
               onPress={handleLocationPress}
             >
               <View style={styles.locationHeader}>
-                <Text style={styles.locationIcon}>📍</Text>
+                <MaterialCommunityIcons
+                  name="map-marker"
+                  size={24}
+                  color={colors.primary.main}
+                  style={{ marginRight: spacing.md }}
+                />
                 <View style={styles.locationInfo}>
                   <Text style={styles.locationName}>{post.location.name}</Text>
                   <Text style={styles.locationCity}>
                     {post.location.city}, {post.location.country}
                   </Text>
                 </View>
-                <Text style={styles.chevron}>›</Text>
+                <MaterialCommunityIcons
+                  name="chevron-right"
+                  size={24}
+                  color={colors.text.secondary}
+                />
               </View>
             </TouchableOpacity>
           )}
@@ -706,7 +763,11 @@ export const PostDetailsScreen: React.FC = () => {
             style={styles.actionButtonLarge}
             onPress={handleLike}
           >
-            <Text style={styles.actionIconLarge}>{isLiked ? '❤️' : '🤍'}</Text>
+            <MaterialCommunityIcons
+              name={isLiked ? 'heart' : 'heart-outline'}
+              size={24}
+              color={isLiked ? '#EF4444' : colors.text.secondary}
+            />
             <Text style={[styles.actionTextLarge, isLiked && styles.actionTextActive]}>
               Thích
             </Text>
@@ -716,7 +777,11 @@ export const PostDetailsScreen: React.FC = () => {
             style={styles.actionButtonLarge}
             onPress={handleComment}
           >
-            <Text style={styles.actionIconLarge}>💬</Text>
+            <MaterialCommunityIcons
+              name="comment-outline"
+              size={24}
+              color={colors.text.secondary}
+            />
             <Text style={styles.actionTextLarge}>{t('postDetails.comment')}</Text>
           </TouchableOpacity>
 
@@ -724,7 +789,11 @@ export const PostDetailsScreen: React.FC = () => {
             style={styles.actionButtonLarge}
             onPress={handleShare}
           >
-            <Text style={styles.actionIconLarge}>📤</Text>
+            <MaterialCommunityIcons
+              name="share-variant"
+              size={24}
+              color={colors.text.secondary}
+            />
             <Text style={styles.actionTextLarge}>{t('postDetails.share')}</Text>
           </TouchableOpacity>
         </View>
@@ -738,7 +807,12 @@ export const PostDetailsScreen: React.FC = () => {
             </View>
           ) : (
             <View style={styles.emptyComments}>
-              <Text style={styles.emptyCommentsIcon}>💬</Text>
+              <MaterialCommunityIcons
+                name="comment-outline"
+                size={48}
+                color={colors.text.secondary}
+                style={{ marginBottom: spacing.md }}
+              />
               <Text style={styles.emptyCommentsText}>
                 Chưa có bình luận nào
               </Text>
@@ -774,9 +848,11 @@ export const PostDetailsScreen: React.FC = () => {
             onPress={handleSendComment}
             disabled={commentText.trim() === ''}
           >
-            <Text style={styles.sendButtonText}>
-              {commentText.trim() === '' ? '📤' : '✈️'}
-            </Text>
+            <MaterialCommunityIcons
+              name={commentText.trim() === '' ? 'send-outline' : 'send'}
+              size={20}
+              color={commentText.trim() === '' ? colors.text.disabled : colors.neutral.white}
+            />
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
@@ -811,9 +887,14 @@ const createStyles = (colors: any) =>
       borderBottomWidth: 1,
       borderBottomColor: colors.border.light,
     },
-    backIcon: {
-      fontSize: 28,
-      color: colors.text.primary,
+    locationRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginTop: 4,
+    },
+    statusRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
     },
     headerTitle: {
       fontSize: typography.fontSize.lg,
@@ -971,9 +1052,6 @@ const createStyles = (colors: any) =>
       flexDirection: 'row',
       gap: 4,
     },
-    star: {
-      fontSize: 20,
-    },
     ratingValue: {
       fontSize: typography.fontSize.lg,
       fontWeight: typography.fontWeight.bold,
@@ -1005,10 +1083,6 @@ const createStyles = (colors: any) =>
       flexDirection: 'row',
       alignItems: 'center',
     },
-    locationIcon: {
-      fontSize: 24,
-      marginRight: spacing.md,
-    },
     locationInfo: {
       flex: 1,
     },
@@ -1021,10 +1095,6 @@ const createStyles = (colors: any) =>
       fontSize: typography.fontSize.sm,
       color: colors.text.secondary,
       marginTop: 2,
-    },
-    chevron: {
-      fontSize: 24,
-      color: colors.text.secondary,
     },
     // Achievement
     achievementContent: {
@@ -1080,9 +1150,6 @@ const createStyles = (colors: any) =>
       justifyContent: 'center',
       gap: spacing.xs,
       paddingVertical: spacing.sm,
-    },
-    actionIconLarge: {
-      fontSize: 24,
     },
     actionTextLarge: {
       fontSize: typography.fontSize.base,
@@ -1147,9 +1214,6 @@ const createStyles = (colors: any) =>
       flexDirection: 'row',
       alignItems: 'center',
       gap: 4,
-    },
-    commentLikeIcon: {
-      fontSize: 14,
     },
     commentLikeCount: {
       fontSize: typography.fontSize.xs,
@@ -1217,9 +1281,6 @@ const createStyles = (colors: any) =>
       fontSize: 11,
       color: colors.text.secondary,
     },
-    replyLikeIcon: {
-      fontSize: 12,
-    },
     replyLikeCount: {
       fontSize: 11,
       color: colors.text.secondary,
@@ -1228,10 +1289,6 @@ const createStyles = (colors: any) =>
     emptyComments: {
       alignItems: 'center',
       paddingVertical: spacing.xl,
-    },
-    emptyCommentsIcon: {
-      fontSize: 48,
-      marginBottom: spacing.md,
     },
     emptyCommentsText: {
       fontSize: typography.fontSize.base,
@@ -1273,12 +1330,6 @@ const createStyles = (colors: any) =>
       fontWeight: typography.fontWeight.bold,
       color: colors.primary.main,
     },
-    cancelReplyButton: {
-      fontSize: 20,
-      color: colors.text.secondary,
-      fontWeight: typography.fontWeight.bold,
-      paddingHorizontal: spacing.sm,
-    },
     commentInput: {
       flex: 1,
       backgroundColor: colors.background.elevated,
@@ -1300,8 +1351,5 @@ const createStyles = (colors: any) =>
     sendButtonDisabled: {
       backgroundColor: colors.background.elevated,
       opacity: 0.5,
-    },
-    sendButtonText: {
-      fontSize: 20,
     },
   });
