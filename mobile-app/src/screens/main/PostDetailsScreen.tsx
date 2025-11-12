@@ -22,6 +22,7 @@ import { Avatar } from '../../components/common/Avatar';
 import { BadgeIcon } from '../../components/common/BadgeIcon';
 import { CustomBadgeIcon } from '../../components/common/CustomBadgeIcon';
 import { ImageViewerModal } from '../../components/common/ImageViewerModal';
+import { Header } from '../../components/common/Header';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius } from '../../theme/spacing';
 
@@ -630,18 +631,13 @@ export const PostDetailsScreen: React.FC = () => {
   // Regular pin post layout
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <MaterialCommunityIcons
-            name="arrow-left"
-            size={28}
-            color={colors.text.primary}
-          />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>{t('postDetails.postDetails')}</Text>
-        <View style={{ width: 30 }} />
-      </View>
+      <Header
+        title={t('postDetails.postDetails')}
+        showBackButton={true}
+        onBackPress={() => navigation.goBack()}
+        gradient={false}
+        blur={false}
+      />
 
       <ScrollView style={styles.scrollView}>
         {/* User Info */}
@@ -876,17 +872,6 @@ const createStyles = (colors: any) =>
       flex: 1,
       backgroundColor: colors.background.main,
     },
-    header: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      paddingHorizontal: spacing.lg,
-      paddingTop: spacing.xl + 20,
-      paddingBottom: spacing.md,
-      backgroundColor: colors.background.card,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border.light,
-    },
     locationRow: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -895,11 +880,6 @@ const createStyles = (colors: any) =>
     statusRow: {
       flexDirection: 'row',
       alignItems: 'center',
-    },
-    headerTitle: {
-      fontSize: typography.fontSize.lg,
-      fontWeight: typography.fontWeight.bold,
-      color: colors.text.primary,
     },
     scrollView: {
       flex: 1,

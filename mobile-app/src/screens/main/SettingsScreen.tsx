@@ -11,6 +11,7 @@ import {
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useLanguage } from '../../i18n/LanguageContext';
+import { Header } from '../../components/common/Header';
 import { spacing } from '../../theme/spacing';
 import { typography } from '../../theme/typography';
 
@@ -127,6 +128,13 @@ export const SettingsScreen = ({ navigation }: any) => {
 
   return (
     <View style={styles.container}>
+      <Header
+        title={t('settings.settings')}
+        showBackButton={true}
+        onBackPress={() => navigation.goBack()}
+        gradient={false}
+        blur={false}
+      />
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {/* User Info Section */}
         <View style={styles.userSection}>

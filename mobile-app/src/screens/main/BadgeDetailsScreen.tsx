@@ -11,6 +11,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useLanguage } from '../../i18n/LanguageContext';
 import { useBadge, BADGE_RANKS, ACHIEVEMENT_BADGES, POINTS_CONFIG } from '../../contexts/BadgeContext';
+import { Header } from '../../components/common/Header';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius } from '../../theme/spacing';
 
@@ -246,13 +247,13 @@ export const BadgeDetailsScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={styles.backButton}>←</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>{t('badge.ranksAndAchievements')}</Text>
-        <View style={{ width: 30 }} />
-      </View>
+      <Header
+        title={t('badge.ranksAndAchievements')}
+        showBackButton={true}
+        onBackPress={() => navigation.goBack()}
+        gradient={false}
+        blur={false}
+      />
 
       <ScrollView
         style={styles.scrollView}
@@ -273,26 +274,6 @@ const createStyles = (colors: any) =>
     container: {
       flex: 1,
       backgroundColor: colors.background.main,
-    },
-    header: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      paddingHorizontal: spacing.lg,
-      paddingTop: spacing.xl + 20,
-      paddingBottom: spacing.md,
-      backgroundColor: colors.background.card,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border.light,
-    },
-    backButton: {
-      fontSize: 30,
-      color: colors.text.primary,
-    },
-    headerTitle: {
-      fontSize: typography.fontSize.lg,
-      fontWeight: typography.fontWeight.bold,
-      color: colors.text.primary,
     },
     scrollView: {
       flex: 1,

@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useLanguage } from '../../i18n/LanguageContext';
+import { Header } from '../../components/common/Header';
 import { spacing } from '../../theme/spacing';
 import { typography } from '../../theme/typography';
 
@@ -99,12 +100,13 @@ export const PrivacySettingsScreen = ({ navigation }: any) => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Text style={styles.backText}>‹ {t('common.back')}</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>{t('privacy.privacy')}</Text>
-      </View>
+      <Header
+        title={t('privacy.privacy')}
+        showBackButton={true}
+        onBackPress={() => navigation.goBack()}
+        gradient={false}
+        blur={false}
+      />
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <View style={styles.section}>
@@ -177,27 +179,6 @@ const createStyles = (colors: any) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background.secondary,
-  },
-  header: {
-    backgroundColor: colors.background.card,
-    paddingTop: spacing.xl + 20,
-    paddingBottom: spacing.md,
-    paddingHorizontal: spacing.lg,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border.main,
-  },
-  backButton: {
-    marginBottom: spacing.sm,
-  },
-  backText: {
-    fontSize: typography.fontSize.lg,
-    color: colors.primary.main,
-    fontWeight: typography.fontWeight.medium as any,
-  },
-  headerTitle: {
-    fontSize: typography.fontSize['2xl'],
-    fontWeight: typography.fontWeight.bold as any,
-    color: colors.text.primary,
   },
   scrollView: {
     flex: 1,

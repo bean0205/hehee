@@ -5,6 +5,8 @@ import {
   StyleSheet,
   TouchableOpacity,
   ViewStyle,
+  StatusBar,
+  Platform,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
@@ -48,10 +50,23 @@ export const Header: React.FC<HeaderProps> = ({
   const { colors } = useTheme();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
 
+  // Determine layout style: centered title when back button exists and no gradient/blur
+  const isCenteredLayout = showBackButton && !gradient && !blur;
+
+  // Apply reduced padding only for headers with back button (no gradient/blur)
+  const hasBackButtonOnly = showBackButton && !gradient && !blur;
+  
   const headerContent = (
-    <View style={[styles.header, style]}>
-      {/* Left side: Back button and Title */}
-      <View style={styles.headerLeft}>
+    <View style={[
+      styles.header, 
+      hasBackButtonOnly && styles.headerWithBack,
+      style
+    ]}>
+      {/* Left side: Back button */}
+      <View style={[
+        styles.headerLeft,
+        hasBackButtonOnly && styles.headerLeftWithBack
+      ]}>
         {showBackButton && (
           <TouchableOpacity
             style={styles.backButton}
@@ -60,50 +75,71 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <MaterialCommunityIcons
               name="arrow-left"
-              size={24}
+              size={isCenteredLayout ? 28 : 24}
               color={gradient || blur ? colors.neutral.white : colors.text.primary}
             />
           </TouchableOpacity>
         )}
-        <Text
-          style={[
-            styles.headerTitle,
-            (gradient || blur) && styles.headerTitleLight,
-            showBackButton && styles.headerTitleWithBack,
-          ]}
-          numberOfLines={1}
-        >
-          {title}
-        </Text>
+        {!isCenteredLayout && (
+          <Text
+            style={[
+              styles.headerTitle,
+              (gradient || blur) && styles.headerTitleLight,
+              showBackButton && styles.headerTitleWithBack,
+            ]}
+            numberOfLines={1}
+          >
+            {title}
+          </Text>
+        )}
       </View>
 
-      {/* Right side: Action buttons */}
-      <View style={styles.headerRight}>
-        {actions.map((action, index) => (
-          <TouchableOpacity
-            key={index}
+      {/* Center: Title (only when centered layout) */}
+      {isCenteredLayout && (
+        <View style={styles.headerCenter}>
+          <Text
             style={[
-              styles.headerButton,
-              (gradient || blur) && styles.headerButtonLight,
+              styles.headerTitle,
+              styles.headerTitleCentered,
             ]}
-            onPress={action.onPress}
-            testID={action.testID}
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            numberOfLines={1}
           >
-            <MaterialCommunityIcons
-              name={action.icon as any}
-              size={20}
-              color={gradient || blur ? colors.neutral.white : colors.text.primary}
-            />
-            {action.badge !== undefined && (
-              <View style={styles.notificationBadge}>
-                <Text style={styles.notificationBadgeText}>
-                  {action.badge}
-                </Text>
-              </View>
-            )}
-          </TouchableOpacity>
-        ))}
+            {title}
+          </Text>
+        </View>
+      )}
+
+      {/* Right side: Action buttons or spacer */}
+      <View style={styles.headerRight}>
+        {actions.length > 0 ? (
+          actions.map((action, index) => (
+            <TouchableOpacity
+              key={index}
+              style={[
+                styles.headerButton,
+                (gradient || blur) && styles.headerButtonLight,
+              ]}
+              onPress={action.onPress}
+              testID={action.testID}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <MaterialCommunityIcons
+                name={action.icon as any}
+                size={20}
+                color={gradient || blur ? colors.neutral.white : colors.text.primary}
+              />
+              {action.badge !== undefined && (
+                <View style={styles.notificationBadge}>
+                  <Text style={styles.notificationBadgeText}>
+                    {action.badge}
+                  </Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          ))
+        ) : isCenteredLayout ? (
+          <View style={{ width: 30 }} />
+        ) : null}
       </View>
     </View>
   );
@@ -143,6 +179,7 @@ export const Header: React.FC<HeaderProps> = ({
     <View
       style={[
         styles.headerSimple,
+        hasBackButtonOnly && styles.headerSimpleWithBack,
         backgroundColor && { backgroundColor },
         style,
       ]}
@@ -173,6 +210,9 @@ const createStyles = (colors: any) =>
       borderBottomWidth: 1,
       borderBottomColor: colors.border.light,
     },
+    headerSimpleWithBack: {
+      paddingBottom: spacing.sm,
+    },
     header: {
       flexDirection: 'row',
       justifyContent: 'space-between',
@@ -181,17 +221,30 @@ const createStyles = (colors: any) =>
       paddingVertical: spacing.md,
       minHeight: 56,
     },
+    headerWithBack: {
+      paddingHorizontal: 0,
+      paddingVertical: spacing.sm,
+      paddingBottom: spacing.sm,
+    },
     headerLeft: {
-      flex: 1,
       flexDirection: 'row',
       alignItems: 'center',
       gap: spacing.sm,
+    },
+    headerLeftWithBack: {
+      gap: spacing.xs,
+      paddingLeft: 0,
+    },
+    headerCenter: {
+      flex: 1,
+      alignItems: 'center',
+      paddingHorizontal: spacing.md,
     },
     headerRight: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: spacing.sm,
-      minWidth: 40,
+      minWidth: 30,
     },
     backButton: {
       width: 40,
@@ -205,13 +258,17 @@ const createStyles = (colors: any) =>
       fontWeight: typography.fontWeight.bold,
       color: colors.text.primary,
       letterSpacing: 0.5,
-      flex: 1,
+    },
+    headerTitleCentered: {
+      fontSize: typography.fontSize.lg,
+      flex: 0,
     },
     headerTitleLight: {
       color: colors.neutral.white,
     },
     headerTitleWithBack: {
       marginLeft: spacing.xs,
+      flex: 1,
     },
     headerButton: {
       width: 40,
@@ -244,4 +301,5 @@ const createStyles = (colors: any) =>
       color: colors.neutral.white,
     },
   });
+
 

@@ -406,11 +406,7 @@ const MainNavigator = () => {
         name="Settings"
         component={SettingsScreen}
         options={{
-          title: t('settings.settings'),
-          headerStyle: {
-            backgroundColor: colors.background.card,
-          },
-          headerTintColor: colors.text.primary,
+          headerShown: false,
         }}
       />
       <Stack.Screen

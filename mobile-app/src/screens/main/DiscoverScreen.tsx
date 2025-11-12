@@ -137,8 +137,15 @@ export const DiscoverScreen: React.FC = () => {
     <View style={styles.container}>
       <Header
         title={t('discover.discover')}
-        gradient={false}
-        blur={false}
+        gradient={true}
+        // blur={true}
+        gradientColors={['#3B82F6', '#60A5FA', '#93C5FD']}
+        actions={[
+          {
+            icon: 'cog-outline',
+            onPress: () => navigation.navigate('Settings'),
+          },
+        ]}
       />
 
       {/* Search Bar */}

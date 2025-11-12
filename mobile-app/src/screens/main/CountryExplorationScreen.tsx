@@ -8,11 +8,12 @@ import {
   TextInput,
 } from 'react-native';
 import { usePin } from '../../contexts/PinContext';
-import { colors } from '../../theme/colors';
+import { useTheme } from '../../contexts/ThemeContext';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius } from '../../theme/spacing';
 import { useNavigation } from '@react-navigation/native';
 import { useLanguage } from '../../i18n/LanguageContext';
+import { Header } from '../../components/common/Header';
 
 // Mapping country names to flag emojis
 const COUNTRY_FLAGS: Record<string, string> = {
@@ -112,10 +113,14 @@ const ALL_COUNTRIES = Object.keys(COUNTRY_FLAGS);
 export const CountryExplorationScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const { pins } = usePin();
+  const { colors } = useTheme();
   const { t } = useLanguage();
   const [searchQuery, setSearchQuery] = useState('');
   const [filter, setFilter] = useState<'all' | 'visited' | 'notVisited'>('all');
   const [selectedContinent, setSelectedContinent] = useState<string | null>(null);
+
+  // Create styles with current theme colors
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
 
   // Extract visited countries from pins - using string set to avoid type issues
   const visitedCountriesArray = pins.map(p => {
@@ -206,13 +211,13 @@ export const CountryExplorationScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Text style={styles.backButtonText}>← {t('countryExploration.back')}</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>{t('countryExploration.title')}</Text>
-      </View>
+      <Header
+        title={t('countryExploration.title')}
+        showBackButton={true}
+        onBackPress={() => navigation.goBack()}
+        gradient={false}
+        blur={false}
+      />
 
       {/* Stats Summary */}
       <View style={styles.statsContainer}>
@@ -354,31 +359,10 @@ export const CountryExplorationScreen: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.neutral.white,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.neutral.gray200,
-    backgroundColor: colors.neutral.white,
-  },
-  backButton: {
-    marginRight: spacing.md,
-  },
-  backButtonText: {
-    fontSize: typography.fontSize.base,
-    color: colors.primary.main,
-    fontWeight: typography.fontWeight.semiBold,
-  },
-  headerTitle: {
-    fontSize: typography.fontSize.xl,
-    fontWeight: typography.fontWeight.bold,
-    color: colors.text.primary,
+    backgroundColor: colors.background.main,
   },
   statsContainer: {
     flexDirection: 'row',

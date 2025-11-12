@@ -101,7 +101,7 @@ export const ProfileScreen: React.FC = () => {
       <Header
         title={t('profile.profile') || 'Profile'}
         gradient={true}
-        blur={true}
+        // blur={true}
         gradientColors={['#3B82F6', '#60A5FA', '#93C5FD']}
         actions={[
           {
