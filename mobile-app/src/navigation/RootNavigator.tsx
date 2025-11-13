@@ -1,41 +1,56 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { Text, View, TouchableOpacity, Animated, Dimensions, StyleSheet, Platform } from 'react-native';
-import { createStackNavigator } from '@react-navigation/stack';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { useNavigation } from '@react-navigation/native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useAuth } from '../contexts/AuthContext';
-import { useTheme } from '../contexts/ThemeContext';
-import { useLanguage } from '../i18n/LanguageContext';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import React, { useEffect, useState, useRef } from "react";
+import {
+  Text,
+  View,
+  TouchableOpacity,
+  Animated,
+  Dimensions,
+  StyleSheet,
+  Platform,
+} from "react-native";
+import { createStackNavigator } from "@react-navigation/stack";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { useNavigation } from "@react-navigation/native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useAuth } from "../contexts/AuthContext";
+import { useTheme } from "../contexts/ThemeContext";
+import { useLanguage } from "../i18n/LanguageContext";
+import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 
 // Auth Screens
-import { SplashScreen } from '../screens/auth/SplashScreen';
-import { WalkthroughScreen } from '../screens/auth/WalkthroughScreen';
-import { PermissionRequestScreen } from '../screens/auth/PermissionRequestScreen';
-import { AuthHomeScreen } from '../screens/auth/AuthHomeScreen';
-import { LoginScreen } from '../screens/auth/LoginScreen';
-import { RegisterScreen } from '../screens/auth/RegisterScreen';
+import { SplashScreen } from "../screens/auth/SplashScreen";
+import { WalkthroughScreen } from "../screens/auth/WalkthroughScreen";
+import { PermissionRequestScreen } from "../screens/auth/PermissionRequestScreen";
+import { AuthHomeScreen } from "../screens/auth/AuthHomeScreen";
+import { LoginScreen } from "../screens/auth/LoginScreen";
+import { RegisterScreen } from "../screens/auth/RegisterScreen";
 
 // Main Screens
-import { MapScreen } from '../screens/main/MapScreen';
-import { ProfileScreen } from '../screens/main/ProfileScreen';
-import { SettingsScreen } from '../screens/main/SettingsScreen';
-import { AddPinScreen } from '../screens/main/AddPinScreen';
-import { PinDetailsScreen } from '../screens/main/PinDetailsScreen';
-import { CountryExplorationScreen } from '../screens/main/CountryExplorationScreen';
-import { FeedScreen } from '../screens/main/FeedScreen';
-import { DiscoverScreen } from '../screens/main/DiscoverScreen';
-import { UserProfileScreen } from '../screens/main/UserProfileScreen';
-import { PrivacySettingsScreen } from '../screens/main/PrivacySettingsScreen';
-import { BadgeDetailsScreen } from '../screens/main/BadgeDetailsScreen';
-import { PostDetailsScreen } from '../screens/main/PostDetailsScreen';
+import { MapScreen } from "../screens/main/MapScreen";
+import { ProfileScreen } from "../screens/main/ProfileScreen";
+import { SettingsScreen } from "../screens/main/SettingsScreen";
+import { AddPinScreen } from "../screens/main/AddPinScreen";
+import { PinDetailsScreen } from "../screens/main/PinDetailsScreen";
+import { CountryExplorationScreen } from "../screens/main/CountryExplorationScreen";
+import { FeedScreen } from "../screens/main/FeedScreen";
+import { DiscoverScreen } from "../screens/main/DiscoverScreen";
+import { UserProfileScreen } from "../screens/main/UserProfileScreen";
+import { PrivacySettingsScreen } from "../screens/main/PrivacySettingsScreen";
+import { BadgeDetailsScreen } from "../screens/main/BadgeDetailsScreen";
+import { PostDetailsScreen } from "../screens/main/PostDetailsScreen";
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 
 // Tab Button Component with Animation
-const TabButton = ({ route, index, isFocused, onPress, options, colors }: any) => {
+const TabButton = ({
+  route,
+  index,
+  isFocused,
+  onPress,
+  options,
+  colors,
+}: any) => {
   const scaleValue = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
@@ -56,12 +71,12 @@ const TabButton = ({ route, index, isFocused, onPress, options, colors }: any) =
       style={styles.tabButton}
       activeOpacity={0.7}
     >
-      <Animated.View 
+      <Animated.View
         style={[
           styles.tabContent,
           {
             transform: [{ scale: scaleValue }],
-          }
+          },
         ]}
       >
         {options.tabBarIcon?.({
@@ -78,7 +93,7 @@ const TabButton = ({ route, index, isFocused, onPress, options, colors }: any) =
 const CustomTabBar = ({ state, descriptors, navigation }: any) => {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
-  const screenWidth = Dimensions.get('window').width;
+  const screenWidth = Dimensions.get("window").width;
   const tabBarWidth = screenWidth - 40; // Trừ đi paddingHorizontal (20 * 2)
   const tabWidth = tabBarWidth / state.routes.length;
   const translateX = useRef(new Animated.Value(0)).current;
@@ -93,13 +108,15 @@ const CustomTabBar = ({ state, descriptors, navigation }: any) => {
   }, [state.index, tabWidth]);
 
   return (
-    <View style={[
-      styles.tabBarContainer, 
-      { 
-        backgroundColor: colors.background.card,
-        paddingBottom: Math.max(insets.bottom, 8),
-      }
-    ]}>
+    <View
+      style={[
+        styles.tabBarContainer,
+        {
+          backgroundColor: colors.background.card,
+          paddingBottom: Math.max(insets.bottom, 8),
+        },
+      ]}
+    >
       {/* Animated indicator bar */}
       <Animated.View
         style={[
@@ -118,7 +135,7 @@ const CustomTabBar = ({ state, descriptors, navigation }: any) => {
 
         const onPress = () => {
           const event = navigation.emit({
-            type: 'tabPress',
+            type: "tabPress",
             target: route.key,
             canPreventDefault: true,
           });
@@ -145,12 +162,12 @@ const CustomTabBar = ({ state, descriptors, navigation }: any) => {
 
 const styles = StyleSheet.create({
   tabBarContainer: {
-    flexDirection: 'row',
+    flexDirection: "row",
     paddingHorizontal: 20,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(0,0,0,0.05)',
+    borderTopColor: "rgba(0,0,0,0.05)",
     elevation: 16,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: -4,
@@ -159,7 +176,7 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
   },
   activeTabIndicator: {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     left: 20,
     height: 3,
@@ -168,24 +185,24 @@ const styles = StyleSheet.create({
   },
   tabButton: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     paddingVertical: 8,
     maxWidth: 80,
   },
   tabContent: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
 });
 
 // Auth Stack Navigator
 const AuthNavigator = () => {
   const { colors } = useTheme();
-  
+
   return (
-    <Stack.Navigator 
-      screenOptions={{ 
+    <Stack.Navigator
+      screenOptions={{
         headerShown: false,
         cardStyle: { backgroundColor: colors.background.main },
       }}
@@ -202,7 +219,7 @@ const MainTabNavigator = () => {
   const { colors } = useTheme();
   const { t } = useLanguage();
   const navigation = useNavigation<any>();
-  
+
   return (
     <Tab.Navigator
       tabBar={(props) => <CustomTabBar {...props} />}
@@ -215,33 +232,33 @@ const MainTabNavigator = () => {
         name="Map"
         component={MapScreen}
         options={{
-          title: 'Map',
+          title: "Map",
           tabBarIcon: ({ color, size, focused }) => (
-            <MaterialCommunityIcons 
+            <MaterialCommunityIcons
               name={focused ? "map-marker" : "map-marker-outline"}
-              size={size} 
+              size={size}
               color={color}
             />
           ),
         }}
       />
-      
+
       {/* Tab 2: Feed */}
       <Tab.Screen
         name="Feed"
         component={FeedScreen}
         options={{
-          title: 'Feed',
+          title: "Feed",
           tabBarIcon: ({ color, size, focused }) => (
-            <MaterialCommunityIcons 
+            <MaterialCommunityIcons
               name={focused ? "view-grid" : "view-grid-outline"}
-              size={size} 
+              size={size}
               color={color}
             />
           ),
         }}
       />
-      
+
       {/* Tab 3: Add Pin */}
       <Tab.Screen
         name="AddPinTab"
@@ -249,47 +266,47 @@ const MainTabNavigator = () => {
         listeners={{
           tabPress: (e) => {
             e.preventDefault();
-            navigation.navigate('AddPin', {});
+            navigation.navigate("AddPin", {});
           },
         }}
         options={{
-          title: 'Add',
+          title: "Add",
           tabBarIcon: ({ color, size, focused }) => (
-            <MaterialCommunityIcons 
+            <MaterialCommunityIcons
               name="plus-circle"
-              size={size + 4} 
+              size={size + 4}
               color={color}
             />
           ),
         }}
       />
-      
+
       {/* Tab 4: Discover */}
       <Tab.Screen
         name="Discover"
         component={DiscoverScreen}
         options={{
-          title: 'Explore',
+          title: "Explore",
           tabBarIcon: ({ color, size, focused }) => (
-            <MaterialCommunityIcons 
+            <MaterialCommunityIcons
               name={focused ? "compass" : "compass-outline"}
-              size={size} 
+              size={size}
               color={color}
             />
           ),
         }}
       />
-      
+
       {/* Tab 5: Profile */}
       <Tab.Screen
         name="Profile"
         component={ProfileScreen}
         options={{
-          title: 'Profile',
+          title: "Profile",
           tabBarIcon: ({ color, size, focused }) => (
-            <MaterialCommunityIcons 
+            <MaterialCommunityIcons
               name={focused ? "account-circle" : "account-circle-outline"}
-              size={size} 
+              size={size}
               color={color}
             />
           ),
@@ -303,7 +320,7 @@ const MainTabNavigator = () => {
 const MainNavigator = () => {
   const { colors } = useTheme();
   const { t } = useLanguage();
-  
+
   return (
     <Stack.Navigator
       screenOptions={{
@@ -325,13 +342,9 @@ const MainNavigator = () => {
         name="AddPin"
         component={AddPinScreen}
         options={{
-          // title: t('pin.addPin'),
-          // presentation: 'modal',
-          // headerStyle: {
-          //   backgroundColor: colors.background.card,
-          // },
-          // headerTintColor: colors.text.primary,
-          headerShown: false
+          presentation: "transparentModal", // hoặc 'fullScreenModal'
+          headerShown: false,
+          animation: "fade", // hoặc 'slide_from_bottom'
         }}
       />
       <Stack.Screen
@@ -343,7 +356,7 @@ const MainNavigator = () => {
           //   backgroundColor: colors.background.card,
           // },
           // headerTintColor: colors.text.primary,
-          headerShown: false
+          headerShown: false,
         }}
       />
       <Stack.Screen
@@ -362,7 +375,7 @@ const MainNavigator = () => {
           //   backgroundColor: colors.background.card,
           // },
           // headerTintColor: colors.text.primary,
-          headerShown: false
+          headerShown: false,
         }}
       />
       <Stack.Screen
