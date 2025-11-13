@@ -1,4 +1,4 @@
-package com.pinyourword.william.dto.request;
+package com.pinyourword.william.dto.auth;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

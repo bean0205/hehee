@@ -1,4 +1,4 @@
-package com.pinyourword.william.dto.response;
+package com.pinyourword.william.dto.auth;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -13,26 +13,24 @@ import java.util.UUID;
 @AllArgsConstructor
 public class AuthResponse {
     
-    private UserResponse user;
     private String accessToken;
-    private String tokenType;
+    private String tokenType = "Bearer";
     private Long expiresIn; // in seconds
+    private UserInfo user;
     
     @Data
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class UserResponse {
+    public static class UserInfo {
         private UUID uuid;
         private String email;
         private String username;
         private String displayName;
-        private String bio;
         private String avatarUrl;
         private String coverUrl;
+        private String bio;
         private String profileVisibility;
-        private String notesVisibility;
-        private String bucketlistVisibility;
         private String subscriptionStatus;
         private Integer visitedCountriesCount;
         private Integer visitedCitiesCount;
