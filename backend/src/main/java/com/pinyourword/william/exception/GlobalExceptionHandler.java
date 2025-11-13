@@ -27,6 +27,15 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.BAD_REQUEST)
                 .body(ApiResponse.error(ex.getMessage()));
     }
+    @ExceptionHandler(BadRequestRegisterException.class)
+    public ResponseEntity<Map<String, Object>> handleBadRequestException(BadRequestRegisterException ex) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("message", ex.getMessage());
+        body.put("errors", ex.getErrors());
+        return ResponseEntity
+                .badRequest()
+                .body(body);
+    }
     
     @ExceptionHandler(UnauthorizedException.class)
     public ResponseEntity<ApiResponse<Void>> handleUnauthorizedException(UnauthorizedException ex) {

@@ -54,6 +54,13 @@ export default {
     apple: '🍎 Apple',
     // RegisterScreen
     processing: 'Đang xử lý...',
+    registerSuccess: 'Đăng ký thành công',
+    registerSuccessMessage: 'Chào mừng bạn đến với PinYourWord! Hãy bắt đầu hành trình khám phá thế giới của bạn.',
+    emailPlaceholder: 'Nhập email của bạn',
+    usernamePlaceholder: 'Nhập tên người dùng',
+    passwordPlaceholder: 'Nhập mật khẩu',
+    displayName: 'Tên hiển thị',
+    displayNamePlaceholder: 'Nhập tên hiển thị',
     // Common
     welcomeBack: 'Chào mừng trở lại',
     createAccount: 'Tạo tài khoản của bạn',
@@ -285,6 +292,19 @@ export default {
     invalidEmail: 'Email không hợp lệ',
     passwordTooShort: 'Mật khẩu phải có ít nhất 6 ký tự',
     passwordsDoNotMatch: 'Mật khẩu không khớp',
+    emailRequired: 'Email là bắt buộc',
+    emailValid: 'Email phải hợp lệ',
+    emailExists: 'Email đã tồn tại',
+    usernameRequired: 'Tên người dùng là bắt buộc',
+    usernameLength: 'Tên người dùng phải từ 3 đến 50 ký tự',
+    usernameFormat: 'Tên người dùng chỉ được chứa chữ cái, số và dấu gạch dưới',
+    usernameExists: 'Tên người dùng đã tồn tại',
+    passwordRequired: 'Mật khẩu là bắt buộc',
+    passwordLength: 'Mật khẩu phải từ 8 đến 100 ký tự',
+    passwordFormat: 'Mật khẩu phải chứa ít nhất một chữ hoa, một chữ thường và một số',
+    passwordNotMatch: 'Mật khẩu không khớp',
+    displayNameRequired: 'Tên hiển thị là bắt buộc',
+    displayNameLength: 'Tên hiển thị không được vượt quá 100 ký tự',
   },
 
   badge: {

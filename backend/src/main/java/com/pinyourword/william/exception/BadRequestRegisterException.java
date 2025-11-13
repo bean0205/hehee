@@ -2,10 +2,10 @@ package com.pinyourword.william.exception;
 
 import java.util.Map;
 
-public class BadRequestException extends RuntimeException {
+public class BadRequestRegisterException extends RuntimeException {
     private final Map<String, String> errors;
 
-    public BadRequestException(String message, Map<String, String> errors) {
+    public BadRequestRegisterException(String message, Map<String, String> errors) {
         super(message);
         this.errors = errors;
     }

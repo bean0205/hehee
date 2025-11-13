@@ -54,6 +54,13 @@ export default {
     apple: '🍎 Apple',
     // RegisterScreen
     processing: 'Processing...',
+    registerSuccess: 'Registration successful',
+    registerSuccessMessage: 'Welcome to PinYourWord! Start your journey to explore the world.',
+    emailPlaceholder: 'Enter your email',
+    usernamePlaceholder: 'Enter your username',
+    passwordPlaceholder: 'Enter your password',
+    displayName: 'Display Name',
+    displayNamePlaceholder: 'Enter your display name',
     // Common
     welcomeBack: 'Welcome back',
     createAccount: 'Create your account',
@@ -285,6 +292,19 @@ export default {
     invalidEmail: 'Invalid email',
     passwordTooShort: 'Password must be at least 6 characters',
     passwordsDoNotMatch: 'Passwords do not match',
+    emailRequired: 'Email is required',
+    emailValid: 'Email must be valid',
+    emailExists: 'Email already exists',
+    usernameRequired: 'Username is required',
+    usernameLength: 'Username must be between 3 and 50 characters',
+    usernameFormat: 'Username can only contain letters, numbers, and underscores',
+    usernameExists: 'Username already exists',
+    passwordRequired: 'Password is required',
+    passwordLength: 'Password must be between 8 and 100 characters',
+    passwordFormat: 'Password must contain at least one uppercase letter, one lowercase letter, and one number',
+    passwordNotMatch: 'Passwords do not match',
+    displayNameRequired: 'Display name is required',
+    displayNameLength: 'Display name must not exceed 100 characters',
   },
 
   badge: {

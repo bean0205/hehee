@@ -5,6 +5,7 @@ import com.pinyourword.william.dto.request.*;
 import com.pinyourword.william.dto.response.AuthResponse;
 import com.pinyourword.william.entity.user.User;
 import com.pinyourword.william.exception.BadRequestException;
+import com.pinyourword.william.exception.BadRequestRegisterException;
 import com.pinyourword.william.exception.ResourceNotFoundException;
 import com.pinyourword.william.exception.UnauthorizedException;
 import com.pinyourword.william.repository.UserRepository;
@@ -12,12 +13,16 @@ import com.pinyourword.william.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 @Service
 @RequiredArgsConstructor
@@ -34,15 +39,9 @@ public class AuthService {
     @Transactional
     public AuthResponse register(RegisterRequest request) {
         log.info("Registering new user with email: {}", request.getEmail());
-        
-        // Check if email already exists
-        if (userRepository.existsByEmail(request.getEmail())) {
-            throw new BadRequestException("Email already exists");
-        }
-        
-        // Check if username already exists
-        if (userRepository.existsByUsername(request.getUsername())) {
-            throw new BadRequestException("Username already exists");
+        Map<String, String> errors = validateRegisterRequest(request);
+        if (!errors.isEmpty()) {
+            throw new BadRequestRegisterException("Lỗi", errors);
         }
         
         // Create new user
@@ -313,5 +312,49 @@ public class AuthService {
                 .visitedCitiesCount(user.getVisitedCitiesCount())
                 .totalPinsCount(user.getTotalPinsCount())
                 .build();
+    }
+
+    public  Map<String, String> validateRegisterRequest(RegisterRequest request) {
+        Map<String, String> errors = new HashMap<>();
+        // Check if email already exists
+        if (userRepository.existsByEmail(request.getEmail())) {
+            errors.put("email", "validation.emailExists");
+        }
+
+        // Check if username already exists
+        if (userRepository.existsByUsername(request.getUsername())) {
+            errors.put("username", "validation.usernameExists");
+        }
+        // Email
+        if (request.getEmail() == null || request.getEmail().isBlank()) {
+            errors.put("email", "validation.emailRequired");
+        } else if (!Pattern.compile("^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$").matcher(request.getEmail()).matches()) {
+            errors.put("email", "validation.emailValid");
+        }
+
+        // Password
+        if (request.getPassword() == null || request.getPassword().isBlank()) {
+            errors.put("password", "validation.passwordRequired");
+        } else if (request.getPassword().length() < 8 || request.getPassword().length() > 100) {
+            errors.put("password", "validation.passwordLength");
+        } else if (!Pattern.compile("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).*$").matcher(request.getPassword()).matches()) {
+            errors.put("password", "validation.passwordFormat");
+        }
+
+        // Username
+        if (request.getUsername() == null || request.getUsername().isBlank()) {
+            errors.put("username", "validation.usernameRequired");
+        } else if (request.getUsername().length() < 3 || request.getUsername().length() > 50) {
+            errors.put("username", "validation.usernameLength");
+        } else if (!Pattern.compile("^[a-zA-Z0-9_]+$").matcher(request.getUsername()).matches()) {
+            errors.put("username", "validation.usernameFormat");
+        }
+
+        // Display Name (optional)
+        if (request.getDisplayName() != null && request.getDisplayName().length() > 100) {
+            errors.put("displayName", "validation.displayNameLength");
+        }
+
+        return errors; // trả về map field -> message
     }
 }
