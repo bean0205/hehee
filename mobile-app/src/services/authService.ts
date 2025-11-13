@@ -10,7 +10,7 @@ export const authService = {
       const response = await authAPI.login(email, password);
       
       // Save token for future requests
-      await setStorageItem('auth_token', response.data.token);
+      await setStorageItem('auth_token', response.data.accessToken);
       await setStorageItem('user_data', response.data.user);
       
       console.log('Login successful:', response.data.user);

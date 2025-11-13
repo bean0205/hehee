@@ -125,7 +125,7 @@ export const Header: React.FC<HeaderProps> = ({
             >
               <MaterialCommunityIcons
                 name={action.icon as any}
-                size={20}
+                size={25}
                 color={gradient || blur ? colors.neutral.white : colors.text.primary}
               />
               {action.badge !== undefined && (
@@ -192,7 +192,7 @@ export const Header: React.FC<HeaderProps> = ({
 const createStyles = (colors: any) =>
   StyleSheet.create({
     headerGradient: {
-      paddingTop: spacing.xl + 20,
+      paddingTop: spacing.lg + 10,
       shadowColor: '#000',
       shadowOffset: { width: 0, height: 4 },
       shadowOpacity: 0.15,
@@ -203,28 +203,30 @@ const createStyles = (colors: any) =>
       overflow: 'hidden',
     },
     headerSimple: {
-      paddingTop: spacing.xl + 20,
-      paddingHorizontal: spacing.lg,
-      paddingBottom: spacing.md,
+      paddingTop: spacing.lg + 40,
+      paddingBottom: spacing.sm,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.15,
+      shadowRadius: 12,
+      elevation: 8,
       backgroundColor: colors.background.card,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border.light,
     },
     headerSimpleWithBack: {
-      paddingBottom: spacing.sm,
+      // paddingBottom: spacing.sm,
     },
     header: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      paddingHorizontal: spacing.lg,
-      paddingVertical: spacing.md,
-      minHeight: 56,
+      paddingHorizontal: spacing.md,
+      // paddingVertical: spacing.md,
+      // minHeight: 45,
     },
     headerWithBack: {
-      paddingHorizontal: 0,
-      paddingVertical: spacing.sm,
-      paddingBottom: spacing.sm,
+      // paddingHorizontal: 0,
+      // paddingVertical: spacing.lg,
+      // paddingBottom: spacing.sm,
     },
     headerLeft: {
       flexDirection: 'row',
@@ -254,7 +256,7 @@ const createStyles = (colors: any) =>
       alignItems: 'center',
     },
     headerTitle: {
-      fontSize: typography.fontSize['2xl'],
+      fontSize: typography.fontSize['3xl'],
       fontWeight: typography.fontWeight.bold,
       color: colors.text.primary,
       letterSpacing: 0.5,
@@ -274,13 +276,13 @@ const createStyles = (colors: any) =>
       width: 40,
       height: 40,
       borderRadius: 20,
-      backgroundColor: colors.background.secondary,
+      // backgroundColor: colors.background.secondary,
       justifyContent: 'center',
       alignItems: 'center',
       position: 'relative',
     },
     headerButtonLight: {
-      backgroundColor: colors.neutral.white + '33', // 20% opacity
+      // backgroundColor: colors.neutral.white + '33', // 20% opacity
     },
     notificationBadge: {
       position: 'absolute',

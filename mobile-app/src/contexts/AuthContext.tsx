@@ -30,30 +30,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setIsLoading(true);
     try {
       // Mock API call - accepts any email/password
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Demo accounts with specific data
-      if (email === 'demo@pinyourword.com') {
-        setUser({
-          id: '1',
-          email: 'demo@pinyourword.com',
-          username: 'traveler_demo',
-          displayName: 'Nguyễn Văn Demo',
-          avatar: 'https://i.pravatar.cc/150?u=demo',
-          bio: 'Yêu thích du lịch và khám phá thế giới 🌍 | 15 quốc gia | 50+ thành phố',
-        });
-      } else {
-        // Generic user from email
-        const username = email.split('@')[0];
-        setUser({
-          id: Date.now().toString(),
-          email,
-          username,
-          displayName: username.charAt(0).toUpperCase() + username.slice(1),
-          avatar: `https://i.pravatar.cc/150?u=${email}`,
-          bio: 'Khám phá thế giới qua từng bước chân 🗺️',
-        });
-      }
+      const rs = await authService.handleLogin(email, password);
+      debugger
+      setUser({
+        id: Date.now().toString(),
+        email,
+        username: rs.user.username,
+        displayName: rs.user.displayName,
+        avatar: rs.user.avatarUrl || `https://i.pravatar.cc/150?u=${rs.user.username}`,
+        bio: rs.user.bio || 'Chào mừng bạn đến với PinYourWord! 🚀',
+      });       
     } catch (error) {
       throw error;
     } finally {

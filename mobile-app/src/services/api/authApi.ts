@@ -33,9 +33,9 @@ export const authAPI = {
   /**
    * Login with email and password
    */
-  login: async (email: string, password: string): Promise<ApiResponse<AuthResponse>> => {
-    return httpClient.post<AuthResponse>('/auth/login', {
-      email,
+  login: async (emailOrUsername: string, password: string): Promise<ApiResponse<AuthResponse>> => {
+    return httpClient.post<AuthResponse>('/v1/auth/login', {
+      emailOrUsername,
       password,
     });
   },

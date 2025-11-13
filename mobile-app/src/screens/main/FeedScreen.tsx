@@ -589,7 +589,7 @@ export const FeedScreen: React.FC = () => {
     <View style={styles.container}>
       <Header
         title={t('feed.feed')}
-        gradient={true}
+        // gradient={true}
         // blur={true}
         gradientColors={['#1E3A8A', '#3B82F6', '#60A5FA']}
         actions={[

@@ -325,23 +325,25 @@ const MainNavigator = () => {
         name="AddPin"
         component={AddPinScreen}
         options={{
-          title: t('pin.addPin'),
-          presentation: 'modal',
-          headerStyle: {
-            backgroundColor: colors.background.card,
-          },
-          headerTintColor: colors.text.primary,
+          // title: t('pin.addPin'),
+          // presentation: 'modal',
+          // headerStyle: {
+          //   backgroundColor: colors.background.card,
+          // },
+          // headerTintColor: colors.text.primary,
+          headerShown: false
         }}
       />
       <Stack.Screen
         name="PinDetails"
         component={PinDetailsScreen}
         options={{
-          title: t('pin.pinDetails'),
-          headerStyle: {
-            backgroundColor: colors.background.card,
-          },
-          headerTintColor: colors.text.primary,
+          // title: t('pin.pinDetails'),
+          // headerStyle: {
+          //   backgroundColor: colors.background.card,
+          // },
+          // headerTintColor: colors.text.primary,
+          headerShown: false
         }}
       />
       <Stack.Screen
@@ -355,22 +357,24 @@ const MainNavigator = () => {
         name="UserProfile"
         component={UserProfileScreen}
         options={{
-          title: 'Hồ sơ người dùng',
-          headerStyle: {
-            backgroundColor: colors.background.card,
-          },
-          headerTintColor: colors.text.primary,
+          // title: 'Hồ sơ người dùng',
+          // headerStyle: {
+          //   backgroundColor: colors.background.card,
+          // },
+          // headerTintColor: colors.text.primary,
+          headerShown: false
         }}
       />
       <Stack.Screen
         name="Settings"
         component={SettingsScreen}
         options={{
-          title: t('settings.settings'),
-          headerStyle: {
-            backgroundColor: colors.background.card,
-          },
-          headerTintColor: colors.text.primary,
+          // title: t('settings.settings'),
+          // headerStyle: {
+          //   backgroundColor: colors.background.card,
+          // },
+          // headerTintColor: colors.text.primary,
+          headerShown: false,
         }}
       />
       <Stack.Screen

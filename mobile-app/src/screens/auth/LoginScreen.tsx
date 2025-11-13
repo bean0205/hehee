@@ -26,17 +26,13 @@ export const LoginScreen: React.FC = () => {
   const { login, isLoading } = useAuth();
   const { t } = useLanguage();
   const { colors, isDarkMode } = useTheme();
-  const [email, setEmail] = useState('demo@pinyourword.com');
-  const [password, setPassword] = useState('demo123');
+  const [email, setEmail] = useState('williamnguyen8888@gmail.com');
+  const [password, setPassword] = useState('250696Aa@');
   const [errors, setErrors] = useState({ email: '', password: '' });
 
   const styles = React.useMemo(() => createStyles(colors), [colors]);
 
-  const handleLogin = async () => {
-    console.log('Login button pressed');
-    console.log('Email:', email);
-    console.log('Password:', password);
-    
+  const handleLogin = async () => { 
     // Validate
     const newErrors = { email: '', password: '' };
     if (!email) newErrors.email = t('validation.emailRequired');

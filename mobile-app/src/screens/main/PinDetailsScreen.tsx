@@ -19,6 +19,7 @@ import { typography } from '../../theme/typography';
 import { spacing, borderRadius } from '../../theme/spacing';
 import { Button } from '../../components/common/Button';
 import { usePin } from '../../contexts/PinContext';
+import { Header } from '../../components/common/Header';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -97,6 +98,13 @@ export const PinDetailsScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
+      <Header
+              title={t('pin.pinDetails')}
+              showBackButton={true}
+              onBackPress={() => navigation.goBack()}
+              gradient={false}
+              blur={false}
+            />
       <ScrollView style={styles.scrollView}>
         {/* Image Gallery */}
         {pin.images && pin.images.length > 0 ? (
