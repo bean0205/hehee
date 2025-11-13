@@ -1,11 +1,13 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Text, View, TouchableOpacity, Animated, Dimensions, StyleSheet } from 'react-native';
+import { Text, View, TouchableOpacity, Animated, Dimensions, StyleSheet, Platform } from 'react-native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useNavigation } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useLanguage } from '../i18n/LanguageContext';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 // Auth Screens
 import { SplashScreen } from '../screens/auth/SplashScreen';
@@ -32,104 +34,80 @@ import { PostDetailsScreen } from '../screens/main/PostDetailsScreen';
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 
-// Custom Tab Bar Component with Circle Indicator and Slide Animation
-const CustomTabBar = ({ state, descriptors, navigation }: any) => {
-  const { colors } = useTheme();
-  const slideAnim = useRef(new Animated.Value(0)).current;
-  const scaleAnims = useRef(state.routes.map(() => new Animated.Value(0))).current;
-  const opacityAnim = useRef(new Animated.Value(1)).current;
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Function to fade out navbar
-  const fadeOut = () => {
-    Animated.timing(opacityAnim, {
-      toValue: 0.3,
-      duration: 300,
-      useNativeDriver: true,
-    }).start();
-  };
-
-  // Function to fade in navbar
-  const fadeIn = () => {
-    Animated.timing(opacityAnim, {
-      toValue: 1,
-      duration: 200,
-      useNativeDriver: true,
-    }).start();
-  };
-
-  // Reset the timeout whenever there's interaction
-  const resetTimeout = () => {
-    fadeIn();
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
-    timeoutRef.current = setTimeout(() => {
-      fadeOut();
-    }, 3000); // Fade out after 3 seconds of inactivity
-  };
+// Tab Button Component with Animation
+const TabButton = ({ route, index, isFocused, onPress, options, colors }: any) => {
+  const scaleValue = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
-    // Initial timeout
-    resetTimeout();
-
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    // Animate slide indicator
-    Animated.spring(slideAnim, {
-      toValue: state.index,
+    Animated.spring(scaleValue, {
+      toValue: isFocused ? 1.15 : 1,
       useNativeDriver: true,
-      friction: 8,
-      tension: 40,
+      friction: 6,
+      tension: 80,
     }).start();
-
-    // Animate scale for icons
-    scaleAnims.forEach((anim: Animated.Value, index: number) => {
-      Animated.spring(anim, {
-        toValue: state.index === index ? 1 : 0,
-        useNativeDriver: true,
-        friction: 8,
-        tension: 40,
-      }).start();
-    });
-
-    // Reset timeout on navigation
-    resetTimeout();
-  }, [state.index]);
-
-  const tabWidth = (Dimensions.get('window').width - 40) / state.routes.length;
+  }, [isFocused]);
 
   return (
-    <Animated.View 
-      style={[
-        styles.tabBarContainer, 
-        { 
-          backgroundColor: colors.background.card,
-          opacity: opacityAnim,
-        }
-      ]}
-      onTouchStart={resetTimeout}
+    <TouchableOpacity
+      key={route.key}
+      accessibilityRole="button"
+      accessibilityState={isFocused ? { selected: true } : {}}
+      onPress={onPress}
+      style={styles.tabButton}
+      activeOpacity={0.7}
     >
-      {/* Sliding Circle Indicator */}
+      <Animated.View 
+        style={[
+          styles.tabContent,
+          {
+            transform: [{ scale: scaleValue }],
+          }
+        ]}
+      >
+        {options.tabBarIcon?.({
+          focused: isFocused,
+          color: isFocused ? colors.primary.main : colors.text.secondary,
+          size: 28,
+        })}
+      </Animated.View>
+    </TouchableOpacity>
+  );
+};
+
+// Modern Bottom Tab Bar with Material Icons
+const CustomTabBar = ({ state, descriptors, navigation }: any) => {
+  const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
+  const screenWidth = Dimensions.get('window').width;
+  const tabBarWidth = screenWidth - 40; // Trừ đi paddingHorizontal (20 * 2)
+  const tabWidth = tabBarWidth / state.routes.length;
+  const translateX = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.spring(translateX, {
+      toValue: state.index * tabWidth,
+      useNativeDriver: true,
+      friction: 10,
+      tension: 100,
+    }).start();
+  }, [state.index, tabWidth]);
+
+  return (
+    <View style={[
+      styles.tabBarContainer, 
+      { 
+        backgroundColor: colors.background.card,
+        paddingBottom: Math.max(insets.bottom, 8),
+      }
+    ]}>
+      {/* Animated indicator bar */}
       <Animated.View
         style={[
-          styles.slideIndicator,
+          styles.activeTabIndicator,
           {
-            backgroundColor: colors.primary.main + '20',
-            transform: [
-              {
-                translateX: slideAnim.interpolate({
-                  inputRange: [0, state.routes.length - 1],
-                  outputRange: [tabWidth / 2 - 30, ((state.routes.length - 1) * tabWidth) + (tabWidth / 2) - 30],
-                }),
-              },
-            ],
+            width: Math.min(tabWidth, 80), // Giới hạn width của indicator
+            backgroundColor: colors.primary.main,
+            transform: [{ translateX }],
           },
         ]}
       />
@@ -150,81 +128,54 @@ const CustomTabBar = ({ state, descriptors, navigation }: any) => {
           }
         };
 
-        const scale = scaleAnims[index].interpolate({
-          inputRange: [0, 1],
-          outputRange: [1, 1.2],
-        });
-
         return (
-          <TouchableOpacity
+          <TabButton
             key={route.key}
-            accessibilityRole="button"
-            accessibilityState={isFocused ? { selected: true } : {}}
+            route={route}
+            isFocused={isFocused}
             onPress={onPress}
-            style={styles.tabButton}
-          >
-            <Animated.View
-              style={[
-                styles.iconContainer,
-                {
-                  transform: [{ scale }],
-                },
-              ]}
-            >
-              {options.tabBarIcon?.({
-                focused: isFocused,
-                color: isFocused ? colors.primary.main : colors.text.disabled,
-                size: 24,
-              })}
-            </Animated.View>
-          </TouchableOpacity>
+            options={options}
+            colors={colors}
+          />
         );
       })}
-    </Animated.View>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   tabBarContainer: {
-    position: 'absolute',
-    bottom: 25,
-    left: 20,
-    right: 20,
     flexDirection: 'row',
-    height: 70,
-    borderRadius: 25,
-    elevation: 8,
+    paddingHorizontal: 20,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(0,0,0,0.05)',
+    elevation: 16,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 4,
+      height: -4,
     },
-    shadowOpacity: 0.3,
-    shadowRadius: 4.65,
-    paddingHorizontal: 0,
-    alignItems: 'center',
-    justifyContent: 'space-around',
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
   },
-  slideIndicator: {
+  activeTabIndicator: {
     position: 'absolute',
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    left: 0,
-    top: 5,
+    top: 0,
+    left: 20,
+    height: 3,
+    borderBottomLeftRadius: 3,
+    borderBottomRightRadius: 3,
   },
   tabButton: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    height: 70,
-    zIndex: 10,
+    paddingVertical: 8,
+    maxWidth: 80,
   },
-  iconContainer: {
-    justifyContent: 'center',
+  tabContent: {
     alignItems: 'center',
-    width: 60,
-    height: 60,
+    justifyContent: 'center',
   },
 });
 
@@ -264,8 +215,13 @@ const MainTabNavigator = () => {
         name="Map"
         component={MapScreen}
         options={{
+          title: 'Map',
           tabBarIcon: ({ color, size, focused }) => (
-            <Text style={{ fontSize: 26 }}>🗺️</Text>
+            <MaterialCommunityIcons 
+              name={focused ? "map-marker" : "map-marker-outline"}
+              size={size} 
+              color={color}
+            />
           ),
         }}
       />
@@ -275,13 +231,18 @@ const MainTabNavigator = () => {
         name="Feed"
         component={FeedScreen}
         options={{
+          title: 'Feed',
           tabBarIcon: ({ color, size, focused }) => (
-            <Text style={{ fontSize: 26 }}>📰</Text>
+            <MaterialCommunityIcons 
+              name={focused ? "view-grid" : "view-grid-outline"}
+              size={size} 
+              color={color}
+            />
           ),
         }}
       />
       
-      {/* Tab 3: Add Pin (Center FAB-style) */}
+      {/* Tab 3: Add Pin */}
       <Tab.Screen
         name="AddPinTab"
         component={View}
@@ -292,18 +253,13 @@ const MainTabNavigator = () => {
           },
         }}
         options={{
+          title: 'Add',
           tabBarIcon: ({ color, size, focused }) => (
-            <View style={{
-              width: 56,
-              height: 56,
-              borderRadius: 28,
-              backgroundColor: colors.primary.main,
-              justifyContent: 'center',
-              alignItems: 'center',
-              marginBottom: 20,
-            }}>
-              <Text style={{ fontSize: 32, color: colors.text.inverse }}>+</Text>
-            </View>
+            <MaterialCommunityIcons 
+              name="plus-circle"
+              size={size + 4} 
+              color={color}
+            />
           ),
         }}
       />
@@ -313,8 +269,13 @@ const MainTabNavigator = () => {
         name="Discover"
         component={DiscoverScreen}
         options={{
+          title: 'Explore',
           tabBarIcon: ({ color, size, focused }) => (
-            <Text style={{ fontSize: 26 }}>�</Text>
+            <MaterialCommunityIcons 
+              name={focused ? "compass" : "compass-outline"}
+              size={size} 
+              color={color}
+            />
           ),
         }}
       />
@@ -324,8 +285,13 @@ const MainTabNavigator = () => {
         name="Profile"
         component={ProfileScreen}
         options={{
+          title: 'Profile',
           tabBarIcon: ({ color, size, focused }) => (
-            <Text style={{ fontSize: 26 }}>👤</Text>
+            <MaterialCommunityIcons 
+              name={focused ? "account-circle" : "account-circle-outline"}
+              size={size} 
+              color={color}
+            />
           ),
         }}
       />
@@ -359,18 +325,12 @@ const MainNavigator = () => {
         name="AddPin"
         component={AddPinScreen}
         options={{
-          headerShown: false,
-          presentation: 'transparentModal',
-          cardStyle: { backgroundColor: 'transparent' },
-          cardOverlayEnabled: true,
-          cardStyleInterpolator: ({ current: { progress } }) => ({
-            cardStyle: {
-              opacity: progress.interpolate({
-                inputRange: [0, 1],
-                outputRange: [0, 1],
-              }),
-            },
-          }),
+          title: t('pin.addPin'),
+          presentation: 'modal',
+          headerStyle: {
+            backgroundColor: colors.background.card,
+          },
+          headerTintColor: colors.text.primary,
         }}
       />
       <Stack.Screen
@@ -406,7 +366,11 @@ const MainNavigator = () => {
         name="Settings"
         component={SettingsScreen}
         options={{
-          headerShown: false,
+          title: t('settings.settings'),
+          headerStyle: {
+            backgroundColor: colors.background.card,
+          },
+          headerTintColor: colors.text.primary,
         }}
       />
       <Stack.Screen

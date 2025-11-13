@@ -7,7 +7,6 @@ import {
   Platform,
   ScrollView,
   TouchableOpacity,
-  Alert,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
@@ -17,37 +16,61 @@ import { typography } from '../../theme/typography';
 import { spacing, borderRadius } from '../../theme/spacing';
 import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';
+import { Alert } from '../../components/common/Alert';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../i18n/LanguageContext';
+import { useAlert } from '../../hooks/useAlert';
 
 export const RegisterScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const { register, isLoading } = useAuth();
   const { t } = useLanguage();
   const { colors, isDarkMode } = useTheme();
-  const [email, setEmail] = useState('');
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [errors, setErrors] = useState({ email: '', username: '', password: '', confirmPassword: '' });
+  const {
+    alertVisible,
+    alertConfig,
+    hideAlert,
+    showSuccess,
+    showError,
+  } = useAlert();
+  const [email, setEmail] = useState('williamnguyen8888@gmail.com');
+  const [username, setUsername] = useState('williamnguyen');
+  const [displayName, setDisplayName] = useState('William Nguyen');
+  const [password, setPassword] = useState('250696Aa@');
+  const [confirmPassword, setConfirmPassword] = useState('250696Aa@');
+  const [errors, setErrors] = useState({ email: '', username: '', password: '', confirmPassword: '', displayName: '' });
 
   const styles = React.useMemo(() => createStyles(colors), [colors]);
 
   const handleRegister = async () => {
     // Validate
-    const newErrors = { email: '', username: '', password: '', confirmPassword: '' };
+    const newErrors = { email: '', username: '', password: '', confirmPassword: '', displayName: '' };
     if (!email) newErrors.email = t('validation.emailRequired');
     if (!username) newErrors.username = t('validation.usernameRequired');
     if (!password) newErrors.password = t('validation.passwordRequired');
     if (password !== confirmPassword) newErrors.confirmPassword = t('validation.passwordNotMatch');
+    if (!displayName) newErrors.displayName = t('validation.displayNameRequired');
     
     setErrors(newErrors);
     if (Object.values(newErrors).some(e => e)) return;
 
     try {
-      await register(email, password, username);
-    } catch (error) {
-      Alert.alert(t('errors.error'), t('errors.registerFailed'));
+      await register(email, password, username, displayName);
+      showSuccess(
+        t('auth.registerSuccess') || 'Đăng ký thành công!',
+        t('auth.registerSuccessMessage') || 'Chào mừng bạn đến với PinYourWord! Hãy bắt đầu hành trình khám phá thế giới của bạn.',
+        () => {
+          // Navigate or do something after success
+        }
+      );
+    } catch (error : any) {
+      showError(
+         error.message,
+         'Đăng ký không thành công. Vui lòng thử lại sau.',
+        () => {
+          // Retry or do something after error
+        }
+      );
     }
   };
 
@@ -132,6 +155,14 @@ export const RegisterScreen: React.FC = () => {
                 secureTextEntry
               />
 
+              <Input
+                label={t('auth.displayName')}
+                placeholder={t('auth.displayNamePlaceholder')}
+                value={displayName}
+                onChangeText={setDisplayName}
+                error={errors.displayName}
+              />
+
               <TouchableOpacity
                 style={styles.registerButton}
                 onPress={handleRegister}
@@ -163,6 +194,18 @@ export const RegisterScreen: React.FC = () => {
           </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {/* Alert Component */}
+      <Alert
+        visible={alertVisible}
+        type={alertConfig.type}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        primaryButton={alertConfig.primaryButton}
+        secondaryButton={alertConfig.secondaryButton}
+        onClose={hideAlert}
+        showCloseButton={alertConfig.showCloseButton}
+      />
     </View>
   );
 };

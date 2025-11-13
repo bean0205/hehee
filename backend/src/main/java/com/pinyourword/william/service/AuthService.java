@@ -3,7 +3,7 @@ package com.pinyourword.william.service;
 
 import com.pinyourword.william.dto.request.*;
 import com.pinyourword.william.dto.response.AuthResponse;
-import com.pinyourword.william.entity.User;
+import com.pinyourword.william.entity.user.User;
 import com.pinyourword.william.exception.BadRequestException;
 import com.pinyourword.william.exception.ResourceNotFoundException;
 import com.pinyourword.william.exception.UnauthorizedException;

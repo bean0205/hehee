@@ -1,5 +1,5 @@
 import React, { createContext, useState, useContext, ReactNode } from 'react';
-
+import { authService } from '../services/authService';
 interface User {
   id: string;
   email: string;
@@ -14,7 +14,7 @@ interface AuthContextType {
   isLoading: boolean;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, username: string) => Promise<void>;
+  register: (email: string, password: string, username: string, displayName: string) => Promise<void>;
   loginWithGoogle: () => Promise<void>;
   loginWithApple: () => Promise<void>;
   logout: () => Promise<void>;
@@ -61,11 +61,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  const register = async (email: string, password: string, username: string) => {
+  const register = async (email: string, password: string, username: string, displayName: string) => {
     setIsLoading(true);
     try {
       // Mock API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const rs = await authService.handleRegister(email, password, username, displayName);
+      debugger
       setUser({
         id: Date.now().toString(),
         email,

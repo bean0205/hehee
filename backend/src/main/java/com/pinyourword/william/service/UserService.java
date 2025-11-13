@@ -2,7 +2,7 @@ package com.pinyourword.william.service;
 
 
 import com.pinyourword.william.dto.response.UserProfileResponse;
-import com.pinyourword.william.entity.User;
+import com.pinyourword.william.entity.user.User;
 import com.pinyourword.william.exception.ResourceNotFoundException;
 import com.pinyourword.william.repository.UserRepository;
 import lombok.RequiredArgsConstructor;

@@ -1,5 +1,5 @@
 export const API_BASE_URL = __DEV__
-  ? 'http://localhost:3000/api'
+  ? 'http://192.168.0.160:8080/api'
   : 'https://api.pinyourword.com';
 
 export const GOOGLE_MAPS_API_KEY = 'YOUR_GOOGLE_MAPS_API_KEY';

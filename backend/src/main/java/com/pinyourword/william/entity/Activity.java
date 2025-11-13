@@ -1,5 +1,6 @@
 package com.pinyourword.william.entity;
 
+import com.pinyourword.william.entity.user.User;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;

@@ -65,3 +65,16 @@ export const pinStorage = {
   getOfflinePins: () => storage.get(STORAGE_KEYS.OFFLINE_PINS),
   clearOfflinePins: () => storage.remove(STORAGE_KEYS.OFFLINE_PINS),
 };
+
+// Generic storage helpers for httpClient
+export const getStorageItem = async (key: string): Promise<any> => {
+  return storage.get(key);
+};
+
+export const setStorageItem = async (key: string, value: any): Promise<void> => {
+  return storage.save(key, value);
+};
+
+export const removeStorageItem = async (key: string): Promise<void> => {
+  return storage.remove(key);
+};
