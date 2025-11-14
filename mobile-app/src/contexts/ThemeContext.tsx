@@ -49,6 +49,7 @@ const lightColors = {
     wantToGo: '#F59E0B', // Orange/Yellow
     success: '#10B981',
     error: '#EF4444',
+    active: '#3B82F6',
   },
   
   // Semantic Colors

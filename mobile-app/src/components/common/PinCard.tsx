@@ -4,18 +4,31 @@ import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius } from '../../theme/spacing';
 
-export interface Pin {
-  id: string;
-  name: string;
-  latitude: number;
-  longitude: number;
-  status: 'visited' | 'wantToGo';
-  rating?: number;
-  visitDate?: string;
-  notes?: string;
-  images?: string[];
+export interface Location {
+  lat: number;
+  lon: number;
 }
 
+export interface Pin {
+  id: string;                 // JSON trả number
+  uuid: string;
+  userId: number;
+  placeName: string;
+  placeIdGoogle?: string | null;
+  location: Location;
+  addressFormatted?: string | null;
+  addressCity?: string | null;
+  addressCountry?: string | null;
+  addressCountryCode?: string | null;
+  status: 'active' | 'visited' | 'wantToGo'; // thêm 'active' vì backend trả
+  notes?: string | null;
+  visitedDate?: string | null;
+  rating?: number | null;
+  isFavorite: boolean;
+  createdAt: string;
+  updatedAt: string;
+  images?: string[]; // có thể null nếu backend trả
+}
 interface PinCardProps {
   pin: Pin;
   onPress: () => void;
@@ -34,15 +47,15 @@ export const PinCard: React.FC<PinCardProps> = ({ pin, onPress }) => {
       )}
       <View style={styles.content}>
         <Text style={styles.name} numberOfLines={1}>
-          {pin.name}
+          {pin.placeName}
         </Text>
         <View style={styles.footer}>
           <View style={[styles.statusBadge, { backgroundColor: statusColor }]}>
             <Text style={styles.statusText}>{statusText}</Text>
           </View>
-          {pin.visitDate && (
+          {pin.visitedDate && (
             <Text style={styles.date}>
-              {new Date(pin.visitDate).toLocaleDateString('vi-VN')}
+              {new Date(pin.visitedDate).toLocaleDateString('vi-VN')}
             </Text>
           )}
         </View>
