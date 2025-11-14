@@ -1,5 +1,6 @@
 package com.pinyourword.william.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.pinyourword.william.entity.user.User;
 import jakarta.persistence.*;
 import lombok.*;
@@ -35,12 +36,11 @@ public class PinMedia {
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
+    @JsonIgnore
     private User user;
     
-    @Enumerated(EnumType.STRING)
     @Column(name = "media_type", nullable = false, length = 20)
-    @Builder.Default
-    private MediaType mediaType = MediaType.IMAGE;
+    private String mediaType;
     
     @Column(name = "storage_url", nullable = false, length = 512)
     private String storageUrl;

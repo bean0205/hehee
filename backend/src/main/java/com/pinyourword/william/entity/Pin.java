@@ -1,6 +1,9 @@
 package com.pinyourword.william.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.pinyourword.william.entity.user.User;
+import com.pinyourword.william.util.PointSerializer;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -35,10 +38,9 @@ public class Pin {
     
     @Column(nullable = false, unique = true, columnDefinition = "UUID DEFAULT uuid_generate_v4()")
     private UUID uuid;
-    
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+
+    @Column(name = "user_id", nullable = false, length = 255)
+    private Long userId;
     
     // Location data
     @Column(name = "place_name", nullable = false, length = 255)
@@ -48,6 +50,7 @@ public class Pin {
     private String placeIdGoogle;
     
     // PostGIS Point - SRID 4326 (WGS 84)
+    @JsonSerialize(using = PointSerializer.class)
     @Column(nullable = false, columnDefinition = "geography(Point, 4326)")
     private Point location;
     
@@ -64,10 +67,8 @@ public class Pin {
     private String addressCountryCode;
     
     // Pin status
-    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    @Builder.Default
-    private PinStatus status = PinStatus.VISITED;
+    private String status ;
     
     // Content
     @Column(columnDefinition = "TEXT")
@@ -91,42 +92,12 @@ public class Pin {
     @UpdateTimestamp
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
-    
-    // Relationships
-    @OneToMany(mappedBy = "pin", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
-    private List<PinMedia> media = new ArrayList<>();
-    
+
     @PrePersist
     protected void onCreate() {
         if (uuid == null) {
             uuid = UUID.randomUUID();
         }
     }
-    
-    // Helper methods
-    public void addMedia(PinMedia pinMedia) {
-        media.add(pinMedia);
-        pinMedia.setPin(this);
-    }
-    
-    public void removeMedia(PinMedia pinMedia) {
-        media.remove(pinMedia);
-        pinMedia.setPin(null);
-    }
-    
-    public enum PinStatus {
-        VISITED("visited"),
-        WANT_TO_GO("want_to_go");
-        
-        private final String value;
-        
-        PinStatus(String value) {
-            this.value = value;
-        }
-        
-        public String getValue() {
-            return value;
-        }
-    }
+
 }
