@@ -199,7 +199,7 @@ export const MapScreen: React.FC = () => {
               ]}
             >
               <MaterialCommunityIcons
-                name="map-marker"
+                name={pin.status === "visited" ? "map-marker-check" : "map-marker-question"}
                 size={24}
                 color={colors.neutral.white}
               />
