@@ -268,7 +268,8 @@ const WorldMapSVG = ({
 
   // Tối ưu viewBox cho hiển thị tốt hơn
   const viewBoxWidth = 2000;
-  const viewBoxHeight = 1000; // Tăng height để map hiển thị đầy đủ hơn
+  const viewBoxHeight = 1100; // Tăng height để map hiển thị đầy đủ hơn
+  const viewBoxY = -50; // Offset âm để có thêm space cho Greenland và các quốc gia phía bắc
   const mapWidth = containerWidth * scale;
   const mapHeight = (mapWidth * viewBoxHeight) / viewBoxWidth;
 
@@ -379,13 +380,13 @@ const WorldMapSVG = ({
               <Svg
                 width={mapWidth}
                 height={mapHeight}
-                viewBox={`0 0 ${viewBoxWidth} ${viewBoxHeight}`}
+                viewBox={`0 ${viewBoxY} ${viewBoxWidth} ${viewBoxHeight}`}
                 preserveAspectRatio="xMidYMid meet"
               >
                 {/* Background */}
                 <Rect
                   x="0"
-                  y="0"
+                  y={viewBoxY}
                   width={viewBoxWidth}
                   height={viewBoxHeight}
                   fill={isDark ? '#0F172A' : '#F0F9FF'}
@@ -422,13 +423,13 @@ const WorldMapSVG = ({
                 {[...Array(10)].map((_, i) => (
                   <React.Fragment key={`grid-${i}`}>
                     <Path
-                      d={`M ${(i * viewBoxWidth) / 10} 0 L ${(i * viewBoxWidth) / 10} ${viewBoxHeight}`}
+                      d={`M ${(i * viewBoxWidth) / 10} ${viewBoxY} L ${(i * viewBoxWidth) / 10} ${viewBoxY + viewBoxHeight}`}
                       stroke={isDark ? '#1E293B' : '#E2E8F0'}
                       strokeWidth={0.5}
                       opacity={0.3}
                     />
                     <Path
-                      d={`M 0 ${(i * viewBoxHeight) / 10} L ${viewBoxWidth} ${(i * viewBoxHeight) / 10}`}
+                      d={`M 0 ${viewBoxY + (i * viewBoxHeight) / 10} L ${viewBoxWidth} ${viewBoxY + (i * viewBoxHeight) / 10}`}
                       stroke={isDark ? '#1E293B' : '#E2E8F0'}
                       strokeWidth={0.5}
                       opacity={0.3}
@@ -520,8 +521,8 @@ const WorldMapSVG = ({
           { backgroundColor: isDark ? '#1F2937DD' : '#FFFFFFDD' },
         ]}
       >
-        <Svg width={80} height={40} viewBox="0 0 2000 1000">
-          <Rect x="0" y="0" width="2000" height="1000" fill={isDark ? '#0F172A' : '#F0F9FF'} />
+        <Svg width={80} height={44} viewBox={`0 ${viewBoxY} 2000 ${viewBoxHeight}`}>
+          <Rect x="0" y={viewBoxY} width="2000" height={viewBoxHeight} fill={isDark ? '#0F172A' : '#F0F9FF'} />
           {Object.entries(COUNTRIES_PATHS).map(([code, path]) => {
             const isVisited = visitedCountries.includes(code as CountryCode);
             return (
