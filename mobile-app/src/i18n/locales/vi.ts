@@ -17,6 +17,9 @@ export default {
     search: 'Tìm kiếm',
     filter: 'Lọc',
     all: 'Tất cả',
+    featureInDevelopmentTitle: 'Tính năng đang phát triển',
+    featureInDevelopmentMessage: 'Tính năng này hiện đang được phát triển. Vui lòng thử lại sau.',
+    ok: 'OK',
   },
 
   auth: {
@@ -44,7 +47,7 @@ export default {
     continueWithApple: 'Tiếp tục với Apple',
     or: 'hoặc',
     loginWithEmail: 'Đăng nhập với Email',
-    noAccountRegister: 'Chưa có tài khoản? Đăng ký ngay 🚀',
+    noAccountRegister: 'Chưa có tài khoản? Đăng ký ngay',
     agreeToTerms: 'Bằng việc tiếp tục, bạn đồng ý với\nĐiều khoản và Chính sách của chúng tôi',
     // LoginScreen
     back: '← Quay lại',

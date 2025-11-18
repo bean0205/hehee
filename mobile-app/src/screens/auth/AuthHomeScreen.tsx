@@ -8,6 +8,7 @@ import {
   Platform,
   Animated,
   Dimensions,
+  Alert,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
@@ -50,6 +51,14 @@ export const AuthHomeScreen: React.FC = () => {
       }),
     ]).start();
   }, []);
+
+  const handleFeatureInDevelopment = () => {
+    Alert.alert(
+      t('common.featureInDevelopmentTitle'), // Title of the alert
+      t('common.featureInDevelopmentMessage'), // Message of the alert
+      [{ text: t('common.ok') }] // Button text
+    );
+  };
 
   const styles = React.useMemo(() => createStyles(colors), [colors]);
 
@@ -123,7 +132,7 @@ export const AuthHomeScreen: React.FC = () => {
           <TouchableOpacity 
             style={styles.socialButton}
             activeOpacity={0.8}
-            onPress={() => {}}
+            onPress={handleFeatureInDevelopment} // Trigger the alert
           >
             <BlurView intensity={isDarkMode ? 60 : 100} tint={isDarkMode ? 'dark' : 'light'} style={styles.buttonBlur}>
               <View style={styles.socialButtonContent}>
@@ -136,7 +145,7 @@ export const AuthHomeScreen: React.FC = () => {
           <TouchableOpacity 
             style={styles.socialButton}
             activeOpacity={0.8}
-            onPress={() => {}}
+            onPress={handleFeatureInDevelopment} // Trigger the alert
           >
             <BlurView intensity={isDarkMode ? 60 : 100} tint={isDarkMode ? 'dark' : 'light'} style={styles.buttonBlur}>
               <View style={styles.socialButtonContent}>
@@ -165,7 +174,7 @@ export const AuthHomeScreen: React.FC = () => {
               end={{ x: 1, y: 1 }}
               style={styles.emailButtonGradient}
             >
-              <Text style={styles.emailButtonIcon}>📧</Text>
+              <MaterialCommunityIcons name="email-outline" size={24} color={colors.neutral.white} />
               <Text style={styles.emailButtonText}>{t('auth.loginWithEmail')}</Text>
             </LinearGradient>
           </TouchableOpacity>
@@ -181,9 +190,9 @@ export const AuthHomeScreen: React.FC = () => {
           </TouchableOpacity>
 
           {/* Terms */}
-          <Text style={styles.terms}>
+          {/* <Text style={styles.terms}>
             {t('auth.agreeToTerms')}
-          </Text>
+          </Text> */}
         </Animated.View>
       </KeyboardAvoidingView>
     </View>

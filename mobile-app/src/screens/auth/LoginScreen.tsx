@@ -20,6 +20,7 @@ import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../i18n/LanguageContext';
+import { blue } from 'react-native-reanimated/lib/typescript/Colors';
 
 export const LoginScreen: React.FC = () => {
   const navigation = useNavigation<any>();
@@ -158,12 +159,21 @@ export const LoginScreen: React.FC = () => {
                   end={{ x: 1, y: 1 }}
                   style={styles.loginButtonGradient}
                 >
-                  <MaterialCommunityIcons
-                    name="rocket-launch"
-                    size={20}
-                    color={colors.neutral.white}
-                    style={{ marginRight: spacing.xs }}
-                  />
+                  {isLoading ? (
+                    <MaterialCommunityIcons
+                      name="loading" // Spinner icon for loading state
+                      size={20}
+                      color={colors.neutral.white}
+                      style={{ marginRight: spacing.xs }}
+                    />
+                  ) : (
+                    <MaterialCommunityIcons
+                      name="login" // Default login icon
+                      size={20}
+                      color={colors.neutral.white}
+                      style={{ marginRight: spacing.xs }}
+                    />
+                  )}
                   <Text style={styles.loginButtonText}>
                     {isLoading ? t('auth.loggingIn') : t('auth.login')}
                   </Text>
@@ -171,9 +181,7 @@ export const LoginScreen: React.FC = () => {
               </TouchableOpacity>
 
               {/* Demo Account Info */}
-              <View style={styles.demoInfo}>
-                <Text style={styles.demoInfoText}>{t('auth.demoAccountFilled')}</Text>
-              </View>
+              
             </View>
           </BlurView>
 
@@ -273,7 +281,7 @@ const createStyles = (colors: any) => StyleSheet.create({
   },
   forgotPasswordText: {
     fontSize: typography.fontSize.sm,
-    color: colors.neutral.white,
+    color: '#186dceff',
     fontWeight: typography.fontWeight.semiBold,
     opacity: 0.9,
   },

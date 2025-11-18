@@ -120,7 +120,6 @@ export const RegisterScreen: React.FC = () => {
 
           {/* Header */}
           <View style={styles.header}>
-            <Text style={styles.headerIcon}>🚀</Text>
             <Text style={styles.title}>{t("auth.register")}</Text>
             <Text style={styles.subtitle}>{t("auth.createAccount")}</Text>
           </View>
@@ -184,7 +183,7 @@ export const RegisterScreen: React.FC = () => {
                 activeOpacity={0.8}
               >
                 <LinearGradient
-                  colors={["#43e97b", "#38f9d7"]}
+                  colors={["#737ab8ff", "#384bf9ff"]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                   style={styles.registerButtonGradient}
@@ -192,7 +191,7 @@ export const RegisterScreen: React.FC = () => {
                   <Text style={styles.registerButtonText}>
                     {isLoading
                       ? t("auth.processing")
-                      : "✨ " + t("auth.register")}
+                      : t("auth.register")}
                   </Text>
                 </LinearGradient>
               </TouchableOpacity>

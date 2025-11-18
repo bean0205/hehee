@@ -17,6 +17,9 @@ export default {
     search: 'Search',
     filter: 'Filter',
     all: 'All',
+    featureInDevelopmentTitle: 'Feature in Development',
+    featureInDevelopmentMessage: 'This feature is currently under development. Please try again later.',
+    ok: 'OK',
   },
 
   auth: {
@@ -44,7 +47,7 @@ export default {
     continueWithApple: 'Continue with Apple',
     or: 'or',
     loginWithEmail: 'Login with Email',
-    noAccountRegister: "Don't have an account? Register now 🚀",
+    noAccountRegister: "Don't have an account? Register now",
     agreeToTerms: 'By continuing, you agree to our\nTerms and Privacy Policy',
     // LoginScreen
     back: '← Back',
