@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useMemo } from 'react';
 import {
   View,
   Text,
@@ -13,8 +13,9 @@ import {
   Platform,
   Animated,
   Pressable,
+  PanResponder,
 } from 'react-native';
-import Svg, { Path } from 'react-native-svg';
+import Svg, { Path, G, Rect, Circle, Text as SvgText } from 'react-native-svg';
 import { COUNTRIES_PATHS } from './countriesPaths';
 import { useTheme } from '../../contexts/ThemeContext';
 
@@ -102,24 +103,39 @@ const StatCard = ({
   value,
   icon,
   color = '#FF6B6B',
-  isDark
+  isDark,
+  gradient = false,
 }: {
   title: string;
   value: number;
   icon: string;
   color?: string;
   isDark: boolean;
+  gradient?: boolean;
 }) => {
   const scaleAnim = useRef(new Animated.Value(0)).current;
+  const rotateAnim = useRef(new Animated.Value(0)).current;
 
   React.useEffect(() => {
-    Animated.spring(scaleAnim, {
-      toValue: 1,
-      tension: 50,
-      friction: 7,
-      useNativeDriver: true,
-    }).start();
+    Animated.parallel([
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        tension: 50,
+        friction: 7,
+        useNativeDriver: true,
+      }),
+      Animated.timing(rotateAnim, {
+        toValue: 1,
+        duration: 1000,
+        useNativeDriver: true,
+      }),
+    ]).start();
   }, [value]);
+
+  const rotate = rotateAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '360deg'],
+  });
 
   return (
     <Animated.View
@@ -127,17 +143,33 @@ const StatCard = ({
         styles.statCard,
         {
           backgroundColor: isDark ? '#1F2937' : '#FFFFFF',
-          transform: [{ scale: scaleAnim }]
-        }
+          transform: [{ scale: scaleAnim }],
+        },
       ]}
     >
-      <View style={[styles.statIconContainer, { backgroundColor: color + '20' }]}>
+      <Animated.View
+        style={[
+          styles.statIconContainer,
+          {
+            backgroundColor: color + '20',
+            transform: [{ rotate }],
+          },
+        ]}
+      >
         <Text style={styles.statIcon}>{icon}</Text>
-      </View>
+      </Animated.View>
       <Text style={[styles.statValue, { color }]}>{value}</Text>
       <Text style={[styles.statTitle, { color: isDark ? '#9CA3AF' : '#6B7280' }]}>
         {title}
       </Text>
+      {gradient && (
+        <View
+          style={[
+            styles.statGradient,
+            { backgroundColor: color + '10' },
+          ]}
+        />
+      )}
     </Animated.View>
   );
 };
@@ -148,7 +180,7 @@ const CountryItem = ({
   name,
   isVisited,
   onToggle,
-  isDark
+  isDark,
 }: {
   code: CountryCode;
   name: string;
@@ -169,7 +201,7 @@ const CountryItem = ({
         toValue: 1,
         friction: 3,
         useNativeDriver: true,
-      })
+      }),
     ]).start();
     onToggle(code);
   };
@@ -182,18 +214,24 @@ const CountryItem = ({
           isVisited && styles.countryItemVisited,
           {
             backgroundColor: isVisited
-              ? (isDark ? '#1F2937' : '#FFF5F5')
-              : (isDark ? '#111827' : '#FFFFFF'),
-            transform: [{ scale: scaleAnim }]
-          }
+              ? isDark
+                ? '#1F2937'
+                : '#FFF5F5'
+              : isDark
+              ? '#111827'
+              : '#FFFFFF',
+            transform: [{ scale: scaleAnim }],
+          },
         ]}
       >
         <View style={styles.countryItemLeft}>
           <Text style={styles.countryFlag}>{COUNTRY_FLAGS[code]}</Text>
-          <Text style={[
-            styles.countryName,
-            { color: isDark ? '#F3F4F6' : '#1F2937' }
-          ]}>
+          <Text
+            style={[
+              styles.countryName,
+              { color: isDark ? '#F3F4F6' : '#1F2937' },
+            ]}
+          >
             {name}
           </Text>
         </View>
@@ -207,102 +245,218 @@ const CountryItem = ({
   );
 };
 
-// World Map Component
+// Enhanced World Map Component with better controls
 const WorldMapSVG = ({
   visitedCountries,
   onCountryPress,
-  isDark
+  isDark,
+  hoveredCountry,
 }: {
   visitedCountries: CountryCode[];
   onCountryPress: (code: CountryCode) => void;
   isDark: boolean;
+  hoveredCountry: CountryCode | null;
 }) => {
   const [scale, setScale] = useState(1);
   const [translateX, setTranslateX] = useState(0);
   const [translateY, setTranslateY] = useState(0);
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+  const lastTap = useRef<number | null>(null);
 
-  const containerWidth = SCREEN_WIDTH;
+  const containerWidth = SCREEN_WIDTH - 40;
   const containerHeight = Math.min(SCREEN_HEIGHT * 0.5, 500);
 
-  const mapWidth = containerWidth * 2;
-  const mapHeight = (mapWidth * 550) / 2000 * 1.5;
+  // Tối ưu viewBox cho hiển thị tốt hơn
+  const viewBoxWidth = 2000;
+  const viewBoxHeight = 1000; // Tăng height để map hiển thị đầy đủ hơn
+  const mapWidth = containerWidth * scale;
+  const mapHeight = (mapWidth * viewBoxHeight) / viewBoxWidth;
 
-  const handleZoomIn = () => {
-    setScale(prev => Math.min(prev * 1.3, 5));
-  };
+  const handleZoomIn = useCallback(() => {
+    const newScale = Math.min(scale * 1.5, 5);
+    setScale(newScale);
+    Animated.spring(scaleAnim, {
+      toValue: newScale,
+      tension: 50,
+      friction: 7,
+      useNativeDriver: false,
+    }).start();
+  }, [scale]);
 
-  const handleZoomOut = () => {
-    setScale(prev => Math.max(prev / 1.3, 0.5));
-  };
+  const handleZoomOut = useCallback(() => {
+    const newScale = Math.max(scale / 1.5, 0.8);
+    setScale(newScale);
+    Animated.spring(scaleAnim, {
+      toValue: newScale,
+      tension: 50,
+      friction: 7,
+      useNativeDriver: false,
+    }).start();
+  }, [scale]);
 
-  const handleReset = () => {
+  const handleReset = useCallback(() => {
     setScale(1);
     setTranslateX(0);
     setTranslateY(0);
-  };
+    Animated.spring(scaleAnim, {
+      toValue: 1,
+      tension: 50,
+      friction: 7,
+      useNativeDriver: false,
+    }).start();
+  }, []);
+
+  // Double tap to zoom
+  const handleDoubleTap = useCallback(() => {
+    const now = Date.now();
+    const DOUBLE_TAP_DELAY = 300;
+
+    if (lastTap.current && now - lastTap.current < DOUBLE_TAP_DELAY) {
+      if (scale === 1) {
+        handleZoomIn();
+      } else {
+        handleReset();
+      }
+    } else {
+      lastTap.current = now;
+    }
+  }, [scale, handleZoomIn, handleReset]);
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => scale > 1,
+      onPanResponderMove: (_, gestureState) => {
+        if (scale > 1) {
+          setTranslateX(gestureState.dx);
+          setTranslateY(gestureState.dy);
+        }
+      },
+      onPanResponderRelease: () => {
+        // Reset translation after release if needed
+      },
+    })
+  ).current;
 
   return (
     <View style={[styles.mapWrapper, { height: containerHeight }]}>
+      {/* Map Instructions */}
+      <View style={styles.mapInstructions}>
+        <Text style={[styles.instructionText, { color: isDark ? '#9CA3AF' : '#6B7280' }]}>
+          👆 Tap countries • 🔍 Zoom • 👆👆 Double tap
+        </Text>
+      </View>
+
       <ScrollView
         horizontal
-        showsHorizontalScrollIndicator={false}
+        showsHorizontalScrollIndicator={true}
         showsVerticalScrollIndicator={false}
         scrollEnabled={true}
         bounces={true}
+        bouncesZoom={true}
+        maximumZoomScale={5}
+        minimumZoomScale={0.8}
         contentContainerStyle={styles.mapScrollContent}
+        indicatorStyle={isDark ? 'white' : 'black'}
+        {...panResponder.panHandlers}
       >
-        <View
-          style={[
-            styles.svgContainer,
-            {
-              width: mapWidth,
-              height: mapHeight,
-              transform: [
-                { translateX },
-                { translateY },
-                { scale },
-              ],
-            }
-          ]}
+        <ScrollView
+          showsVerticalScrollIndicator={true}
+          scrollEnabled={true}
+          bounces={true}
+          indicatorStyle={isDark ? 'white' : 'black'}
         >
-          <Svg
-            width={mapWidth}
-            height={mapHeight}
-            viewBox="0 0 2000 550"
-            preserveAspectRatio="xMidYMid meet"
-          >
-            <Path
-              d="M0,0 L2000,0 L2000,550 L0,550 Z"
-              fill={isDark ? '#0F172A' : '#F0F9FF'}
-            />
-
-            {Object.entries(COUNTRIES_PATHS).map(([code, path]) => {
-              const isVisited = visitedCountries.includes(code as CountryCode);
-              return (
-                <Path
-                  key={code}
-                  d={path}
-                  fill={isVisited ? '#FF6B6B' : (isDark ? '#1E293B' : '#E2E8F0')}
-                  stroke={isDark ? '#0F172A' : '#CBD5E1'}
-                  strokeWidth={0.5}
-                  onPress={() => onCountryPress(code as CountryCode)}
+          <Pressable onPress={handleDoubleTap}>
+            <View
+              style={[
+                styles.svgContainer,
+                {
+                  width: mapWidth,
+                  height: mapHeight,
+                },
+              ]}
+            >
+              <Svg
+                width={mapWidth}
+                height={mapHeight}
+                viewBox={`0 0 ${viewBoxWidth} ${viewBoxHeight}`}
+                preserveAspectRatio="xMidYMid meet"
+              >
+                {/* Background */}
+                <Rect
+                  x="0"
+                  y="0"
+                  width={viewBoxWidth}
+                  height={viewBoxHeight}
+                  fill={isDark ? '#0F172A' : '#F0F9FF'}
                 />
-              );
-            })}
-          </Svg>
-        </View>
+
+                {/* Countries */}
+                <G>
+                  {Object.entries(COUNTRIES_PATHS).map(([code, path]) => {
+                    const isVisited = visitedCountries.includes(code as CountryCode);
+                    const isHovered = hoveredCountry === code;
+                    return (
+                      <Path
+                        key={code}
+                        d={path}
+                        fill={
+                          isHovered
+                            ? '#FFA500'
+                            : isVisited
+                            ? '#FF6B6B'
+                            : isDark
+                            ? '#1E293B'
+                            : '#E2E8F0'
+                        }
+                        stroke={isDark ? '#0F172A' : '#CBD5E1'}
+                        strokeWidth={isHovered ? 1.5 : 0.5}
+                        opacity={isHovered ? 0.9 : 1}
+                        onPress={() => onCountryPress(code as CountryCode)}
+                      />
+                    );
+                  })}
+                </G>
+
+                {/* Grid lines for better orientation */}
+                {[...Array(10)].map((_, i) => (
+                  <React.Fragment key={`grid-${i}`}>
+                    <Path
+                      d={`M ${(i * viewBoxWidth) / 10} 0 L ${(i * viewBoxWidth) / 10} ${viewBoxHeight}`}
+                      stroke={isDark ? '#1E293B' : '#E2E8F0'}
+                      strokeWidth={0.5}
+                      opacity={0.3}
+                    />
+                    <Path
+                      d={`M 0 ${(i * viewBoxHeight) / 10} L ${viewBoxWidth} ${(i * viewBoxHeight) / 10}`}
+                      stroke={isDark ? '#1E293B' : '#E2E8F0'}
+                      strokeWidth={0.5}
+                      opacity={0.3}
+                    />
+                  </React.Fragment>
+                ))}
+              </Svg>
+            </View>
+          </Pressable>
+        </ScrollView>
       </ScrollView>
 
+      {/* Enhanced Zoom Controls */}
       <View style={styles.zoomControls}>
         <Pressable
           style={({ pressed }) => [
             styles.zoomButton,
             { backgroundColor: isDark ? '#1F2937' : '#FFFFFF' },
-            pressed && styles.zoomButtonPressed
+            pressed && styles.zoomButtonPressed,
           ]}
           onPress={handleZoomIn}
         >
-          <Text style={[styles.zoomButtonText, { color: isDark ? '#F3F4F6' : '#1F2937' }]}>
+          <Text
+            style={[
+              styles.zoomButtonText,
+              { color: isDark ? '#F3F4F6' : '#1F2937' },
+            ]}
+          >
             +
           </Text>
         </Pressable>
@@ -310,11 +464,16 @@ const WorldMapSVG = ({
           style={({ pressed }) => [
             styles.zoomButton,
             { backgroundColor: isDark ? '#1F2937' : '#FFFFFF' },
-            pressed && styles.zoomButtonPressed
+            pressed && styles.zoomButtonPressed,
           ]}
           onPress={handleZoomOut}
         >
-          <Text style={[styles.zoomButtonText, { color: isDark ? '#F3F4F6' : '#1F2937' }]}>
+          <Text
+            style={[
+              styles.zoomButtonText,
+              { color: isDark ? '#F3F4F6' : '#1F2937' },
+            ]}
+          >
             −
           </Text>
         </Pressable>
@@ -322,14 +481,67 @@ const WorldMapSVG = ({
           style={({ pressed }) => [
             styles.zoomButton,
             { backgroundColor: isDark ? '#1F2937' : '#FFFFFF' },
-            pressed && styles.zoomButtonPressed
+            pressed && styles.zoomButtonPressed,
           ]}
           onPress={handleReset}
         >
-          <Text style={[styles.zoomButtonText, { color: isDark ? '#F3F4F6' : '#1F2937', fontSize: 14 }]}>
+          <Text
+            style={[
+              styles.zoomButtonText,
+              { color: isDark ? '#F3F4F6' : '#1F2937', fontSize: 14 },
+            ]}
+          >
             ⟲
           </Text>
         </Pressable>
+      </View>
+
+      {/* Zoom Level Indicator */}
+      <View
+        style={[
+          styles.zoomIndicator,
+          { backgroundColor: isDark ? '#1F2937DD' : '#FFFFFFDD' },
+        ]}
+      >
+        <Text
+          style={[
+            styles.zoomIndicatorText,
+            { color: isDark ? '#F3F4F6' : '#1F2937' },
+          ]}
+        >
+          {Math.round(scale * 100)}%
+        </Text>
+      </View>
+
+      {/* Minimap */}
+      <View
+        style={[
+          styles.minimap,
+          { backgroundColor: isDark ? '#1F2937DD' : '#FFFFFFDD' },
+        ]}
+      >
+        <Svg width={80} height={40} viewBox="0 0 2000 1000">
+          <Rect x="0" y="0" width="2000" height="1000" fill={isDark ? '#0F172A' : '#F0F9FF'} />
+          {Object.entries(COUNTRIES_PATHS).map(([code, path]) => {
+            const isVisited = visitedCountries.includes(code as CountryCode);
+            return (
+              <Path
+                key={`mini-${code}`}
+                d={path}
+                fill={isVisited ? '#FF6B6B' : isDark ? '#1E293B' : '#E2E8F0'}
+                stroke="none"
+              />
+            );
+          })}
+        </Svg>
+        <Text
+          style={[
+            styles.minimapLabel,
+            { color: isDark ? '#9CA3AF' : '#6B7280' },
+          ]}
+        >
+          Overview
+        </Text>
       </View>
     </View>
   );
@@ -339,13 +551,25 @@ const WorldMapSVG = ({
 export default function TravelMapComponent() {
   const { colors, isDarkMode } = useTheme();
   const [visitedCountries, setVisitedCountries] = useState<CountryCode[]>([
-    'VN', 'TH', 'PL', 'SE', 'DE', 'BR', 'KR', 'IN'
+    'VN',
+    'TH',
+    'PL',
+    'SE',
+    'DE',
+    'BR',
+    'KR',
+    'IN',
   ]);
   const [visitedCities] = useState(140);
   const [visitedPlaces] = useState(216);
   const [modalVisible, setModalVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCountry, setSelectedCountry] = useState<CountryCode | null>(null);
+  const [selectedCountry, setSelectedCountry] = useState<CountryCode | null>(
+    null
+  );
+  const [hoveredCountry, setHoveredCountry] = useState<CountryCode | null>(
+    null
+  );
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   React.useEffect(() => {
@@ -357,35 +581,67 @@ export default function TravelMapComponent() {
   }, []);
 
   const toggleCountry = useCallback((code: CountryCode) => {
-    setVisitedCountries(prev =>
-      prev.includes(code)
-        ? prev.filter(c => c !== code)
-        : [...prev, code]
+    setVisitedCountries((prev) =>
+      prev.includes(code) ? prev.filter((c) => c !== code) : [...prev, code]
     );
   }, []);
 
-  const handleCountryPress = useCallback((code: CountryCode) => {
-    setSelectedCountry(code);
-    toggleCountry(code);
-    setTimeout(() => setSelectedCountry(null), 2000);
-  }, [toggleCountry]);
+  const handleCountryPress = useCallback(
+    (code: CountryCode) => {
+      setSelectedCountry(code);
+      setHoveredCountry(code);
+      toggleCountry(code);
+      setTimeout(() => {
+        setSelectedCountry(null);
+        setHoveredCountry(null);
+      }, 2000);
+    },
+    [toggleCountry]
+  );
 
-  const filteredCountries = (Object.keys(COUNTRY_NAMES) as CountryCode[]).filter(code =>
-    COUNTRY_NAMES[code]?.toLowerCase().includes(searchQuery.toLowerCase())
-  ).sort((a, b) => {
-    const nameA = COUNTRY_NAMES[a] || '';
-    const nameB = COUNTRY_NAMES[b] || '';
-    return nameA.localeCompare(nameB);
-  });
+  const filteredCountries = useMemo(
+    () =>
+      (Object.keys(COUNTRY_NAMES) as CountryCode[])
+        .filter((code) =>
+          COUNTRY_NAMES[code]?.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+        .sort((a, b) => {
+          const nameA = COUNTRY_NAMES[a] || '';
+          const nameB = COUNTRY_NAMES[b] || '';
+          return nameA.localeCompare(nameB);
+        }),
+    [searchQuery]
+  );
 
   const progressPercentage = Math.round(
     (visitedCountries.length / Object.keys(COUNTRY_NAMES).length) * 100
   );
 
+  const continents = useMemo(() => {
+    // Group visited countries by continent (simplified)
+    const asia = visitedCountries.filter((c) =>
+      ['VN', 'TH', 'KR', 'IN', 'KZ', 'AF', 'BD', 'BT', 'BN', 'KH', 'GE', 'IR', 'IQ', 'IL', 'JO', 'KW', 'KG', 'LA', 'LB', 'MM', 'MN', 'NP', 'OM', 'PK', 'PS', 'QA', 'SA', 'SY', 'TJ', 'TW', 'TM', 'AE', 'UZ', 'YE', 'LK'].includes(c)
+    ).length;
+    const europe = visitedCountries.filter((c) =>
+      ['PL', 'SE', 'DE', 'ES', 'NL', 'CH', 'AL', 'AM', 'AT', 'BY', 'BE', 'BA', 'BG', 'HR', 'CZ', 'DK', 'EE', 'FI', 'GE', 'HU', 'IS', 'IE', 'IT', 'XK', 'LV', 'LT', 'LU', 'MK', 'MD', 'NO', 'PT', 'RO', 'RS', 'SK', 'SI', 'UA', 'GB'].includes(c)
+    ).length;
+    const americas = visitedCountries.filter((c) =>
+      ['BR', 'MX', 'CO', 'AR', 'PE', 'VE', 'CL', 'EC', 'GT', 'CU', 'BO', 'HT', 'DO', 'HN', 'NI', 'PY', 'SV', 'CR', 'PA', 'UY', 'JM', 'GY', 'SR', 'BZ', 'GF', 'AW'].includes(c)
+    ).length;
+    const africa = visitedCountries.filter((c) =>
+      ['DZ', 'EG', 'ET', 'KE', 'ZA', 'NG', 'TZ', 'UG', 'MA', 'GH', 'MZ', 'MG', 'CM', 'CI', 'NE', 'BF', 'ML', 'MW', 'ZM', 'SN', 'TD', 'SO', 'ZW', 'GN', 'RW', 'BJ', 'TN', 'BI', 'SS', 'TG', 'SL', 'LY', 'LR', 'MR', 'CF', 'ER', 'GM', 'BW', 'GA', 'NA', 'LS', 'GW', 'GQ', 'DJ', 'SZ', 'RE', 'MQ', 'YT', 'EH'].includes(c)
+    ).length;
+    const others = visitedCountries.length - asia - europe - americas - africa;
+
+    return { asia, europe, americas, africa, others };
+  }, [visitedCountries]);
+
   return (
-    <View style={[styles.container, { backgroundColor: colors.background.main }]}>
+    <View
+      style={[styles.container, { backgroundColor: colors.background.main }]}
+    >
       <StatusBar
-        barStyle={isDarkMode ? "light-content" : "dark-content"}
+        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
         backgroundColor={colors.background.main}
       />
 
@@ -395,32 +651,61 @@ export default function TravelMapComponent() {
       >
         <Animated.View style={{ opacity: fadeAnim }}>
           {/* Header với Gradient Effect */}
-          <View style={[styles.header, { backgroundColor: isDarkMode ? '#1F2937' : '#FFFFFF' }]}>
+          <View
+            style={[
+              styles.header,
+              { backgroundColor: isDarkMode ? '#1F2937' : '#FFFFFF' },
+            ]}
+          >
             <Text style={[styles.headerTitle, { color: colors.text.primary }]}>
               🌍 My Travel Journey
             </Text>
-            <Text style={[styles.headerSubtitle, { color: colors.text.secondary }]}>
+            <Text
+              style={[styles.headerSubtitle, { color: colors.text.secondary }]}
+            >
               Exploring the world, one country at a time
             </Text>
 
             {/* Progress Bar */}
             <View style={styles.progressSection}>
               <View style={styles.progressHeader}>
-                <Text style={[styles.progressLabel, { color: colors.text.secondary }]}>
+                <Text
+                  style={[
+                    styles.progressLabel,
+                    { color: colors.text.secondary },
+                  ]}
+                >
                   World Progress
                 </Text>
                 <Text style={[styles.progressPercentage, { color: '#FF6B6B' }]}>
                   {progressPercentage}%
                 </Text>
               </View>
-              <View style={[styles.progressBarBg, { backgroundColor: isDarkMode ? '#374151' : '#E5E7EB' }]}>
-                <View
+              <View
+                style={[
+                  styles.progressBarBg,
+                  { backgroundColor: isDarkMode ? '#374151' : '#E5E7EB' },
+                ]}
+              >
+                <Animated.View
                   style={[
                     styles.progressBarFill,
-                    { width: `${progressPercentage}%`, backgroundColor: '#FF6B6B' }
+                    {
+                      width: `${progressPercentage}%`,
+                      backgroundColor: '#FF6B6B',
+                    },
                   ]}
                 />
               </View>
+              <Text
+                style={[
+                  styles.progressSubtext,
+                  { color: colors.text.secondary },
+                ]}
+              >
+                {visitedCountries.length} of {Object.keys(COUNTRY_NAMES).length}{' '}
+                countries visited
+              </Text>
             </View>
           </View>
 
@@ -432,6 +717,7 @@ export default function TravelMapComponent() {
               icon="🌎"
               color="#FF6B6B"
               isDark={isDarkMode}
+              gradient
             />
             <StatCard
               title="Cities"
@@ -439,6 +725,7 @@ export default function TravelMapComponent() {
               icon="🏙️"
               color="#4ECDC4"
               isDark={isDarkMode}
+              gradient
             />
             <StatCard
               title="Places"
@@ -446,18 +733,121 @@ export default function TravelMapComponent() {
               icon="📍"
               color="#FFD93D"
               isDark={isDarkMode}
+              gradient
             />
           </View>
 
+          {/* Continent Breakdown */}
+          <View
+            style={[
+              styles.continentSection,
+              { backgroundColor: isDarkMode ? '#1F2937' : '#FFFFFF' },
+            ]}
+          >
+            <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>
+              🗺️ Continents Visited
+            </Text>
+            <View style={styles.continentGrid}>
+              <View style={styles.continentItem}>
+                <Text style={styles.continentIcon}>🌏</Text>
+                <Text
+                  style={[
+                    styles.continentValue,
+                    { color: isDarkMode ? '#F3F4F6' : '#1F2937' },
+                  ]}
+                >
+                  {continents.asia}
+                </Text>
+                <Text
+                  style={[
+                    styles.continentLabel,
+                    { color: isDarkMode ? '#9CA3AF' : '#6B7280' },
+                  ]}
+                >
+                  Asia
+                </Text>
+              </View>
+              <View style={styles.continentItem}>
+                <Text style={styles.continentIcon}>🌍</Text>
+                <Text
+                  style={[
+                    styles.continentValue,
+                    { color: isDarkMode ? '#F3F4F6' : '#1F2937' },
+                  ]}
+                >
+                  {continents.europe}
+                </Text>
+                <Text
+                  style={[
+                    styles.continentLabel,
+                    { color: isDarkMode ? '#9CA3AF' : '#6B7280' },
+                  ]}
+                >
+                  Europe
+                </Text>
+              </View>
+              <View style={styles.continentItem}>
+                <Text style={styles.continentIcon}>🌎</Text>
+                <Text
+                  style={[
+                    styles.continentValue,
+                    { color: isDarkMode ? '#F3F4F6' : '#1F2937' },
+                  ]}
+                >
+                  {continents.americas}
+                </Text>
+                <Text
+                  style={[
+                    styles.continentLabel,
+                    { color: isDarkMode ? '#9CA3AF' : '#6B7280' },
+                  ]}
+                >
+                  Americas
+                </Text>
+              </View>
+              <View style={styles.continentItem}>
+                <Text style={styles.continentIcon}>🌍</Text>
+                <Text
+                  style={[
+                    styles.continentValue,
+                    { color: isDarkMode ? '#F3F4F6' : '#1F2937' },
+                  ]}
+                >
+                  {continents.africa}
+                </Text>
+                <Text
+                  style={[
+                    styles.continentLabel,
+                    { color: isDarkMode ? '#9CA3AF' : '#6B7280' },
+                  ]}
+                >
+                  Africa
+                </Text>
+              </View>
+            </View>
+          </View>
+
           {/* Interactive Map Section */}
-          <View style={[styles.mapSection, { backgroundColor: isDarkMode ? '#1F2937' : '#FFFFFF' }]}>
+          <View
+            style={[
+              styles.mapSection,
+              { backgroundColor: isDarkMode ? '#1F2937' : '#FFFFFF' },
+            ]}
+          >
             <View style={styles.mapSectionHeader}>
               <View>
-                <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>
-                  Interactive World Map
+                <Text
+                  style={[styles.sectionTitle, { color: colors.text.primary }]}
+                >
+                  🗺️ Interactive World Map
                 </Text>
-                <Text style={[styles.sectionSubtitle, { color: colors.text.secondary }]}>
-                  Tap any country to mark as visited
+                <Text
+                  style={[
+                    styles.sectionSubtitle,
+                    { color: colors.text.secondary },
+                  ]}
+                >
+                  Tap countries to mark as visited
                 </Text>
               </View>
             </View>
@@ -466,40 +856,92 @@ export default function TravelMapComponent() {
               visitedCountries={visitedCountries}
               onCountryPress={handleCountryPress}
               isDark={isDarkMode}
+              hoveredCountry={hoveredCountry}
             />
 
             {/* Country Tooltip */}
             {selectedCountry && (
-              <View style={[styles.tooltip, { backgroundColor: isDarkMode ? '#374151' : '#FFFFFF' }]}>
-                <Text style={styles.tooltipFlag}>{COUNTRY_FLAGS[selectedCountry]}</Text>
-                <Text style={[styles.tooltipText, { color: colors.text.primary }]}>
+              <Animated.View
+                style={[
+                  styles.tooltip,
+                  {
+                    backgroundColor: isDarkMode ? '#374151' : '#FFFFFF',
+                    opacity: fadeAnim,
+                  },
+                ]}
+              >
+                <Text style={styles.tooltipFlag}>
+                  {COUNTRY_FLAGS[selectedCountry]}
+                </Text>
+                <Text
+                  style={[styles.tooltipText, { color: colors.text.primary }]}
+                >
                   {COUNTRY_NAMES[selectedCountry]}
                 </Text>
-                <View style={[
-                  styles.tooltipBadge,
-                  { backgroundColor: visitedCountries.includes(selectedCountry) ? '#10B981' : '#FF6B6B' }
-                ]}>
+                <View
+                  style={[
+                    styles.tooltipBadge,
+                    {
+                      backgroundColor: visitedCountries.includes(
+                        selectedCountry
+                      )
+                        ? '#10B981'
+                        : '#FF6B6B',
+                    },
+                  ]}
+                >
                   <Text style={styles.tooltipBadgeText}>
-                    {visitedCountries.includes(selectedCountry) ? '✓ Visited' : '+ Added'}
+                    {visitedCountries.includes(selectedCountry)
+                      ? '✓ Visited'
+                      : '+ Added'}
                   </Text>
                 </View>
-              </View>
+              </Animated.View>
             )}
 
             {/* Map Legend */}
             <View style={styles.mapLegend}>
               <View style={styles.legendItem}>
-                <View style={[styles.legendDot, { backgroundColor: '#FF6B6B' }]} />
-                <Text style={[styles.legendText, { color: colors.text.secondary }]}>
+                <View
+                  style={[styles.legendDot, { backgroundColor: '#FF6B6B' }]}
+                />
+                <Text
+                  style={[
+                    styles.legendText,
+                    { color: colors.text.secondary },
+                  ]}
+                >
                   Visited
                 </Text>
               </View>
               <View style={styles.legendItem}>
-                <View style={[
-                  styles.legendDot,
-                  { backgroundColor: isDarkMode ? '#1E293B' : '#E2E8F0' }
-                ]} />
-                <Text style={[styles.legendText, { color: colors.text.secondary }]}>
+                <View
+                  style={[styles.legendDot, { backgroundColor: '#FFA500' }]}
+                />
+                <Text
+                  style={[
+                    styles.legendText,
+                    { color: colors.text.secondary },
+                  ]}
+                >
+                  Selected
+                </Text>
+              </View>
+              <View style={styles.legendItem}>
+                <View
+                  style={[
+                    styles.legendDot,
+                    {
+                      backgroundColor: isDarkMode ? '#1E293B' : '#E2E8F0',
+                    },
+                  ]}
+                />
+                <Text
+                  style={[
+                    styles.legendText,
+                    { color: colors.text.secondary },
+                  ]}
+                >
                   Not visited
                 </Text>
               </View>
@@ -508,30 +950,46 @@ export default function TravelMapComponent() {
 
           {/* Visited Countries Grid */}
           {visitedCountries.length > 0 && (
-            <View style={[styles.visitedSection, { backgroundColor: isDarkMode ? '#1F2937' : '#FFFFFF' }]}>
+            <View
+              style={[
+                styles.visitedSection,
+                { backgroundColor: isDarkMode ? '#1F2937' : '#FFFFFF' },
+              ]}
+            >
               <View style={styles.visitedHeader}>
-                <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>
-                  Visited Countries
+                <Text
+                  style={[styles.sectionTitle, { color: colors.text.primary }]}
+                >
+                  ✈️ Visited Countries
                 </Text>
                 <View style={styles.countBadge}>
-                  <Text style={styles.countBadgeText}>{visitedCountries.length}</Text>
+                  <Text style={styles.countBadgeText}>
+                    {visitedCountries.length}
+                  </Text>
                 </View>
               </View>
 
               <View style={styles.flagGrid}>
-                {visitedCountries.map(code => (
+                {visitedCountries.map((code) => (
                   <Pressable
                     key={code}
                     style={({ pressed }) => [
                       styles.flagCard,
-                      { backgroundColor: isDarkMode ? '#374151' : '#F9FAFB' },
-                      pressed && styles.flagCardPressed
+                      {
+                        backgroundColor: isDarkMode ? '#374151' : '#F9FAFB',
+                      },
+                      pressed && styles.flagCardPressed,
                     ]}
                     onPress={() => handleCountryPress(code)}
                   >
-                    <Text style={styles.flagCardEmoji}>{COUNTRY_FLAGS[code]}</Text>
+                    <Text style={styles.flagCardEmoji}>
+                      {COUNTRY_FLAGS[code]}
+                    </Text>
                     <Text
-                      style={[styles.flagCardName, { color: colors.text.secondary }]}
+                      style={[
+                        styles.flagCardName,
+                        { color: colors.text.secondary },
+                      ]}
                       numberOfLines={2}
                     >
                       {COUNTRY_NAMES[code]}
@@ -547,7 +1005,7 @@ export default function TravelMapComponent() {
             <Pressable
               style={({ pressed }) => [
                 styles.addButton,
-                pressed && styles.addButtonPressed
+                pressed && styles.addButtonPressed,
               ]}
               onPress={() => setModalVisible(true)}
             >
@@ -561,14 +1019,19 @@ export default function TravelMapComponent() {
                   styles.clearButton,
                   {
                     backgroundColor: isDarkMode ? '#374151' : '#F3F4F6',
-                    borderColor: isDarkMode ? '#4B5563' : '#E5E7EB'
+                    borderColor: isDarkMode ? '#4B5563' : '#E5E7EB',
                   },
-                  pressed && styles.clearButtonPressed
+                  pressed && styles.clearButtonPressed,
                 ]}
                 onPress={() => setVisitedCountries([])}
               >
-                <Text style={[styles.clearButtonText, { color: colors.text.secondary }]}>
-                  Clear All
+                <Text
+                  style={[
+                    styles.clearButtonText,
+                    { color: colors.text.secondary },
+                  ]}
+                >
+                  🗑️ Clear All
                 </Text>
               </Pressable>
             )}
@@ -594,14 +1057,18 @@ export default function TravelMapComponent() {
               setSearchQuery('');
             }}
           />
-          <View style={[
-            styles.modalContent,
-            { backgroundColor: isDarkMode ? '#1F2937' : '#FFFFFF' }
-          ]}>
+          <View
+            style={[
+              styles.modalContent,
+              { backgroundColor: isDarkMode ? '#1F2937' : '#FFFFFF' },
+            ]}
+          >
             <View style={styles.modalHandle} />
 
             <View style={styles.modalHeader}>
-              <Text style={[styles.modalTitle, { color: colors.text.primary }]}>
+              <Text
+                style={[styles.modalTitle, { color: colors.text.primary }]}
+              >
                 Select Countries
               </Text>
               <Pressable
@@ -611,14 +1078,23 @@ export default function TravelMapComponent() {
                 }}
                 style={styles.modalCloseButton}
               >
-                <Text style={[styles.modalCloseText, { color: colors.text.secondary }]}>✕</Text>
+                <Text
+                  style={[
+                    styles.modalCloseText,
+                    { color: colors.text.secondary },
+                  ]}
+                >
+                  ✕
+                </Text>
               </Pressable>
             </View>
 
-            <View style={[
-              styles.searchContainer,
-              { backgroundColor: isDarkMode ? '#374151' : '#F9FAFB' }
-            ]}>
+            <View
+              style={[
+                styles.searchContainer,
+                { backgroundColor: isDarkMode ? '#374151' : '#F9FAFB' },
+              ]}
+            >
               <Text style={styles.searchIcon}>🔍</Text>
               <TextInput
                 style={[styles.searchInput, { color: colors.text.primary }]}
@@ -629,13 +1105,23 @@ export default function TravelMapComponent() {
               />
               {searchQuery.length > 0 && (
                 <Pressable onPress={() => setSearchQuery('')}>
-                  <Text style={[styles.searchClear, { color: colors.text.secondary }]}>✕</Text>
+                  <Text
+                    style={[
+                      styles.searchClear,
+                      { color: colors.text.secondary },
+                    ]}
+                  >
+                    ✕
+                  </Text>
                 </Pressable>
               )}
             </View>
 
-            <Text style={[styles.resultCount, { color: colors.text.secondary }]}>
-              {filteredCountries.length} {filteredCountries.length === 1 ? 'country' : 'countries'} found
+            <Text
+              style={[styles.resultCount, { color: colors.text.secondary }]}
+            >
+              {filteredCountries.length}{' '}
+              {filteredCountries.length === 1 ? 'country' : 'countries'} found
             </Text>
 
             <FlatList
@@ -687,13 +1173,15 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   headerTitle: {
-    fontSize: isSmallScreen ? 24 : 28,
-    fontWeight: '700',
+    fontSize: isSmallScreen ? 26 : 30,
+    fontWeight: '800',
     marginBottom: 8,
+    letterSpacing: -0.5,
   },
   headerSubtitle: {
     fontSize: isSmallScreen ? 13 : 14,
     marginBottom: 20,
+    fontWeight: '500',
   },
   progressSection: {
     marginTop: 4,
@@ -709,17 +1197,22 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   progressPercentage: {
-    fontSize: 16,
-    fontWeight: '700',
+    fontSize: 18,
+    fontWeight: '800',
   },
   progressBarBg: {
-    height: 8,
-    borderRadius: 4,
+    height: 10,
+    borderRadius: 5,
     overflow: 'hidden',
   },
   progressBarFill: {
     height: '100%',
-    borderRadius: 4,
+    borderRadius: 5,
+  },
+  progressSubtext: {
+    fontSize: 11,
+    marginTop: 6,
+    fontWeight: '500',
   },
   statsContainer: {
     flexDirection: 'row',
@@ -738,21 +1231,23 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.06,
     shadowRadius: 8,
     elevation: 3,
+    position: 'relative',
+    overflow: 'hidden',
   },
   statIconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 12,
   },
   statIcon: {
-    fontSize: 24,
+    fontSize: 26,
   },
   statValue: {
-    fontSize: isSmallScreen ? 24 : 28,
-    fontWeight: '700',
+    fontSize: isSmallScreen ? 26 : 30,
+    fontWeight: '800',
     marginBottom: 4,
   },
   statTitle: {
@@ -761,9 +1256,53 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
-  mapSection: {
+  statGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    opacity: 0.1,
+    zIndex: -1,
+  },
+  continentSection: {
     marginHorizontal: 20,
     marginTop: 8,
+    borderRadius: 20,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 4,
+  },
+  continentGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 16,
+  },
+  continentItem: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 12,
+  },
+  continentIcon: {
+    fontSize: 28,
+    marginBottom: 8,
+  },
+  continentValue: {
+    fontSize: 20,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  continentLabel: {
+    fontSize: 10,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+  },
+  mapSection: {
+    marginHorizontal: 20,
+    marginTop: 16,
     borderRadius: 20,
     paddingVertical: 20,
     shadowColor: '#000',
@@ -777,7 +1316,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    marginBottom: 16,
+    marginBottom: 12,
   },
   sectionTitle: {
     fontSize: isSmallScreen ? 18 : 20,
@@ -786,10 +1325,20 @@ const styles = StyleSheet.create({
   },
   sectionSubtitle: {
     fontSize: 12,
+    fontWeight: '500',
   },
   mapWrapper: {
     position: 'relative',
     marginBottom: 16,
+  },
+  mapInstructions: {
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    alignItems: 'center',
+  },
+  instructionText: {
+    fontSize: 11,
+    fontWeight: '500',
   },
   mapScrollContent: {
     paddingHorizontal: 20,
@@ -800,7 +1349,7 @@ const styles = StyleSheet.create({
   zoomControls: {
     position: 'absolute',
     right: 28,
-    bottom: 20,
+    bottom: 80,
     gap: 8,
   },
   zoomButton: {
@@ -822,6 +1371,36 @@ const styles = StyleSheet.create({
   zoomButtonText: {
     fontSize: 20,
     fontWeight: '600',
+  },
+  zoomIndicator: {
+    position: 'absolute',
+    bottom: 80,
+    left: 28,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+  },
+  zoomIndicatorText: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  minimap: {
+    position: 'absolute',
+    bottom: 20,
+    left: 28,
+    borderRadius: 8,
+    padding: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 5,
+  },
+  minimapLabel: {
+    fontSize: 8,
+    fontWeight: '600',
+    textAlign: 'center',
+    marginTop: 4,
   },
   tooltip: {
     position: 'absolute',
@@ -860,20 +1439,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     paddingHorizontal: 20,
-    gap: 24,
+    gap: 20,
+    marginTop: 12,
   },
   legendItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
   },
   legendDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
   },
   legendText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '500',
   },
   visitedSection: {
