@@ -14,6 +14,7 @@ import { useLanguage } from '../../i18n/LanguageContext';
 import { Header } from '../../components/common/Header';
 import { spacing } from '../../theme/spacing';
 import { typography } from '../../theme/typography';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 
 export const SettingsScreen = ({ navigation }: any) => {
   const { user, logout } = useAuth();
@@ -87,13 +88,13 @@ export const SettingsScreen = ({ navigation }: any) => {
       activeOpacity={onPress ? 0.7 : 1}
     >
       <View style={styles.settingItemLeft}>
-        <Text style={styles.settingIcon}>{icon}</Text>
+        <Icon name={icon} style={styles.settingIcon} />
         <View style={styles.settingTextContainer}>
           <Text style={styles.settingTitle}>{title}</Text>
           {subtitle && <Text style={styles.settingSubtitle}>{subtitle}</Text>}
         </View>
       </View>
-      {rightElement || (showArrow && <Text style={styles.arrow}>›</Text>)}
+      {rightElement || (showArrow && <Icon name="chevron-right" style={styles.arrow} />)}
     </TouchableOpacity>
   );
 
@@ -159,19 +160,19 @@ export const SettingsScreen = ({ navigation }: any) => {
         <SettingSection title={t('settings.account')} />
         <View style={styles.section}>
           <SettingItem
-            icon="👤"
+            icon="person"
             title={t('settings.personalInfo')}
             subtitle={t('settings.personalInfoDescription')}
             onPress={() => Alert.alert(t('common.success'), t('settings.featureInDevelopment'))}
           />
           <SettingItem
-            icon="🔒"
+            icon="lock"
             title={t('settings.changePassword')}
             subtitle={t('settings.changePasswordDescription')}
             onPress={() => Alert.alert(t('common.success'), t('settings.featureInDevelopment'))}
           />
           <SettingItem
-            icon="🌐"
+            icon="language"
             title={t('settings.language')}
             subtitle={availableLanguages.find(l => l.code === language)?.name || 'Tiếng Việt'}
             onPress={() => {
@@ -199,21 +200,21 @@ export const SettingsScreen = ({ navigation }: any) => {
         <SettingSection title={t('settings.preferences')} />
         <View style={styles.section}>
           <SettingToggle
-            icon="🔔"
+            icon="notifications"
             title={t('settings.notifications')}
             subtitle={t('settings.notificationsDescription')}
             value={notifications}
             onValueChange={setNotifications}
           />
           <SettingToggle
-            icon="📍"
+            icon="location-on"
             title={t('settings.locationServices')}
             subtitle={t('settings.locationServicesDescription')}
             value={locationServices}
             onValueChange={setLocationServices}
           />
           <SettingItem
-            icon="🌙"
+            icon="brightness-6"
             title={t('settings.appearance')}
             subtitle={
               themeMode === 'auto'
@@ -248,7 +249,7 @@ export const SettingsScreen = ({ navigation }: any) => {
             }}
           />
           <SettingToggle
-            icon="💾"
+            icon="save"
             title={t('settings.autoSave')}
             subtitle={t('settings.autoSaveDescription')}
             value={autoSave}
@@ -260,24 +261,24 @@ export const SettingsScreen = ({ navigation }: any) => {
         <SettingSection title={t('settings.privacySecurity')} />
         <View style={styles.section}>
           <SettingItem
-            icon="🔐"
+            icon="privacy-tip"
             title={t('settings.privacy')}
             subtitle={t('settings.privacyDescription')}
             onPress={() => (navigation as any).navigate('PrivacySettings')}
           />
           <SettingItem
-            icon="🛡️"
+            icon="security"
             title={t('settings.security')}
             subtitle={t('settings.securityDescription')}
             onPress={() => Alert.alert(t('common.success'), t('settings.featureInDevelopment'))}
           />
           <SettingItem
-            icon="📜"
+            icon="description"
             title={t('settings.termsOfService')}
             onPress={() => Alert.alert(t('common.success'), t('settings.featureInDevelopment'))}
           />
           <SettingItem
-            icon="📄"
+            icon="policy"
             title={t('settings.privacyPolicy')}
             onPress={() => Alert.alert(t('common.success'), t('settings.featureInDevelopment'))}
           />
@@ -287,13 +288,13 @@ export const SettingsScreen = ({ navigation }: any) => {
         <SettingSection title={t('settings.dataStorage')} />
         <View style={styles.section}>
           <SettingItem
-            icon="📊"
+            icon="bar-chart"
             title={t('settings.storageUsage')}
             subtitle={t('settings.storageUsageValue')}
             onPress={() => Alert.alert(t('common.success'), t('settings.featureInDevelopment'))}
           />
           <SettingItem
-            icon="🗑️"
+            icon="delete"
             title={t('settings.clearCache')}
             subtitle={t('settings.clearCacheDescription')}
             onPress={() =>
@@ -307,7 +308,7 @@ export const SettingsScreen = ({ navigation }: any) => {
             }
           />
           <SettingItem
-            icon="☁️"
+            icon="cloud"
             title={t('settings.backupSync')}
             subtitle={t('settings.backupSyncDescription')}
             onPress={() => Alert.alert(t('common.success'), t('settings.featureInDevelopment'))}
@@ -318,23 +319,23 @@ export const SettingsScreen = ({ navigation }: any) => {
         <SettingSection title={t('settings.support')} />
         <View style={styles.section}>
           <SettingItem
-            icon="❓"
+            icon="help-outline"
             title={t('settings.help')}
             onPress={() => Alert.alert(t('common.success'), t('settings.featureInDevelopment'))}
           />
           <SettingItem
-            icon="💬"
+            icon="feedback"
             title={t('settings.feedback')}
             subtitle={t('settings.feedbackDescription')}
             onPress={() => Alert.alert(t('common.success'), t('settings.featureInDevelopment'))}
           />
           <SettingItem
-            icon="⭐"
+            icon="star"
             title={t('settings.rateApp')}
             onPress={() => Alert.alert(t('common.success'), t('settings.featureInDevelopment'))}
           />
           <SettingItem
-            icon="ℹ️"
+            icon="info"
             title={t('settings.about')}
             subtitle={t('settings.aboutDescription')}
             onPress={() =>
@@ -350,13 +351,13 @@ export const SettingsScreen = ({ navigation }: any) => {
         <SettingSection title={t('settings.dangerZone')} />
         <View style={styles.section}>
           <SettingItem
-            icon="🚪"
+            icon="logout"
             title={t('auth.logout')}
             onPress={handleLogout}
             showArrow={false}
           />
           <TouchableOpacity style={styles.dangerItem} onPress={handleDeleteAccount}>
-            <Text style={styles.settingIcon}>🗑️</Text>
+            <Icon name="delete" style={styles.settingIcon} />
             <Text style={styles.dangerText}>{t('settings.deleteAccount')}</Text>
           </TouchableOpacity>
         </View>

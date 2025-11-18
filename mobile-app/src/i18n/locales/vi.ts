@@ -69,7 +69,7 @@ export default {
     createAccount: 'Tạo tài khoản của bạn',
     hasAccount: 'Đã có tài khoản?',
     noAccount: 'Chưa có tài khoản?',
-    registerNow: 'Đăng nhập ngay',
+    registerNow: 'Đăng ký ngay',
   },
 
   walkthrough: {

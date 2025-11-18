@@ -63,12 +63,19 @@ class HttpClient {
       return config;
     });
 
-    // Add default headers
+    // Add default headers (skip Content-Type for FormData)
     this.addRequestInterceptor(async (config) => {
+      const headers = config.headers as Record<string, any> || {};
+      const skipContentType = headers['__skip_content_type__'];
+      
+      if (skipContentType) {
+        delete headers['__skip_content_type__'];
+      }
+      
       config.headers = {
-        'Content-Type': 'application/json',
+        ...(skipContentType ? {} : { 'Content-Type': 'application/json' }),
         Accept: 'application/json',
-        ...config.headers,
+        ...headers,
       };
       return config;
     });
@@ -275,7 +282,6 @@ class HttpClient {
         };
       } catch (error: any) {
         lastError = error;
-
         // Execute error interceptors
         await this.executeErrorInterceptors(error);
 
@@ -362,16 +368,16 @@ class HttpClient {
    * Upload file/form data
    */
   async upload<T = any>(url: string, formData: FormData, config?: Partial<RequestConfig>): Promise<ApiResponse<T>> {
-    // Remove Content-Type header for FormData (browser will set it with boundary)
-    const headers: Record<string, any> = { ...config?.headers };
-    delete headers['Content-Type'];
-
     return this.makeRequest<T>({
       url,
       method: 'POST',
       body: formData as any,
       ...config,
-      headers,
+      // Set a special flag to skip Content-Type in interceptor
+      headers: {
+        ...config?.headers,
+        '__skip_content_type__': 'true',
+      },
     });
   }
 }

@@ -111,12 +111,12 @@ export const LoginScreen: React.FC = () => {
 
           {/* Header */}
           <View style={styles.header}>
-            <MaterialCommunityIcons
+            {/* <MaterialCommunityIcons
               name="hand-wave"
               size={64}
               color={colors.neutral.white}
               style={{ marginBottom: spacing.md }}
-            />
+            /> */}
             <Text style={styles.title}>{t('auth.login')}</Text>
             <Text style={styles.subtitle}>{t('auth.welcomeBack')}</Text>
           </View>

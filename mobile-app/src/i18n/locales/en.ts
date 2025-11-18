@@ -69,7 +69,7 @@ export default {
     createAccount: 'Create your account',
     hasAccount: 'Already have an account?',
     noAccount: "Don't have an account?",
-    registerNow: 'Login now',
+    registerNow: 'Register now',
   },
 
   walkthrough: {

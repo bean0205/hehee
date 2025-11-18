@@ -73,7 +73,7 @@ export const AuthHomeScreen: React.FC = () => {
       />
 
       {/* Floating Decorative Elements */}
-      <View style={styles.decorContainer} pointerEvents="none">
+      {/* <View style={styles.decorContainer} pointerEvents="none">
         <Animated.Text style={[styles.decorEmoji, styles.decor1, { opacity: fadeAnim }]}>
           🌍
         </Animated.Text>
@@ -92,7 +92,7 @@ export const AuthHomeScreen: React.FC = () => {
         <Animated.Text style={[styles.decorEmoji, styles.decor6, { opacity: fadeAnim }]}>
           🎒
         </Animated.Text>
-      </View>
+      </View> */}
 
       <KeyboardAvoidingView
         style={styles.keyboardView}

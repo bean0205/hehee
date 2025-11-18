@@ -166,11 +166,11 @@ export const ProfileScreen: React.FC = () => {
         {/* Profile Header */}
         <View style={styles.profileHeader}>
           <Image
-            source={{ uri: "https://picsum.photos/400/150" }}
+            source={{ uri: user?.coverUrl}}
             style={styles.coverImage}
           />
           <View style={styles.profileInfo}>
-            <Avatar uri={user?.avatar} size={80} style={styles.avatar} />
+            <Avatar uri={user?.avatarUrl} size={80} style={styles.avatar} />
             <View style={styles.nameRow}>
               <Text style={styles.displayName}>
                 {user?.displayName || "User"}

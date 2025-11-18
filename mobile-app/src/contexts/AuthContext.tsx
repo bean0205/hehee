@@ -5,8 +5,9 @@ interface User {
   email: string;
   username: string;
   displayName: string;
-  avatar?: string;
   bio?: string;
+  avatarUrl?: string;
+  coverUrl?: string;
 }
 
 interface AuthContextType {
@@ -29,15 +30,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      // Mock API call - accepts any email/password
       const rs = await authService.handleLogin(email, password);
-      debugger
       setUser({
         id: Date.now().toString(),
         email,
         username: rs.user.username,
         displayName: rs.user.displayName,
-        avatar: rs.user.avatarUrl || `https://i.pravatar.cc/150?u=${rs.user.username}`,
+        avatarUrl: rs.user.avatarUrl,
+        coverUrl: rs.user.coverUrl,
         bio: rs.user.bio || 'Chào mừng bạn đến với PinYourWord! 🚀',
       });       
     } catch (error) {
