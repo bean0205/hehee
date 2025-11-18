@@ -17,6 +17,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons, FontAwesome, Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useLanguage } from '../../i18n/LanguageContext';
 import { Avatar } from '../../components/common/Avatar';
@@ -246,6 +247,7 @@ export const FeedScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const { colors } = useTheme();
   const { t } = useLanguage();
+  const insets = useSafeAreaInsets();
   const [refreshing, setRefreshing] = useState(false);
   const [posts, setPosts] = useState(getMockPosts(t));
   const [imageViewerVisible, setImageViewerVisible] = useState(false);
@@ -629,7 +631,7 @@ export const FeedScreen: React.FC = () => {
       >
         <View style={styles.searchModalContainer}>
           {/* Search Header */}
-          <View style={styles.searchHeader}>
+          <View style={[styles.searchHeader, { paddingTop: insets.top + spacing.md }]}>
             <TouchableOpacity onPress={() => setSearchVisible(false)}>
               <MaterialCommunityIcons
                 name="arrow-left"
@@ -784,7 +786,7 @@ export const FeedScreen: React.FC = () => {
       >
         <View style={styles.notificationsModalContainer}>
           {/* Notifications Header */}
-          <View style={styles.notificationsHeader}>
+          <View style={[styles.notificationsHeader, { paddingTop: insets.top + spacing.md }]}>
             <TouchableOpacity onPress={() => setNotificationsVisible(false)}>
               <MaterialCommunityIcons
                 name="close"
@@ -1407,7 +1409,7 @@ export const FeedScreen: React.FC = () => {
       >
         <View style={styles.storyViewerContainer}>
           <TouchableOpacity
-            style={styles.storyViewerClose}
+            style={[styles.storyViewerClose, { top: insets.top + spacing.lg }]}
             onPress={() => setStoryViewerVisible(false)}
           >
             <MaterialCommunityIcons
@@ -1429,7 +1431,7 @@ export const FeedScreen: React.FC = () => {
         onRequestClose={() => setCommentModalVisible(false)}
       >
         <View style={styles.commentModalContainer}>
-          <View style={styles.commentModalHeader}>
+          <View style={[styles.commentModalHeader, { paddingTop: insets.top + spacing.md }]}>
             <TouchableOpacity onPress={() => setCommentModalVisible(false)}>
               <MaterialCommunityIcons
                 name="close"
@@ -2045,7 +2047,7 @@ const createStyles = (colors: any) =>
       flexDirection: 'row',
       alignItems: 'center',
       paddingHorizontal: spacing.md,
-      paddingVertical: spacing.md,
+      paddingBottom: spacing.md,
       gap: spacing.md,
       backgroundColor: colors.background.card,
       borderBottomWidth: 1,
@@ -2166,7 +2168,7 @@ const createStyles = (colors: any) =>
       justifyContent: 'space-between',
       alignItems: 'center',
       paddingHorizontal: spacing.md,
-      paddingVertical: spacing.md,
+      paddingBottom: spacing.md,
       backgroundColor: colors.background.card,
       borderBottomWidth: 1,
       borderBottomColor: colors.border.light,
@@ -2260,7 +2262,6 @@ const createStyles = (colors: any) =>
     },
     storyViewerClose: {
       position: 'absolute',
-      top: 50,
       right: spacing.lg,
       zIndex: 100,
     },
@@ -2279,7 +2280,7 @@ const createStyles = (colors: any) =>
       justifyContent: 'space-between',
       alignItems: 'center',
       paddingHorizontal: spacing.md,
-      paddingVertical: spacing.md,
+      paddingBottom: spacing.md,
       backgroundColor: colors.background.card,
       borderBottomWidth: 1,
       borderBottomColor: colors.border.light,
