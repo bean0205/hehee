@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -10,9 +10,12 @@ import {
   Dimensions,
   ScrollView,
   Animated,
+  Modal,
+  Pressable,
+  ActivityIndicator,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { MaterialCommunityIcons, FontAwesome } from '@expo/vector-icons';
+import { MaterialCommunityIcons, FontAwesome, Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useLanguage } from '../../i18n/LanguageContext';
@@ -168,6 +171,27 @@ const getMockPosts = (t: any) => [
   },
 ];
 
+// Filter tabs
+const FILTER_TABS = [
+  { id: 'all', labelKey: 'feed.filters.all', icon: 'earth' },
+  { id: 'following', labelKey: 'feed.filters.following', icon: 'account-group' },
+  { id: 'popular', labelKey: 'feed.filters.popular', icon: 'fire' },
+  { id: 'nearby', labelKey: 'feed.filters.nearby', icon: 'map-marker-radius' },
+];
+
+// Mock suggested users
+const mockSuggestedUsers = [
+  { id: 'su1', name: 'Emma Wilson', username: '@emma_travels', avatar: null, mutualFriends: 5 },
+  { id: 'su2', name: 'John Smith', username: '@johnexplorer', avatar: null, mutualFriends: 3 },
+  { id: 'su3', name: 'Sarah Lee', username: '@sarahwanders', avatar: null, mutualFriends: 8 },
+];
+
+// Mock comments
+const getMockComments = (t: any) => [
+  { id: 'c1', user: { name: 'Mai', avatar: null }, text: t('mockData.feed.comment1') },
+  { id: 'c2', user: { name: 'Tuấn', avatar: null }, text: t('mockData.feed.comment2') },
+];
+
 export const FeedScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const { colors } = useTheme();
@@ -177,6 +201,16 @@ export const FeedScreen: React.FC = () => {
   const [imageViewerVisible, setImageViewerVisible] = useState(false);
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [activeFilter, setActiveFilter] = useState('all');
+  const [bookmarkedPosts, setBookmarkedPosts] = useState<string[]>([]);
+  const [optionsMenuPost, setOptionsMenuPost] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [showSuggestedUsers, setShowSuggestedUsers] = useState(true);
+  const [followedUsers, setFollowedUsers] = useState<string[]>([]);
+
+  // Animation refs
+  const likeAnimationScale = useRef(new Animated.Value(0)).current;
+  const likeAnimationOpacity = useRef(new Animated.Value(0)).current;
 
   const styles = React.useMemo(() => createStyles(colors), [colors]);
 
@@ -200,6 +234,35 @@ export const FeedScreen: React.FC = () => {
           : post
       )
     );
+
+    // Trigger like animation
+    triggerLikeAnimation();
+  };
+
+  const triggerLikeAnimation = () => {
+    likeAnimationScale.setValue(0);
+    likeAnimationOpacity.setValue(1);
+
+    Animated.parallel([
+      Animated.spring(likeAnimationScale, {
+        toValue: 1,
+        friction: 3,
+        useNativeDriver: true,
+      }),
+      Animated.timing(likeAnimationOpacity, {
+        toValue: 0,
+        duration: 800,
+        delay: 200,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+
+  const handleDoubleTap = (postId: string) => {
+    const post = posts.find(p => p.id === postId);
+    if (post && !post.isLiked) {
+      handleLike(postId);
+    }
   };
 
   const handleComment = (postId: string) => {
@@ -210,6 +273,32 @@ export const FeedScreen: React.FC = () => {
   const handleShare = (postId: string) => {
     // TODO: Open share modal
     console.log('Share post:', postId);
+  };
+
+  const handleBookmark = (postId: string) => {
+    setBookmarkedPosts(prev =>
+      prev.includes(postId)
+        ? prev.filter(id => id !== postId)
+        : [...prev, postId]
+    );
+    setOptionsMenuPost(null);
+  };
+
+  const handleFollow = (userId: string) => {
+    setFollowedUsers(prev =>
+      prev.includes(userId)
+        ? prev.filter(id => id !== userId)
+        : [...prev, userId]
+    );
+  };
+
+  const handleFilterChange = (filterId: string) => {
+    setActiveFilter(filterId);
+    setLoading(true);
+    // Simulate loading
+    setTimeout(() => {
+      setLoading(false);
+    }, 500);
   };
 
   const handleUserPress = (userId: string) => {
@@ -230,6 +319,226 @@ export const FeedScreen: React.FC = () => {
     setSelectedImages(photos);
     setSelectedImageIndex(index);
     setImageViewerVisible(true);
+  };
+
+  // Render Filter Tabs
+  const renderFilterTabs = () => {
+    return (
+      <View style={styles.filterTabsContainer}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.filterTabsContent}
+        >
+          {FILTER_TABS.map(tab => (
+            <TouchableOpacity
+              key={tab.id}
+              style={[
+                styles.filterTab,
+                activeFilter === tab.id && styles.filterTabActive,
+              ]}
+              onPress={() => handleFilterChange(tab.id)}
+              activeOpacity={0.7}
+            >
+              <MaterialCommunityIcons
+                name={tab.icon as any}
+                size={18}
+                color={
+                  activeFilter === tab.id
+                    ? colors.neutral.white
+                    : colors.text.secondary
+                }
+              />
+              <Text
+                style={[
+                  styles.filterTabText,
+                  activeFilter === tab.id && styles.filterTabTextActive,
+                ]}
+              >
+                {t(tab.labelKey)}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
+    );
+  };
+
+  // Render Suggested Users
+  const renderSuggestedUsers = () => {
+    if (!showSuggestedUsers) return null;
+
+    return (
+      <View style={styles.suggestedUsersContainer}>
+        <View style={styles.suggestedUsersHeader}>
+          <Text style={styles.suggestedUsersTitle}>
+            {t('feed.suggestedForYou')}
+          </Text>
+          <TouchableOpacity onPress={() => setShowSuggestedUsers(false)}>
+            <MaterialCommunityIcons
+              name="close"
+              size={20}
+              color={colors.text.secondary}
+            />
+          </TouchableOpacity>
+        </View>
+
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.suggestedUsersContent}
+        >
+          {mockSuggestedUsers.map(user => (
+            <View key={user.id} style={styles.suggestedUserCard}>
+              <Avatar size={80} uri={user.avatar} />
+              <Text style={styles.suggestedUserName} numberOfLines={1}>
+                {user.name}
+              </Text>
+              <Text style={styles.suggestedUserUsername} numberOfLines={1}>
+                {user.username}
+              </Text>
+              <Text style={styles.suggestedUserMutual}>
+                {t('feed.mutualFriends', { count: user.mutualFriends })}
+              </Text>
+              <TouchableOpacity
+                style={[
+                  styles.followButton,
+                  followedUsers.includes(user.id) && styles.followingButton,
+                ]}
+                onPress={() => handleFollow(user.id)}
+              >
+                <Text
+                  style={[
+                    styles.followButtonText,
+                    followedUsers.includes(user.id) && styles.followingButtonText,
+                  ]}
+                >
+                  {followedUsers.includes(user.id)
+                    ? t('feed.following')
+                    : t('feed.follow')}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          ))}
+        </ScrollView>
+      </View>
+    );
+  };
+
+  // Render Skeleton Loading
+  const renderSkeletonPost = () => {
+    return (
+      <View style={styles.postCard}>
+        <View style={styles.postHeader}>
+          <View style={styles.userInfo}>
+            <View style={styles.skeletonAvatar} />
+            <View style={{ flex: 1, marginLeft: spacing.sm }}>
+              <View style={styles.skeletonText} />
+              <View style={[styles.skeletonText, { width: '60%', marginTop: 4 }]} />
+            </View>
+          </View>
+        </View>
+        <View style={styles.skeletonImage} />
+        <View style={{ padding: spacing.md }}>
+          <View style={styles.skeletonText} />
+          <View style={[styles.skeletonText, { width: '80%', marginTop: 4 }]} />
+        </View>
+      </View>
+    );
+  };
+
+  // Render Comments Preview
+  const renderCommentsPreview = (postId: string) => {
+    const comments = getMockComments(t);
+    if (comments.length === 0) return null;
+
+    return (
+      <View style={styles.commentsPreview}>
+        {comments.slice(0, 2).map(comment => (
+          <View key={comment.id} style={styles.commentPreviewItem}>
+            <Text style={styles.commentPreviewText}>
+              <Text style={styles.commentPreviewUsername}>{comment.user.name}</Text>{' '}
+              {comment.text}
+            </Text>
+          </View>
+        ))}
+        <TouchableOpacity onPress={() => handleComment(postId)}>
+          <Text style={styles.viewAllComments}>
+            {t('feed.viewAllComments')}
+          </Text>
+        </TouchableOpacity>
+      </View>
+    );
+  };
+
+  // Render Options Menu
+  const renderOptionsMenu = () => {
+    if (!optionsMenuPost) return null;
+
+    const post = posts.find(p => p.id === optionsMenuPost);
+    const isBookmarked = bookmarkedPosts.includes(optionsMenuPost);
+
+    return (
+      <Modal
+        visible={!!optionsMenuPost}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setOptionsMenuPost(null)}
+      >
+        <Pressable
+          style={styles.modalOverlay}
+          onPress={() => setOptionsMenuPost(null)}
+        >
+          <View style={styles.optionsMenu}>
+            <TouchableOpacity
+              style={styles.optionsMenuItem}
+              onPress={() => handleBookmark(optionsMenuPost)}
+            >
+              <MaterialCommunityIcons
+                name={isBookmarked ? 'bookmark' : 'bookmark-outline'}
+                size={24}
+                color={colors.text.primary}
+              />
+              <Text style={styles.optionsMenuText}>
+                {isBookmarked ? t('feed.unsave') : t('feed.save')}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.optionsMenuItem}
+              onPress={() => {
+                setOptionsMenuPost(null);
+                handleShare(optionsMenuPost);
+              }}
+            >
+              <MaterialCommunityIcons
+                name="share-variant"
+                size={24}
+                color={colors.text.primary}
+              />
+              <Text style={styles.optionsMenuText}>{t('feed.share')}</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.optionsMenuItem}
+              onPress={() => {
+                setOptionsMenuPost(null);
+                console.log('Report post');
+              }}
+            >
+              <MaterialCommunityIcons
+                name="flag-outline"
+                size={24}
+                color={colors.error.main}
+              />
+              <Text style={[styles.optionsMenuText, { color: colors.error.main }]}>
+                {t('feed.report')}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </Pressable>
+      </Modal>
+    );
   };
 
   const renderStoryItem = ({ item }: { item: any }) => {
@@ -465,6 +774,17 @@ export const FeedScreen: React.FC = () => {
     }
 
     // Regular pin post
+    let lastTap = 0;
+    const handleImageDoubleTap = () => {
+      const now = Date.now();
+      const DOUBLE_TAP_DELAY = 300;
+
+      if (now - lastTap < DOUBLE_TAP_DELAY) {
+        handleDoubleTap(item.id);
+      }
+      lastTap = now;
+    };
+
     return (
       <View style={styles.postCard}>
         {/* Header */}
@@ -494,7 +814,21 @@ export const FeedScreen: React.FC = () => {
             </View>
           </TouchableOpacity>
 
-          {/* Status Badge */}
+          {/* Options Button */}
+          <TouchableOpacity
+            style={styles.optionsButton}
+            onPress={() => setOptionsMenuPost(item.id)}
+          >
+            <MaterialCommunityIcons
+              name="dots-vertical"
+              size={24}
+              color={colors.text.secondary}
+            />
+          </TouchableOpacity>
+        </View>
+
+        {/* Status Badge */}
+        <View style={styles.statusBadgeRow}>
           <View
             style={[
               styles.statusBadge,
@@ -509,8 +843,28 @@ export const FeedScreen: React.FC = () => {
           </View>
         </View>
 
-        {/* Photo Gallery */}
-        {item.photos && renderPhotoGallery(item.photos)}
+        {/* Photo Gallery with Double Tap */}
+        <Pressable onPress={handleImageDoubleTap}>
+          {item.photos && renderPhotoGallery(item.photos)}
+
+          {/* Like Animation Overlay */}
+          <Animated.View
+            style={[
+              styles.likeAnimationContainer,
+              {
+                opacity: likeAnimationOpacity,
+                transform: [{ scale: likeAnimationScale }],
+              },
+            ]}
+            pointerEvents="none"
+          >
+            <MaterialCommunityIcons
+              name="heart"
+              size={100}
+              color="#EF4444"
+            />
+          </Animated.View>
+        </Pressable>
 
         {/* Post Details */}
         <TouchableOpacity
@@ -543,44 +897,59 @@ export const FeedScreen: React.FC = () => {
 
         {/* Actions Bar */}
         <View style={styles.actionsBar}>
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={() => handleLike(item.id)}
-          >
-            <MaterialCommunityIcons
-              name={item.isLiked ? 'heart' : 'heart-outline'}
-              size={24}
-              color={item.isLiked ? '#EF4444' : colors.text.secondary}
-            />
-            <Text style={[styles.actionText, item.isLiked && styles.actionTextActive]}>
-              {item.likes}
-            </Text>
-          </TouchableOpacity>
+          <View style={styles.actionsLeft}>
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() => handleLike(item.id)}
+            >
+              <MaterialCommunityIcons
+                name={item.isLiked ? 'heart' : 'heart-outline'}
+                size={26}
+                color={item.isLiked ? '#EF4444' : colors.text.secondary}
+              />
+              <Text style={[styles.actionText, item.isLiked && styles.actionTextActive]}>
+                {item.likes}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() => handleComment(item.id)}
+            >
+              <MaterialCommunityIcons
+                name="comment-outline"
+                size={26}
+                color={colors.text.secondary}
+              />
+              <Text style={styles.actionText}>{item.comments}</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() => handleShare(item.id)}
+            >
+              <MaterialCommunityIcons
+                name="share-variant"
+                size={26}
+                color={colors.text.secondary}
+              />
+            </TouchableOpacity>
+          </View>
 
           <TouchableOpacity
             style={styles.actionButton}
-            onPress={() => handleComment(item.id)}
+            onPress={() => handleBookmark(item.id)}
           >
             <MaterialCommunityIcons
-              name="comment-outline"
-              size={24}
-              color={colors.text.secondary}
+              name={bookmarkedPosts.includes(item.id) ? 'bookmark' : 'bookmark-outline'}
+              size={26}
+              color={bookmarkedPosts.includes(item.id) ? colors.primary.main : colors.text.secondary}
             />
-            <Text style={styles.actionText}>{item.comments}</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={() => handleShare(item.id)}
-          >
-            <MaterialCommunityIcons
-              name="share-variant"
-              size={24}
-              color={colors.text.secondary}
-            />
-            <Text style={styles.actionText}>{t('feed.share')}</Text>
           </TouchableOpacity>
         </View>
+
+        {/* Comments Preview */}
+        {renderCommentsPreview(item.id)}
       </View>
     );
   };
@@ -613,7 +982,7 @@ export const FeedScreen: React.FC = () => {
 
       {/* Posts Feed */}
       <FlatList
-        data={posts}
+        data={loading ? [] : posts}
         renderItem={renderPost}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContent}
@@ -625,7 +994,19 @@ export const FeedScreen: React.FC = () => {
           />
         }
         showsVerticalScrollIndicator={false}
-        ListHeaderComponent={renderStories()}
+        ListHeaderComponent={
+          <>
+            {renderStories()}
+            {renderFilterTabs()}
+            {renderSuggestedUsers()}
+            {loading && (
+              <View>
+                {renderSkeletonPost()}
+                {renderSkeletonPost()}
+              </View>
+            )}
+          </>
+        }
         ListEmptyComponent={
           <View style={styles.emptyState}>
             <LinearGradient
@@ -670,6 +1051,9 @@ export const FeedScreen: React.FC = () => {
         initialIndex={selectedImageIndex}
         onClose={() => setImageViewerVisible(false)}
       />
+
+      {/* Options Menu Modal */}
+      {renderOptionsMenu()}
     </View>
   );
 };
@@ -756,7 +1140,17 @@ const createStyles = (colors: any) =>
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'flex-start',
-      padding: spacing.md,
+      paddingHorizontal: spacing.md,
+      paddingTop: spacing.md,
+      paddingBottom: spacing.xs,
+    },
+    optionsButton: {
+      padding: spacing.xs,
+      marginLeft: spacing.sm,
+    },
+    statusBadgeRow: {
+      paddingHorizontal: spacing.md,
+      paddingBottom: spacing.sm,
     },
     userInfo: {
       flexDirection: 'row',
@@ -942,13 +1336,19 @@ const createStyles = (colors: any) =>
     // Actions Bar
     actionsBar: {
       flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
       paddingHorizontal: spacing.md,
       paddingTop: spacing.md,
-      paddingBottom: spacing.sm,
-      gap: spacing.xl,
+      paddingBottom: spacing.xs,
       borderTopWidth: 1,
       borderTopColor: colors.border.light,
       marginTop: spacing.sm,
+    },
+    actionsLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.lg,
     },
     actionButton: {
       flexDirection: 'row',
@@ -964,6 +1364,193 @@ const createStyles = (colors: any) =>
     actionTextActive: {
       color: '#EF4444',
       fontWeight: typography.fontWeight.bold,
+    },
+    // Like Animation
+    likeAnimationContainer: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      justifyContent: 'center',
+      alignItems: 'center',
+      zIndex: 100,
+    },
+    // Filter Tabs
+    filterTabsContainer: {
+      backgroundColor: colors.background.card,
+      paddingVertical: spacing.sm,
+      marginBottom: spacing.sm,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border.light,
+    },
+    filterTabsContent: {
+      paddingHorizontal: spacing.md,
+      gap: spacing.sm,
+    },
+    filterTab: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.xs,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      borderRadius: borderRadius.full,
+      backgroundColor: colors.background.secondary,
+      borderWidth: 1,
+      borderColor: colors.border.light,
+    },
+    filterTabActive: {
+      backgroundColor: colors.primary.main,
+      borderColor: colors.primary.main,
+    },
+    filterTabText: {
+      fontSize: typography.fontSize.sm,
+      fontWeight: typography.fontWeight.semiBold,
+      color: colors.text.secondary,
+    },
+    filterTabTextActive: {
+      color: colors.neutral.white,
+      fontWeight: typography.fontWeight.bold,
+    },
+    // Suggested Users
+    suggestedUsersContainer: {
+      backgroundColor: colors.background.card,
+      paddingVertical: spacing.md,
+      marginBottom: spacing.sm,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border.light,
+    },
+    suggestedUsersHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: spacing.md,
+      marginBottom: spacing.sm,
+    },
+    suggestedUsersTitle: {
+      fontSize: typography.fontSize.base,
+      fontWeight: typography.fontWeight.bold,
+      color: colors.text.primary,
+    },
+    suggestedUsersContent: {
+      paddingHorizontal: spacing.md,
+      gap: spacing.md,
+    },
+    suggestedUserCard: {
+      width: 160,
+      backgroundColor: colors.background.secondary,
+      borderRadius: borderRadius.lg,
+      padding: spacing.md,
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: colors.border.light,
+    },
+    suggestedUserName: {
+      fontSize: typography.fontSize.sm,
+      fontWeight: typography.fontWeight.bold,
+      color: colors.text.primary,
+      marginTop: spacing.sm,
+      textAlign: 'center',
+    },
+    suggestedUserUsername: {
+      fontSize: typography.fontSize.xs,
+      color: colors.text.secondary,
+      marginTop: 2,
+      textAlign: 'center',
+    },
+    suggestedUserMutual: {
+      fontSize: typography.fontSize.xs,
+      color: colors.text.disabled,
+      marginTop: 4,
+      textAlign: 'center',
+    },
+    followButton: {
+      backgroundColor: colors.primary.main,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.xs,
+      borderRadius: borderRadius.md,
+      marginTop: spacing.sm,
+      width: '100%',
+    },
+    followingButton: {
+      backgroundColor: colors.background.card,
+      borderWidth: 1,
+      borderColor: colors.border.main,
+    },
+    followButtonText: {
+      fontSize: typography.fontSize.sm,
+      fontWeight: typography.fontWeight.bold,
+      color: colors.neutral.white,
+      textAlign: 'center',
+    },
+    followingButtonText: {
+      color: colors.text.primary,
+    },
+    // Comments Preview
+    commentsPreview: {
+      paddingHorizontal: spacing.md,
+      paddingBottom: spacing.sm,
+    },
+    commentPreviewItem: {
+      marginBottom: spacing.xs,
+    },
+    commentPreviewText: {
+      fontSize: typography.fontSize.sm,
+      color: colors.text.primary,
+      lineHeight: 18,
+    },
+    commentPreviewUsername: {
+      fontWeight: typography.fontWeight.bold,
+      color: colors.text.primary,
+    },
+    viewAllComments: {
+      fontSize: typography.fontSize.sm,
+      color: colors.text.secondary,
+      fontWeight: typography.fontWeight.medium,
+      marginTop: spacing.xs,
+    },
+    // Options Menu Modal
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0, 0, 0, 0.6)',
+      justifyContent: 'flex-end',
+    },
+    optionsMenu: {
+      backgroundColor: colors.background.card,
+      borderTopLeftRadius: borderRadius.xl,
+      borderTopRightRadius: borderRadius.xl,
+      paddingVertical: spacing.lg,
+      paddingBottom: spacing.xl + spacing.lg,
+    },
+    optionsMenuItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: spacing.xl,
+      paddingVertical: spacing.md,
+      gap: spacing.md,
+    },
+    optionsMenuText: {
+      fontSize: typography.fontSize.base,
+      color: colors.text.primary,
+      fontWeight: typography.fontWeight.medium,
+    },
+    // Skeleton Loading
+    skeletonAvatar: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: colors.background.elevated,
+    },
+    skeletonText: {
+      height: 12,
+      borderRadius: 6,
+      backgroundColor: colors.background.elevated,
+      width: '100%',
+    },
+    skeletonImage: {
+      width: '100%',
+      height: 320,
+      backgroundColor: colors.background.elevated,
     },
     // Empty State
     emptyState: {

@@ -181,6 +181,24 @@ export default {
     noPostsYet: 'No posts yet',
     followFriends: 'Follow friends to see their activities',
     yourStory: 'Your Story',
+    // Filter tabs
+    filters: {
+      all: 'All',
+      following: 'Following',
+      popular: 'Popular',
+      nearby: 'Nearby',
+    },
+    // Suggested users
+    suggestedForYou: 'Suggested for you',
+    mutualFriends: '{{count}} mutual friends',
+    follow: 'Follow',
+    following: 'Following',
+    // Actions
+    save: 'Save',
+    unsave: 'Unsave',
+    report: 'Report',
+    // Comments
+    viewAllComments: 'View all comments',
   },
 
   profile: {
@@ -524,6 +542,8 @@ export default {
       country5: 'Japan',
       country6: 'Vietnam',
       achievementTitle: 'Explored {{count}} countries',
+      comment1: 'So beautiful! I want to go here too 😍',
+      comment2: 'Congratulations! 🎉',
     },
     discover: {
       user1Name: 'Nguyen Van A',
