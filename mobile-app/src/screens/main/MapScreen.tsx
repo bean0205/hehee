@@ -47,10 +47,10 @@ export const MapScreen: React.FC = () => {
   const styles = React.useMemo(() => createStyles(colors), [colors]);
 
   const initialRegion = {
-    latitude: 21.0285,
-    longitude: 105.8542,
-    latitudeDelta: 0.0922,
-    longitudeDelta: 0.0421,
+    latitude: 0,
+    longitude: 0,
+    latitudeDelta: 180,
+    longitudeDelta: 180,
   };
 
   const handleSearch = (text: string) => {
