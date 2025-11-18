@@ -192,6 +192,56 @@ const getMockComments = (t: any) => [
   { id: 'c2', user: { name: 'Tuấn', avatar: null }, text: t('mockData.feed.comment2') },
 ];
 
+// Mock notifications
+const getMockNotifications = (t: any) => [
+  {
+    id: 'n1',
+    type: 'like',
+    user: { name: 'Mai', avatar: null },
+    text: t('mockData.feed.notification1'),
+    timestamp: '5 phút trước',
+    read: false,
+  },
+  {
+    id: 'n2',
+    type: 'comment',
+    user: { name: 'Tuấn', avatar: null },
+    text: t('mockData.feed.notification2'),
+    timestamp: '1 giờ trước',
+    read: false,
+  },
+  {
+    id: 'n3',
+    type: 'follow',
+    user: { name: 'Linh', avatar: null },
+    text: t('mockData.feed.notification3'),
+    timestamp: '2 giờ trước',
+    read: true,
+  },
+  {
+    id: 'n4',
+    type: 'achievement',
+    text: t('mockData.feed.notification4'),
+    timestamp: '1 ngày trước',
+    read: true,
+  },
+];
+
+// Mock search results
+const getMockSearchResults = (t: any) => ({
+  users: [
+    { id: 'u1', name: 'Nguyễn Văn A', username: '@nguyenvana', avatar: null, isFollowing: true },
+    { id: 'u2', name: 'Trần Thị B', username: '@tranthib', avatar: null, isFollowing: false },
+  ],
+  locations: [
+    { id: 'l1', name: 'Vịnh Hạ Long', city: 'Hà Nội', country: 'Việt Nam', pins: 1234 },
+    { id: 'l2', name: 'Tokyo', city: 'Tokyo', country: 'Nhật Bản', pins: 5678 },
+  ],
+  posts: [
+    { id: 'p1', text: 'Trải nghiệm tuyệt vời tại Vịnh Hạ Long', image: null },
+  ],
+});
+
 export const FeedScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const { colors } = useTheme();
@@ -207,6 +257,17 @@ export const FeedScreen: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [showSuggestedUsers, setShowSuggestedUsers] = useState(true);
   const [followedUsers, setFollowedUsers] = useState<string[]>([]);
+  const [searchVisible, setSearchVisible] = useState(false);
+  const [notificationsVisible, setNotificationsVisible] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchTab, setSearchTab] = useState<'all' | 'users' | 'locations' | 'posts'>('all');
+  const [notifications, setNotifications] = useState(getMockNotifications(t));
+  const [storyViewerVisible, setStoryViewerVisible] = useState(false);
+  const [selectedStory, setSelectedStory] = useState<any>(null);
+  const [commentModalVisible, setCommentModalVisible] = useState(false);
+  const [selectedPostForComment, setSelectedPostForComment] = useState<string | null>(null);
+  const [shareModalVisible, setShareModalVisible] = useState(false);
+  const [selectedPostForShare, setSelectedPostForShare] = useState<string | null>(null);
 
   // Animation refs
   const likeAnimationScale = useRef(new Animated.Value(0)).current;
@@ -266,13 +327,28 @@ export const FeedScreen: React.FC = () => {
   };
 
   const handleComment = (postId: string) => {
-    // TODO: Open comment modal
-    console.log('Open comments for post:', postId);
+    setSelectedPostForComment(postId);
+    setCommentModalVisible(true);
   };
 
   const handleShare = (postId: string) => {
-    // TODO: Open share modal
-    console.log('Share post:', postId);
+    setSelectedPostForShare(postId);
+    setShareModalVisible(true);
+  };
+
+  const handleStoryPress = (story: any) => {
+    setSelectedStory(story);
+    setStoryViewerVisible(true);
+  };
+
+  const handleMarkNotificationAsRead = (notificationId: string) => {
+    setNotifications(prev =>
+      prev.map(n => (n.id === notificationId ? { ...n, read: true } : n))
+    );
+  };
+
+  const handleMarkAllNotificationsAsRead = () => {
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
   };
 
   const handleBookmark = (postId: string) => {
@@ -541,9 +617,283 @@ export const FeedScreen: React.FC = () => {
     );
   };
 
+  // Render Search Modal
+  const renderSearchModal = () => {
+    const searchResults = getMockSearchResults(t);
+
+    return (
+      <Modal
+        visible={searchVisible}
+        animationType="slide"
+        onRequestClose={() => setSearchVisible(false)}
+      >
+        <View style={styles.searchModalContainer}>
+          {/* Search Header */}
+          <View style={styles.searchHeader}>
+            <TouchableOpacity onPress={() => setSearchVisible(false)}>
+              <MaterialCommunityIcons
+                name="arrow-left"
+                size={24}
+                color={colors.text.primary}
+              />
+            </TouchableOpacity>
+            <View style={styles.searchInputContainer}>
+              <MaterialCommunityIcons
+                name="magnify"
+                size={20}
+                color={colors.text.secondary}
+              />
+              <Text style={styles.searchInput}>
+                {searchQuery || t('feed.search.placeholder')}
+              </Text>
+            </View>
+          </View>
+
+          {/* Search Tabs */}
+          <View style={styles.searchTabsContainer}>
+            {['all', 'users', 'locations', 'posts'].map(tab => (
+              <TouchableOpacity
+                key={tab}
+                style={[
+                  styles.searchTab,
+                  searchTab === tab && styles.searchTabActive,
+                ]}
+                onPress={() => setSearchTab(tab as any)}
+              >
+                <Text
+                  style={[
+                    styles.searchTabText,
+                    searchTab === tab && styles.searchTabTextActive,
+                  ]}
+                >
+                  {t(`feed.search.${tab}`)}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          {/* Search Results */}
+          <ScrollView style={styles.searchResults}>
+            {/* Users Section */}
+            {(searchTab === 'all' || searchTab === 'users') && (
+              <View style={styles.searchSection}>
+                <Text style={styles.searchSectionTitle}>
+                  {t('feed.search.users')}
+                </Text>
+                {searchResults.users.map(user => (
+                  <TouchableOpacity
+                    key={user.id}
+                    style={styles.searchResultItem}
+                    onPress={() => {
+                      setSearchVisible(false);
+                      handleUserPress(user.id);
+                    }}
+                  >
+                    <Avatar size={50} uri={user.avatar} />
+                    <View style={styles.searchResultInfo}>
+                      <Text style={styles.searchResultName}>{user.name}</Text>
+                      <Text style={styles.searchResultUsername}>
+                        {user.username}
+                      </Text>
+                    </View>
+                    <TouchableOpacity
+                      style={[
+                        styles.searchFollowButton,
+                        user.isFollowing && styles.searchFollowingButton,
+                      ]}
+                      onPress={() => handleFollow(user.id)}
+                    >
+                      <Text
+                        style={[
+                          styles.searchFollowButtonText,
+                          user.isFollowing && styles.searchFollowingButtonText,
+                        ]}
+                      >
+                        {user.isFollowing ? t('feed.following') : t('feed.follow')}
+                      </Text>
+                    </TouchableOpacity>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+
+            {/* Locations Section */}
+            {(searchTab === 'all' || searchTab === 'locations') && (
+              <View style={styles.searchSection}>
+                <Text style={styles.searchSectionTitle}>
+                  {t('feed.search.locations')}
+                </Text>
+                {searchResults.locations.map(location => (
+                  <TouchableOpacity
+                    key={location.id}
+                    style={styles.searchResultItem}
+                    onPress={() => setSearchVisible(false)}
+                  >
+                    <View style={styles.searchLocationIcon}>
+                      <MaterialCommunityIcons
+                        name="map-marker"
+                        size={24}
+                        color={colors.primary.main}
+                      />
+                    </View>
+                    <View style={styles.searchResultInfo}>
+                      <Text style={styles.searchResultName}>
+                        {location.name}
+                      </Text>
+                      <Text style={styles.searchResultUsername}>
+                        {location.city}, {location.country}
+                      </Text>
+                    </View>
+                    <Text style={styles.searchLocationPins}>
+                      {location.pins} pins
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+          </ScrollView>
+        </View>
+      </Modal>
+    );
+  };
+
+  // Render Notifications Modal
+  const renderNotificationsModal = () => {
+    const unreadCount = notifications.filter(n => !n.read).length;
+
+    const getNotificationIcon = (type: string) => {
+      switch (type) {
+        case 'like':
+          return { name: 'heart', color: '#EF4444' };
+        case 'comment':
+          return { name: 'comment', color: colors.primary.main };
+        case 'follow':
+          return { name: 'account-plus', color: colors.success.main };
+        case 'achievement':
+          return { name: 'trophy', color: '#F59E0B' };
+        default:
+          return { name: 'bell', color: colors.text.secondary };
+      }
+    };
+
+    return (
+      <Modal
+        visible={notificationsVisible}
+        animationType="slide"
+        onRequestClose={() => setNotificationsVisible(false)}
+      >
+        <View style={styles.notificationsModalContainer}>
+          {/* Notifications Header */}
+          <View style={styles.notificationsHeader}>
+            <TouchableOpacity onPress={() => setNotificationsVisible(false)}>
+              <MaterialCommunityIcons
+                name="close"
+                size={24}
+                color={colors.text.primary}
+              />
+            </TouchableOpacity>
+            <Text style={styles.notificationsTitle}>
+              {t('feed.notifications.title')}
+            </Text>
+            {unreadCount > 0 && (
+              <TouchableOpacity onPress={handleMarkAllNotificationsAsRead}>
+                <Text style={styles.notificationsMarkAllRead}>
+                  {t('feed.notifications.markAllRead')}
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
+
+          {/* Notifications List */}
+          <ScrollView style={styles.notificationsList}>
+            {notifications.length === 0 ? (
+              <View style={styles.notificationsEmpty}>
+                <MaterialCommunityIcons
+                  name="bell-off-outline"
+                  size={80}
+                  color={colors.text.disabled}
+                />
+                <Text style={styles.notificationsEmptyText}>
+                  {t('feed.notifications.empty')}
+                </Text>
+              </View>
+            ) : (
+              notifications.map(notification => {
+                const icon = getNotificationIcon(notification.type);
+                return (
+                  <TouchableOpacity
+                    key={notification.id}
+                    style={[
+                      styles.notificationItem,
+                      !notification.read && styles.notificationItemUnread,
+                    ]}
+                    onPress={() => handleMarkNotificationAsRead(notification.id)}
+                  >
+                    {notification.user ? (
+                      <View style={styles.notificationAvatarContainer}>
+                        <Avatar size={50} uri={notification.user.avatar} />
+                        <View
+                          style={[
+                            styles.notificationIconBadge,
+                            { backgroundColor: icon.color },
+                          ]}
+                        >
+                          <MaterialCommunityIcons
+                            name={icon.name as any}
+                            size={14}
+                            color={colors.neutral.white}
+                          />
+                        </View>
+                      </View>
+                    ) : (
+                      <View
+                        style={[
+                          styles.notificationIcon,
+                          { backgroundColor: icon.color + '20' },
+                        ]}
+                      >
+                        <MaterialCommunityIcons
+                          name={icon.name as any}
+                          size={24}
+                          color={icon.color}
+                        />
+                      </View>
+                    )}
+
+                    <View style={styles.notificationContent}>
+                      <Text style={styles.notificationText}>
+                        {notification.user && (
+                          <Text style={styles.notificationUsername}>
+                            {notification.user.name}{' '}
+                          </Text>
+                        )}
+                        {notification.text}
+                      </Text>
+                      <Text style={styles.notificationTimestamp}>
+                        {notification.timestamp}
+                      </Text>
+                    </View>
+
+                    {!notification.read && (
+                      <View style={styles.notificationUnreadDot} />
+                    )}
+                  </TouchableOpacity>
+                );
+              })
+            )}
+          </ScrollView>
+        </View>
+      </Modal>
+    );
+  };
+
   const renderStoryItem = ({ item }: { item: any }) => {
     return (
-      <TouchableOpacity style={styles.storyItem} activeOpacity={0.7}>
+      <TouchableOpacity
+        style={styles.storyItem}
+        activeOpacity={0.7}
+        onPress={() => handleStoryPress(item)}
+      >
         <LinearGradient
           colors={
             item.hasStory && !item.isViewed
@@ -958,24 +1308,16 @@ export const FeedScreen: React.FC = () => {
     <View style={styles.container}>
       <Header
         title={t('feed.feed')}
-        // gradient={true}
-        // blur={true}
         gradientColors={['#1E3A8A', '#3B82F6', '#60A5FA']}
         actions={[
           {
             icon: 'magnify',
-            onPress: () => {
-              // TODO: Navigate to search
-              console.log('Search pressed');
-            },
+            onPress: () => setSearchVisible(true),
           },
           {
             icon: 'bell-outline',
-            onPress: () => {
-              // TODO: Navigate to notifications
-              console.log('Notifications pressed');
-            },
-            badge: 3,
+            onPress: () => setNotificationsVisible(true),
+            badge: notifications.filter(n => !n.read).length,
           },
         ]}
       />
@@ -1052,8 +1394,150 @@ export const FeedScreen: React.FC = () => {
         onClose={() => setImageViewerVisible(false)}
       />
 
-      {/* Options Menu Modal */}
+      {/* Modals */}
       {renderOptionsMenu()}
+      {renderSearchModal()}
+      {renderNotificationsModal()}
+
+      {/* Story Viewer Modal - Simple placeholder */}
+      <Modal
+        visible={storyViewerVisible}
+        animationType="fade"
+        onRequestClose={() => setStoryViewerVisible(false)}
+      >
+        <View style={styles.storyViewerContainer}>
+          <TouchableOpacity
+            style={styles.storyViewerClose}
+            onPress={() => setStoryViewerVisible(false)}
+          >
+            <MaterialCommunityIcons
+              name="close"
+              size={30}
+              color={colors.neutral.white}
+            />
+          </TouchableOpacity>
+          <Text style={styles.storyViewerText}>
+            {t('feed.storyViewer.comingSoon')}
+          </Text>
+        </View>
+      </Modal>
+
+      {/* Comment Modal */}
+      <Modal
+        visible={commentModalVisible}
+        animationType="slide"
+        onRequestClose={() => setCommentModalVisible(false)}
+      >
+        <View style={styles.commentModalContainer}>
+          <View style={styles.commentModalHeader}>
+            <TouchableOpacity onPress={() => setCommentModalVisible(false)}>
+              <MaterialCommunityIcons
+                name="close"
+                size={24}
+                color={colors.text.primary}
+              />
+            </TouchableOpacity>
+            <Text style={styles.commentModalTitle}>
+              {t('feed.comments.title')}
+            </Text>
+            <View style={{ width: 24 }} />
+          </View>
+
+          <ScrollView style={styles.commentsList}>
+            {getMockComments(t).map(comment => (
+              <View key={comment.id} style={styles.commentItem}>
+                <Avatar size={40} uri={comment.user.avatar} />
+                <View style={styles.commentContent}>
+                  <Text style={styles.commentUsername}>{comment.user.name}</Text>
+                  <Text style={styles.commentText}>{comment.text}</Text>
+                  <Text style={styles.commentTime}>5 phút trước</Text>
+                </View>
+              </View>
+            ))}
+          </ScrollView>
+
+          <View style={styles.commentInputContainer}>
+            <Avatar size={36} uri={null} />
+            <View style={styles.commentInputWrapper}>
+              <Text style={styles.commentInputPlaceholder}>
+                {t('feed.comments.placeholder')}
+              </Text>
+            </View>
+            <TouchableOpacity style={styles.commentSendButton}>
+              <MaterialCommunityIcons
+                name="send"
+                size={24}
+                color={colors.primary.main}
+              />
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Share Modal */}
+      <Modal
+        visible={shareModalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShareModalVisible(false)}
+      >
+        <Pressable
+          style={styles.modalOverlay}
+          onPress={() => setShareModalVisible(false)}
+        >
+          <View style={styles.shareModal}>
+            <View style={styles.shareModalHeader}>
+              <Text style={styles.shareModalTitle}>{t('feed.share.title')}</Text>
+            </View>
+
+            <ScrollView style={styles.shareOptions}>
+              <TouchableOpacity style={styles.shareOption}>
+                <View style={[styles.shareOptionIcon, { backgroundColor: '#25D366' + '20' }]}>
+                  <MaterialCommunityIcons
+                    name="whatsapp"
+                    size={28}
+                    color="#25D366"
+                  />
+                </View>
+                <Text style={styles.shareOptionText}>WhatsApp</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.shareOption}>
+                <View style={[styles.shareOptionIcon, { backgroundColor: '#1DA1F2' + '20' }]}>
+                  <MaterialCommunityIcons
+                    name="twitter"
+                    size={28}
+                    color="#1DA1F2"
+                  />
+                </View>
+                <Text style={styles.shareOptionText}>Twitter</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.shareOption}>
+                <View style={[styles.shareOptionIcon, { backgroundColor: '#1877F2' + '20' }]}>
+                  <MaterialCommunityIcons
+                    name="facebook"
+                    size={28}
+                    color="#1877F2"
+                  />
+                </View>
+                <Text style={styles.shareOptionText}>Facebook</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.shareOption}>
+                <View style={[styles.shareOptionIcon, { backgroundColor: colors.text.secondary + '20' }]}>
+                  <MaterialCommunityIcons
+                    name="link-variant"
+                    size={28}
+                    color={colors.text.secondary}
+                  />
+                </View>
+                <Text style={styles.shareOptionText}>{t('feed.share.copyLink')}</Text>
+              </TouchableOpacity>
+            </ScrollView>
+          </View>
+        </Pressable>
+      </Modal>
     </View>
   );
 };
@@ -1551,6 +2035,355 @@ const createStyles = (colors: any) =>
       width: '100%',
       height: 320,
       backgroundColor: colors.background.elevated,
+    },
+    // Search Modal
+    searchModalContainer: {
+      flex: 1,
+      backgroundColor: colors.background.primary,
+    },
+    searchHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.md,
+      gap: spacing.md,
+      backgroundColor: colors.background.card,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border.light,
+    },
+    searchInputContainer: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+      backgroundColor: colors.background.secondary,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      borderRadius: borderRadius.full,
+    },
+    searchInput: {
+      flex: 1,
+      fontSize: typography.fontSize.base,
+      color: colors.text.secondary,
+    },
+    searchTabsContainer: {
+      flexDirection: 'row',
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      gap: spacing.sm,
+      backgroundColor: colors.background.card,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border.light,
+    },
+    searchTab: {
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.xs,
+      borderRadius: borderRadius.full,
+      backgroundColor: colors.background.secondary,
+    },
+    searchTabActive: {
+      backgroundColor: colors.primary.main,
+    },
+    searchTabText: {
+      fontSize: typography.fontSize.sm,
+      fontWeight: typography.fontWeight.semiBold,
+      color: colors.text.secondary,
+    },
+    searchTabTextActive: {
+      color: colors.neutral.white,
+    },
+    searchResults: {
+      flex: 1,
+    },
+    searchSection: {
+      paddingVertical: spacing.md,
+    },
+    searchSectionTitle: {
+      fontSize: typography.fontSize.base,
+      fontWeight: typography.fontWeight.bold,
+      color: colors.text.primary,
+      paddingHorizontal: spacing.md,
+      marginBottom: spacing.sm,
+    },
+    searchResultItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      gap: spacing.md,
+    },
+    searchResultInfo: {
+      flex: 1,
+    },
+    searchResultName: {
+      fontSize: typography.fontSize.base,
+      fontWeight: typography.fontWeight.semiBold,
+      color: colors.text.primary,
+    },
+    searchResultUsername: {
+      fontSize: typography.fontSize.sm,
+      color: colors.text.secondary,
+      marginTop: 2,
+    },
+    searchFollowButton: {
+      backgroundColor: colors.primary.main,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.xs,
+      borderRadius: borderRadius.md,
+    },
+    searchFollowingButton: {
+      backgroundColor: colors.background.secondary,
+      borderWidth: 1,
+      borderColor: colors.border.main,
+    },
+    searchFollowButtonText: {
+      fontSize: typography.fontSize.sm,
+      fontWeight: typography.fontWeight.bold,
+      color: colors.neutral.white,
+    },
+    searchFollowingButtonText: {
+      color: colors.text.primary,
+    },
+    searchLocationIcon: {
+      width: 50,
+      height: 50,
+      borderRadius: 25,
+      backgroundColor: colors.background.secondary,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    searchLocationPins: {
+      fontSize: typography.fontSize.sm,
+      color: colors.text.secondary,
+    },
+    // Notifications Modal
+    notificationsModalContainer: {
+      flex: 1,
+      backgroundColor: colors.background.primary,
+    },
+    notificationsHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.md,
+      backgroundColor: colors.background.card,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border.light,
+    },
+    notificationsTitle: {
+      fontSize: typography.fontSize.lg,
+      fontWeight: typography.fontWeight.bold,
+      color: colors.text.primary,
+    },
+    notificationsMarkAllRead: {
+      fontSize: typography.fontSize.sm,
+      fontWeight: typography.fontWeight.semiBold,
+      color: colors.primary.main,
+    },
+    notificationsList: {
+      flex: 1,
+    },
+    notificationItem: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.md,
+      gap: spacing.md,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border.light,
+    },
+    notificationItemUnread: {
+      backgroundColor: colors.primary.main + '08',
+    },
+    notificationAvatarContainer: {
+      position: 'relative',
+    },
+    notificationIconBadge: {
+      position: 'absolute',
+      bottom: -2,
+      right: -2,
+      width: 24,
+      height: 24,
+      borderRadius: 12,
+      justifyContent: 'center',
+      alignItems: 'center',
+      borderWidth: 2,
+      borderColor: colors.background.primary,
+    },
+    notificationIcon: {
+      width: 50,
+      height: 50,
+      borderRadius: 25,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    notificationContent: {
+      flex: 1,
+    },
+    notificationText: {
+      fontSize: typography.fontSize.sm,
+      color: colors.text.primary,
+      lineHeight: 20,
+    },
+    notificationUsername: {
+      fontWeight: typography.fontWeight.bold,
+    },
+    notificationTimestamp: {
+      fontSize: typography.fontSize.xs,
+      color: colors.text.secondary,
+      marginTop: spacing.xs,
+    },
+    notificationUnreadDot: {
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+      backgroundColor: colors.primary.main,
+      marginTop: 6,
+    },
+    notificationsEmpty: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: spacing.xl * 3,
+    },
+    notificationsEmptyText: {
+      fontSize: typography.fontSize.base,
+      color: colors.text.secondary,
+      marginTop: spacing.md,
+    },
+    // Story Viewer Modal
+    storyViewerContainer: {
+      flex: 1,
+      backgroundColor: colors.neutral.black,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    storyViewerClose: {
+      position: 'absolute',
+      top: 50,
+      right: spacing.lg,
+      zIndex: 100,
+    },
+    storyViewerText: {
+      fontSize: typography.fontSize.xl,
+      color: colors.neutral.white,
+      fontWeight: typography.fontWeight.bold,
+    },
+    // Comment Modal
+    commentModalContainer: {
+      flex: 1,
+      backgroundColor: colors.background.primary,
+    },
+    commentModalHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.md,
+      backgroundColor: colors.background.card,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border.light,
+    },
+    commentModalTitle: {
+      fontSize: typography.fontSize.lg,
+      fontWeight: typography.fontWeight.bold,
+      color: colors.text.primary,
+    },
+    commentsList: {
+      flex: 1,
+    },
+    commentItem: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.md,
+      gap: spacing.sm,
+    },
+    commentContent: {
+      flex: 1,
+    },
+    commentUsername: {
+      fontSize: typography.fontSize.sm,
+      fontWeight: typography.fontWeight.bold,
+      color: colors.text.primary,
+      marginBottom: 2,
+    },
+    commentText: {
+      fontSize: typography.fontSize.sm,
+      color: colors.text.primary,
+      lineHeight: 20,
+    },
+    commentTime: {
+      fontSize: typography.fontSize.xs,
+      color: colors.text.secondary,
+      marginTop: spacing.xs,
+    },
+    commentInputContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.md,
+      gap: spacing.sm,
+      backgroundColor: colors.background.card,
+      borderTopWidth: 1,
+      borderTopColor: colors.border.light,
+    },
+    commentInputWrapper: {
+      flex: 1,
+      backgroundColor: colors.background.secondary,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      borderRadius: borderRadius.full,
+    },
+    commentInputPlaceholder: {
+      fontSize: typography.fontSize.sm,
+      color: colors.text.disabled,
+    },
+    commentSendButton: {
+      padding: spacing.xs,
+    },
+    // Share Modal
+    shareModal: {
+      backgroundColor: colors.background.card,
+      borderTopLeftRadius: borderRadius.xl,
+      borderTopRightRadius: borderRadius.xl,
+      paddingVertical: spacing.lg,
+      paddingBottom: spacing.xl + spacing.lg,
+      maxHeight: '50%',
+    },
+    shareModalHeader: {
+      paddingHorizontal: spacing.xl,
+      paddingBottom: spacing.md,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border.light,
+    },
+    shareModalTitle: {
+      fontSize: typography.fontSize.lg,
+      fontWeight: typography.fontWeight.bold,
+      color: colors.text.primary,
+      textAlign: 'center',
+    },
+    shareOptions: {
+      paddingTop: spacing.md,
+    },
+    shareOption: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: spacing.xl,
+      paddingVertical: spacing.md,
+      gap: spacing.md,
+    },
+    shareOptionIcon: {
+      width: 50,
+      height: 50,
+      borderRadius: 25,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    shareOptionText: {
+      fontSize: typography.fontSize.base,
+      fontWeight: typography.fontWeight.medium,
+      color: colors.text.primary,
     },
     // Empty State
     emptyState: {

@@ -199,6 +199,34 @@ export default {
     report: 'Report',
     // Comments
     viewAllComments: 'View all comments',
+    // Search Modal
+    search: {
+      placeholder: 'Search users, locations...',
+      all: 'All',
+      users: 'Users',
+      locations: 'Locations',
+      posts: 'Posts',
+    },
+    // Notifications
+    notifications: {
+      title: 'Notifications',
+      markAllRead: 'Mark all as read',
+      empty: 'No notifications yet',
+    },
+    // Story Viewer
+    storyViewer: {
+      comingSoon: 'Coming soon',
+    },
+    // Comments Modal
+    comments: {
+      title: 'Comments',
+      placeholder: 'Add a comment...',
+    },
+    // Share Modal
+    share: {
+      title: 'Share',
+      copyLink: 'Copy link',
+    },
   },
 
   profile: {
@@ -544,6 +572,10 @@ export default {
       achievementTitle: 'Explored {{count}} countries',
       comment1: 'So beautiful! I want to go here too 😍',
       comment2: 'Congratulations! 🎉',
+      notification1: 'liked your post',
+      notification2: 'commented on your post',
+      notification3: 'started following you',
+      notification4: 'Congratulations! You got a new achievement 🎉',
     },
     discover: {
       user1Name: 'Nguyen Van A',

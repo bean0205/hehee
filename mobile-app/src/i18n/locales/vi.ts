@@ -199,6 +199,34 @@ export default {
     report: 'Báo cáo',
     // Comments
     viewAllComments: 'Xem tất cả bình luận',
+    // Search Modal
+    search: {
+      placeholder: 'Tìm kiếm người dùng, địa điểm...',
+      all: 'Tất cả',
+      users: 'Người dùng',
+      locations: 'Địa điểm',
+      posts: 'Bài viết',
+    },
+    // Notifications
+    notifications: {
+      title: 'Thông báo',
+      markAllRead: 'Đánh dấu đã đọc',
+      empty: 'Chưa có thông báo nào',
+    },
+    // Story Viewer
+    storyViewer: {
+      comingSoon: 'Tính năng đang được phát triển',
+    },
+    // Comments Modal
+    comments: {
+      title: 'Bình luận',
+      placeholder: 'Thêm bình luận...',
+    },
+    // Share Modal
+    share: {
+      title: 'Chia sẻ',
+      copyLink: 'Sao chép liên kết',
+    },
   },
 
   profile: {
@@ -544,6 +572,10 @@ export default {
       achievementTitle: 'Đã khám phá {{count}} quốc gia',
       comment1: 'Đẹp quá! Mình cũng muốn đến đây 😍',
       comment2: 'Chúc mừng bạn nhé! 🎉',
+      notification1: 'đã thích bài viết của bạn',
+      notification2: 'đã bình luận về bài viết của bạn',
+      notification3: 'đã bắt đầu theo dõi bạn',
+      notification4: 'Chúc mừng! Bạn đã đạt thành tựu mới 🎉',
     },
     discover: {
       user1Name: 'Nguyễn Văn A',
