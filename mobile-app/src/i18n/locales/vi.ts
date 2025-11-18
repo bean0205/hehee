@@ -181,6 +181,24 @@ export default {
     noPostsYet: 'Chưa có bài viết nào',
     followFriends: 'Theo dõi bạn bè để xem hoạt động của họ',
     yourStory: 'Câu chuyện của bạn',
+    // Filter tabs
+    filters: {
+      all: 'Tất cả',
+      following: 'Đang theo dõi',
+      popular: 'Phổ biến',
+      nearby: 'Gần đây',
+    },
+    // Suggested users
+    suggestedForYou: 'Gợi ý cho bạn',
+    mutualFriends: '{{count}} bạn chung',
+    follow: 'Theo dõi',
+    following: 'Đang theo dõi',
+    // Actions
+    save: 'Lưu',
+    unsave: 'Bỏ lưu',
+    report: 'Báo cáo',
+    // Comments
+    viewAllComments: 'Xem tất cả bình luận',
   },
 
   profile: {
@@ -524,6 +542,8 @@ export default {
       country5: 'Nhật Bản',
       country6: 'Việt Nam',
       achievementTitle: 'Đã khám phá {{count}} quốc gia',
+      comment1: 'Đẹp quá! Mình cũng muốn đến đây 😍',
+      comment2: 'Chúc mừng bạn nhé! 🎉',
     },
     discover: {
       user1Name: 'Nguyễn Văn A',
