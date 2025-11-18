@@ -9,6 +9,8 @@ import {
   Platform,
   Alert,
   Animated,
+  Dimensions,
+  Vibration,
 } from 'react-native';
 import BottomSheet, { BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { MaterialCommunityIcons, FontAwesome } from '@expo/vector-icons';
@@ -25,6 +27,9 @@ import { Input } from '../../components/common/Input';
 import { usePin } from '../../contexts/PinContext';
 import { useLanguage } from '../../i18n/LanguageContext';
 
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+const IMAGE_SIZE = (SCREEN_WIDTH - spacing.lg * 2 - spacing.sm * 2) / 3;
+
 export const AddPinScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
@@ -33,7 +38,7 @@ export const AddPinScreen: React.FC = () => {
   const { colors, isDarkMode } = useTheme();
   const bottomSheetRef = useRef<BottomSheet>(null);
   
-  const styles = React.useMemo(() => createStyles(colors), [colors]);
+  const styles = React.useMemo(() => createStyles(colors, isDarkMode), [colors, isDarkMode]);
 
   // Edit mode
   const editPinId = route.params?.pinId;
@@ -54,12 +59,52 @@ export const AddPinScreen: React.FC = () => {
   const [images, setImages] = useState<string[]>(existingPin?.images || []);
   const [isLoading, setIsLoading] = useState(false);
 
+  // Enhanced animation values
+  const backdropOpacity = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
+  const headerScale = useRef(new Animated.Value(0.9)).current;
+  const statusSlideX = useRef(new Animated.Value(status === 'visited' ? 0 : 1)).current;
+
   useEffect(() => {
+    // Entrance animations
+    Animated.parallel([
+      Animated.timing(backdropOpacity, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.spring(slideAnim, {
+        toValue: 0,
+        tension: 50,
+        friction: 10,
+        useNativeDriver: true,
+      }),
+      Animated.spring(headerScale, {
+        toValue: 1,
+        tension: 80,
+        friction: 8,
+        useNativeDriver: true,
+      }),
+    ]).start();
+    
     bottomSheetRef.current?.expand();
   }, []);
 
   const handleStatusToggle = (newStatus: 'visited' | 'wantToGo') => {
+    if (Platform.OS === 'ios') {
+      Vibration.vibrate(10);
+    }
+    
     setStatus(newStatus);
+    
+    // Smooth slide animation for status toggle
+    Animated.spring(statusSlideX, {
+      toValue: newStatus === 'visited' ? 0 : 1,
+      useNativeDriver: true,
+      tension: 70,
+      friction: 10,
+    }).start();
+    
     if (newStatus === 'wantToGo') {
       setRating(0);
       setVisitDate(new Date());
@@ -94,11 +139,30 @@ export const AddPinScreen: React.FC = () => {
 
     if (!result.canceled) {
       setImages([...images, result.assets[0].uri]);
+      if (Platform.OS === 'ios') {
+        Vibration.vibrate(10);
+      }
     }
   };
 
   const removeImage = (index: number) => {
-    setImages(images.filter((_, i) => i !== index));
+    Alert.alert(
+      t('common.confirm'),
+      t('pin.removeImageConfirm'),
+      [
+        { text: t('common.cancel'), style: 'cancel' },
+        {
+          text: t('common.remove'),
+          style: 'destructive',
+          onPress: () => {
+            setImages(images.filter((_, i) => i !== index));
+            if (Platform.OS === 'ios') {
+              Vibration.vibrate(10);
+            }
+          },
+        },
+      ]
+    );
   };
 
   const handleSave = async () => {
@@ -127,9 +191,9 @@ export const AddPinScreen: React.FC = () => {
         ]);
       } else {
         addPin(pinData);
-      Alert.alert(t('common.success'), t('pin.pinAdded'), [
-        { text: 'OK', onPress: () => navigation.goBack() },
-      ]);
+        Alert.alert(t('common.success'), t('pin.pinAdded'), [
+          { text: 'OK', onPress: () => navigation.goBack() },
+        ]);
       }
     } catch (error) {
       Alert.alert(t('errors.error'), t('errors.saveFailed'));
@@ -138,81 +202,102 @@ export const AddPinScreen: React.FC = () => {
     }
   };
 
+  const getStatusColor = (statusType: 'visited' | 'wantToGo') => {
+    return statusType === 'visited' ? colors.status.success : colors.accent.main;
+  };
+
   return (
     <View style={styles.container}>
-      {/* Backdrop */}
-      <TouchableOpacity
-        style={styles.backdrop}
-        activeOpacity={1}
-        onPress={() => navigation.goBack()}
-      />
+      {/* Animated backdrop with blur effect */}
+      <Animated.View 
+        style={[
+          styles.backdrop,
+          { opacity: backdropOpacity }
+        ]}
+      >
+        <TouchableOpacity
+          style={StyleSheet.absoluteFill}
+          activeOpacity={1}
+          onPress={() => navigation.goBack()}
+        />
+      </Animated.View>
 
       <BottomSheet
         ref={bottomSheetRef}
         index={0}
-        snapPoints={['88%']}
+        snapPoints={['92%']}
         enablePanDownToClose={true}
-        // enableContentPanningGesture={false}
         animateOnMount={true}
         onClose={() => navigation.goBack()}
         backgroundStyle={styles.bottomSheet}
         handleIndicatorStyle={styles.handleIndicator}
         topInset={0}
         enableDynamicSizing={false}
-       
       >
         <BottomSheetScrollView 
           style={styles.content}
           showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
         >
-          {/* Modern Header with Gradient */}
-          <LinearGradient
-            colors={isEditMode 
-              ? [colors.accent.main + '20', colors.accent.main + '05'] 
-              : [colors.primary.main + '20', colors.primary.main + '05']
-            }
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.headerGradient}
+          {/* Modern Header with Gradient Accent */}
+          <Animated.View 
+            style={[
+              styles.header,
+              { transform: [{ scale: headerScale }] }
+            ]}
           >
-            <View style={styles.headerContent}>
-              <View style={[
-                styles.headerIconContainer,
-                { backgroundColor: isEditMode ? colors.accent.main + '20' : colors.primary.main + '20' }
-              ]}>
-                <MaterialCommunityIcons
-                  name={isEditMode ? 'pencil' : 'map-marker'}
-                  size={32}
-                  color={isEditMode ? colors.accent.main : colors.primary.main}
-                />
+            <LinearGradient
+              colors={
+                isEditMode 
+                  ? [colors.accent.main + '15', colors.accent.main + '05']
+                  : [colors.primary.main + '15', colors.primary.main + '05']
+              }
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.headerGradient}
+            >
+              <View style={styles.headerContent}>
+                <View style={[
+                  styles.headerIconContainer,
+                  { backgroundColor: isEditMode ? colors.accent.main : colors.primary.main }
+                ]}>
+                  <MaterialCommunityIcons
+                    name={isEditMode ? 'pencil' : 'map-marker-plus'}
+                    size={28}
+                    color={colors.neutral.white}
+                  />
+                </View>
+                <View style={styles.headerTextWrapper}>
+                  <Text style={styles.headerTitle}>
+                    {isEditMode ? t('pin.editPin') : t('pin.addPin')}
+                  </Text>
+                  <Text style={styles.headerSubtitle}>
+                    {isEditMode ? t('pin.updatePinInfo') : t('pin.createNewMemory')}
+                  </Text>
+                </View>
               </View>
-              <Text style={styles.title}>
-                {isEditMode ? t('pin.editPin') : t('pin.addPin')}
-              </Text>
-              <Text style={styles.subtitle}>
-                {isEditMode ? t('pin.updatePinInfo') : t('pin.createNewMemory')}
-              </Text>
-            </View>
-          </LinearGradient>
+            </LinearGradient>
+          </Animated.View>
 
-          {/* Place Name Card */}
-          <View style={styles.card}>
-            <View style={styles.cardHeader}>
-              <View style={[styles.cardIconWrapper, { backgroundColor: colors.primary.main + '15' }]}>
+          {/* Section: Place Name with Icon */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeaderRow}>
+              <View style={[styles.sectionIconBadge, { backgroundColor: colors.primary.main + '15' }]}>
                 <MaterialCommunityIcons
-                  name="tag"
-                  size={24}
+                  name="map-marker"
+                  size={18}
                   color={colors.primary.main}
                 />
               </View>
-              <View style={styles.cardHeaderText}>
-                <Text style={styles.cardTitle}>{t('pin.placeInfo')}</Text>
-                <Text style={styles.cardDescription}>{t('pin.nameAndLocation')}</Text>
+              <Text style={styles.sectionTitle}>{t('pin.placeInfo')}</Text>
+              <View style={styles.requiredPill}>
+                <MaterialCommunityIcons name="asterisk" size={10} color={colors.error} />
+                {/* <Text style={styles.requiredPillText}>{t('pin.required')}</Text> */}
               </View>
             </View>
-            <View style={styles.cardContent}>
+            
+            <View style={styles.inputWrapper}>
               <Input
-                label={t('pin.placeName')}
                 placeholder={t('pin.placeNamePlaceholder')}
                 value={name}
                 onChangeText={setName}
@@ -220,662 +305,675 @@ export const AddPinScreen: React.FC = () => {
             </View>
           </View>
 
-          {/* Status Card */}
-          <View style={styles.card}>
-            <View style={styles.cardHeader}>
-              <View style={[styles.cardIconWrapper, { backgroundColor: colors.accent.main + '15' }]}>
+          {/* Section: Status with Sliding Toggle */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeaderRow}>
+              <View style={[styles.sectionIconBadge, { backgroundColor: colors.accent.main + '15' }]}>
                 <MaterialCommunityIcons
-                  name="star-outline"
-                  size={24}
+                  name="flag-variant"
+                  size={18}
                   color={colors.accent.main}
                 />
               </View>
-              <View style={styles.cardHeaderText}>
-                <Text style={styles.cardTitle}>{t('pin.status')}</Text>
-                <Text style={styles.cardDescription}>{t('pin.chooseYourStatus')}</Text>
-              </View>
-              <View style={styles.requiredBadge}>
-                <Text style={styles.requiredText}>{t('pin.required')}</Text>
+              <Text style={styles.sectionTitle}>{t('pin.status')}</Text>
+              <View style={styles.requiredPill}>
+                <MaterialCommunityIcons name="asterisk" size={10} color={colors.error} />
+                {/* <Text style={styles.requiredPillText}>{t('pin.required')}</Text> */}
               </View>
             </View>
-            <View style={styles.cardContent}>
-              <View style={styles.statusToggle}>
-              <TouchableOpacity
-                style={[
-                  styles.statusButton,
-                  status === 'visited' && styles.statusButtonVisited,
-                ]}
-                onPress={() => handleStatusToggle('visited')}
-                activeOpacity={0.7}
-              >
-                <View style={styles.statusButtonContent}>
-                  <View style={[
-                    styles.statusIcon,
-                    status === 'visited' && styles.statusIconActive
+
+            {/* Modern Toggle Switch Design */}
+            <View style={styles.statusToggleContainer}>
+              <View style={styles.statusTrack}>
+                <Animated.View
+                  style={[
+                    styles.statusIndicator,
+                    {
+                      backgroundColor: getStatusColor(status),
+                      transform: [
+                        {
+                          translateX: statusSlideX.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: [0, (SCREEN_WIDTH - spacing.lg * 2) / 2],
+                          }),
+                        },
+                      ],
+                    },
+                  ]}
+                />
+                
+                <TouchableOpacity
+                  style={styles.statusOption}
+                  onPress={() => handleStatusToggle('visited')}
+                  activeOpacity={0.8}
+                >
+                  <MaterialCommunityIcons
+                    name="check-circle"
+                    size={24}
+                    color={status === 'visited' ? colors.neutral.white : colors.text.secondary}
+                  />
+                  <Text style={[
+                    styles.statusOptionText,
+                    status === 'visited' && styles.statusOptionTextActive
                   ]}>
-                    <MaterialCommunityIcons
-                      name="check"
-                      size={24}
-                      color={status === 'visited' ? colors.neutral.white : colors.text.secondary}
-                    />
-                  </View>
-                  <Text
-                    style={[
-                      styles.statusButtonText,
-                      status === 'visited' && styles.statusButtonTextActive,
-                    ]}
-                  >
                     {t('pin.visited')}
                   </Text>
-                  <Text
-                    style={[
-                      styles.statusButtonSubtext,
-                      status === 'visited' && styles.statusButtonSubtextActive,
-                    ]}
-                  >
-                    Đã đến
-                  </Text>
-                </View>
-              </TouchableOpacity>
-              
-              <TouchableOpacity
-                style={[
-                  styles.statusButton,
-                  status === 'wantToGo' && styles.statusButtonWantToGo,
-                ]}
-                onPress={() => handleStatusToggle('wantToGo')}
-                activeOpacity={0.7}
-              >
-                <View style={styles.statusButtonContent}>
-                  <View style={[
-                    styles.statusIcon,
-                    status === 'wantToGo' && styles.statusIconActive
+                </TouchableOpacity>
+                
+                <TouchableOpacity
+                  style={styles.statusOption}
+                  onPress={() => handleStatusToggle('wantToGo')}
+                  activeOpacity={0.8}
+                >
+                  <FontAwesome
+                    name="heart"
+                    size={22}
+                    color={status === 'wantToGo' ? colors.neutral.white : colors.text.secondary}
+                  />
+                  <Text style={[
+                    styles.statusOptionText,
+                    status === 'wantToGo' && styles.statusOptionTextActive
                   ]}>
-                    <FontAwesome
-                      name="star"
-                      size={24}
-                      color={status === 'wantToGo' ? colors.neutral.white : colors.text.secondary}
-                    />
-                  </View>
-                  <Text
-                    style={[
-                      styles.statusButtonText,
-                      status === 'wantToGo' && styles.statusButtonTextActive,
-                    ]}
-                  >
                     {t('pin.wantToGo')}
                   </Text>
-                  <Text
-                    style={[
-                      styles.statusButtonSubtext,
-                      status === 'wantToGo' && styles.statusButtonSubtextActive,
-                    ]}
-                  >
-                    Muốn đến
-                  </Text>
-                </View>
-              </TouchableOpacity>
+                </TouchableOpacity>
               </View>
             </View>
           </View>
 
-          {/* Visited Fields */}
+          {/* Section: Visit Details with Animation */}
           {status === 'visited' && (
-            <>
-              {/* Date & Rating Card */}
-              <View style={styles.card}>
-                <View style={styles.cardHeader}>
-                  <View style={[styles.cardIconWrapper, { backgroundColor: colors.status.success + '15' }]}>
-                    <MaterialCommunityIcons
-                      name="calendar"
-                      size={24}
-                      color={colors.status.success}
-                    />
-                  </View>
-                  <View style={styles.cardHeaderText}>
-                    <Text style={styles.cardTitle}>{t('pin.dateAndRating')}</Text>
-                    <Text style={styles.cardDescription}>{t('pin.timeAndExperience')}</Text>
-                  </View>
+            <Animated.View 
+              style={[
+                styles.section,
+                {
+                  opacity: statusSlideX.interpolate({
+                    inputRange: [0, 0.5, 1],
+                    outputRange: [1, 0.5, 0],
+                  }),
+                }
+              ]}
+            >
+              <View style={styles.sectionHeaderRow}>
+                <View style={[styles.sectionIconBadge, { backgroundColor: colors.status.success + '15' }]}>
+                  <MaterialCommunityIcons
+                    name="calendar-check"
+                    size={18}
+                    color={colors.status.success}
+                  />
                 </View>
-                <View style={styles.cardContent}>
-                
-                {/* Date Picker */}
-                <View style={styles.inputGroup}>
-                  <Text style={styles.inputLabel}>{t('pin.visitDate')}</Text>
-                  <TouchableOpacity
-                    style={styles.dateButton}
-                    onPress={() => setShowDatePicker(true)}
-                    activeOpacity={0.7}
-                  >
-                    <View style={styles.dateButtonContent}>
-                      <Text style={styles.dateButtonIcon}>📅</Text>
-                      <Text style={styles.dateButtonText}>
-                        {visitDate.toLocaleDateString('vi-VN', {
-                          weekday: 'long',
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric'
-                        })}
-                      </Text>
-                      <Text style={styles.dateButtonChevron}>›</Text>
-                    </View>
-                  </TouchableOpacity>
-                  {showDatePicker && (
-                    <DateTimePicker
-                      value={visitDate}
-                      mode="date"
-                      display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                      onChange={handleDateChange}
-                      maximumDate={new Date()}
+                <Text style={styles.sectionTitle}>{t('pin.dateAndRating')}</Text>
+              </View>
+
+              {/* Date Picker Card */}
+              <View style={styles.cardContainer}>
+                <Text style={styles.cardLabel}>{t('pin.visitDate')}</Text>
+                <TouchableOpacity
+                  style={styles.dateCard}
+                  onPress={() => setShowDatePicker(true)}
+                  activeOpacity={0.7}
+                >
+                  <View style={styles.dateIconWrapper}>
+                    <MaterialCommunityIcons
+                      name="calendar-month"
+                      size={24}
+                      color={colors.primary.main}
                     />
+                  </View>
+                  <View style={styles.dateTextContainer}>
+                    <Text style={styles.dateValue}>
+                      {visitDate.toLocaleDateString('vi-VN', {
+                        day: '2-digit',
+                        month: 'short',
+                        year: 'numeric'
+                      })}
+                    </Text>
+                    <Text style={styles.dateDayName}>
+                      {visitDate.toLocaleDateString('vi-VN', { weekday: 'long' })}
+                    </Text>
+                  </View>
+                  <MaterialCommunityIcons
+                    name="chevron-right"
+                    size={24}
+                    color={colors.text.disabled}
+                  />
+                </TouchableOpacity>
+                {showDatePicker && (
+                  <DateTimePicker
+                    value={visitDate}
+                    mode="date"
+                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                    onChange={handleDateChange}
+                    maximumDate={new Date()}
+                  />
+                )}
+              </View>
+
+              {/* Rating Card */}
+              <View style={styles.cardContainer}>
+                <Text style={styles.cardLabel}>{t('pin.rating')}</Text>
+                <View style={styles.ratingCard}>
+                  <Rating
+                    type="custom"
+                    ratingCount={5}
+                    imageSize={44}
+                    startingValue={rating}
+                    onFinishRating={(value) => {
+                      setRating(value);
+                      if (Platform.OS === 'ios') {
+                        Vibration.vibrate(10);
+                      }
+                    }}
+                    style={styles.ratingStars}
+                    readonly={false}
+                    tintColor={colors.background.card}
+                    ratingColor={colors.accent.main}
+                    ratingBackgroundColor={colors.border.light}
+                  />
+                  {rating > 0 && (
+                    <View style={styles.ratingValueContainer}>
+                      <Text style={styles.ratingNumber}>{rating.toFixed(1)}</Text>
+                      <View style={styles.ratingMaxContainer}>
+                        <Text style={styles.ratingMaxText}>/ 5.0</Text>
+                        <View style={styles.ratingQualityBadge}>
+                          <Text style={styles.ratingQualityText}>
+                            {rating >= 4.5 ? 'Excellent' : rating >= 3.5 ? 'Great' : rating >= 2.5 ? 'Good' : 'Fair'}
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
                   )}
                 </View>
-
-                {/* Star Rating */}
-                <View style={styles.inputGroup}>
-                  <Text style={styles.inputLabel}>{t('pin.rating')}</Text>
-                  <View style={styles.ratingContainer}>
-                    <Rating
-                      type="star"
-                      ratingCount={5}
-                      imageSize={44}
-                      startingValue={rating}
-                      onFinishRating={setRating}
-                      style={styles.rating}
-                      readonly={false}
-                      ratingBackgroundColor={colors.background.card}
-                    />
-                  </View>
-                  <Text style={styles.ratingText}>
-                    {rating > 0 ? (
-                      <>
-                        <Text style={styles.ratingValue}>{rating}</Text>
-                        <Text style={styles.ratingMax}>/5 {t('pin.stars')}</Text>
-                      </>
-                    ) : (
-                      <Text style={styles.ratingEmpty}>{t('pin.tapToRate')}</Text>
-                    )}
-                  </Text>
-                </View>
-                </View>
               </View>
-            </>
+            </Animated.View>
           )}
 
-          {/* Notes Card */}
-          <View style={styles.card}>
-            <View style={styles.cardHeader}>
-              <View style={[styles.cardIconWrapper, { backgroundColor: colors.text.secondary + '15' }]}>
+          {/* Section: Notes */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeaderRow}>
+              <View style={[styles.sectionIconBadge, { backgroundColor: colors.text.secondary + '15' }]}>
                 <MaterialCommunityIcons
-                  name="note-text-outline"
-                  size={24}
+                  name="text"
+                  size={18}
                   color={colors.text.secondary}
                 />
               </View>
-              <View style={styles.cardHeaderText}>
-                <Text style={styles.cardTitle}>{t('pin.notes')}</Text>
-                <Text style={styles.cardDescription}>{t('pin.notesAndFeelings')}</Text>
+              <Text style={styles.sectionTitle}>{t('pin.notes')}</Text>
+              <View style={styles.optionalBadge}>
+                <Text style={styles.optionalBadgeText}>Optional</Text>
               </View>
             </View>
-            <View style={styles.cardContent}>
+            
+            <View style={styles.inputWrapper}>
               <Input
                 placeholder={t('pin.notesPlaceholder')}
                 value={notes}
                 onChangeText={setNotes}
                 multiline
-                numberOfLines={5}
+                numberOfLines={4}
               />
             </View>
           </View>
 
-          {/* Image Uploader Card */}
-          <View style={styles.card}>
-            <View style={styles.cardHeader}>
-              <View style={[styles.cardIconWrapper, { backgroundColor: colors.primary.main + '15' }]}>
+          {/* Section: Photos Gallery */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeaderRow}>
+              <View style={[styles.sectionIconBadge, { backgroundColor: colors.primary.main + '15' }]}>
                 <MaterialCommunityIcons
-                  name="camera-outline"
-                  size={24}
+                  name="image-multiple"
+                  size={18}
                   color={colors.primary.main}
                 />
               </View>
-              <View style={styles.cardHeaderText}>
-                <Text style={styles.cardTitle}>{t('pin.images')}</Text>
-                <Text style={styles.cardDescription}>{t('pin.maxImages')}</Text>
-              </View>
-              <View style={styles.imageBadge}>
-                <Text style={styles.imageBadgeText}>{images.length}/5</Text>
+              <Text style={styles.sectionTitle}>{t('pin.images')}</Text>
+              <View style={styles.imageCountBadge}>
+                <MaterialCommunityIcons 
+                  name="camera" 
+                  size={12} 
+                  color={colors.primary.main} 
+                />
+                <Text style={styles.imageCountText}>{images.length} / 5</Text>
               </View>
             </View>
-            <View style={styles.cardContent}>
-              <ScrollView 
-              horizontal 
-              style={styles.imageScroll}
-              showsHorizontalScrollIndicator={false}
-            >
+
+            <View style={styles.imageGallery}>
               {images.map((uri, index) => (
-                <View key={index} style={styles.imageContainer}>
+                <View key={index} style={styles.imageItem}>
                   <Image source={{ uri }} style={styles.imageThumb} />
+                  
+                  {/* Image overlay with gradient */}
+                  <LinearGradient
+                    colors={['transparent', 'rgba(0,0,0,0.3)']}
+                    style={styles.imageOverlay}
+                  >
+                    <View style={styles.imageIndexBadge}>
+                      <Text style={styles.imageIndexText}>{index + 1}</Text>
+                    </View>
+                  </LinearGradient>
+                  
+                  {/* Remove button */}
                   <TouchableOpacity
-                    style={styles.removeImageButton}
+                    style={styles.imageDeleteButton}
                     onPress={() => removeImage(index)}
                     activeOpacity={0.8}
                   >
-                    <MaterialCommunityIcons
-                      name="close"
-                      size={16}
-                      color={colors.neutral.white}
-                    />
+                    <View style={styles.imageDeleteCircle}>
+                      <MaterialCommunityIcons
+                        name="close"
+                        size={16}
+                        color={colors.neutral.white}
+                      />
+                    </View>
                   </TouchableOpacity>
-                  <View style={styles.imageNumber}>
-                    <Text style={styles.imageNumberText}>{index + 1}</Text>
-                  </View>
                 </View>
               ))}
+              
+              {/* Add Photo Button */}
               {images.length < 5 && (
                 <TouchableOpacity
-                  style={styles.addImageButton}
+                  style={styles.imageAddCard}
                   onPress={pickImage}
                   activeOpacity={0.7}
                 >
-                  <View style={styles.addImageContent}>
+                  <View style={styles.imageAddIconWrapper}>
                     <MaterialCommunityIcons
                       name="camera-plus"
-                      size={24}
+                      size={32}
                       color={colors.primary.main}
                     />
-                    <Text style={styles.addImageText}>{t('pin.addPhotos')}</Text>
                   </View>
+                  <Text style={styles.imageAddLabel}>Add Photo</Text>
+                  <Text style={styles.imageAddHint}>Tap to upload</Text>
                 </TouchableOpacity>
               )}
-            </ScrollView>
-              {images.length === 0 && (
-                <View style={styles.emptyImageState}>
-                  <Text style={styles.emptyImageText}>
-                    {t('pin.addImagesToShare')}
-                  </Text>
-                </View>
-              )}
             </View>
+
+            {/* Empty State */}
+            {images.length === 0 && (
+              <View style={styles.emptyImageState}>
+                <View style={styles.emptyImageIconCircle}>
+                  <MaterialCommunityIcons
+                    name="image-outline"
+                    size={40}
+                    color={colors.text.disabled}
+                  />
+                </View>
+                <Text style={styles.emptyImageTitle}>No photos yet</Text>
+                <Text style={styles.emptyImageSubtitle}>
+                  {t('pin.addImagesToShare')}
+                </Text>
+              </View>
+            )}
           </View>
 
-          {/* Save Button */}
-          <View style={styles.buttonContainer}>
-            <Button
-              title={isEditMode ? t('pin.update') : t('pin.savePin')}
-              onPress={handleSave}
-              loading={isLoading}
-              fullWidth
-            />
-            <Button
-              title={t('common.cancel')}
-              onPress={() => navigation.goBack()}
-              variant="outline"
-              fullWidth
-              style={{ marginTop: spacing.md }}
-            />
-          </View>
+          {/* Bottom Spacer for Fixed Buttons */}
+          <View style={{ height: 140 }} />
         </BottomSheetScrollView>
+
+        {/* Fixed Action Bar */}
+        <View style={styles.actionBar}>
+          <LinearGradient
+            colors={[
+              colors.background.main + '00',
+              colors.background.main,
+              colors.background.main,
+            ]}
+            style={styles.actionBarGradient}
+          >
+            <View style={styles.actionButtonsContainer}>
+              <Button
+                title={isEditMode ? t('pin.update') : t('pin.savePin')}
+                onPress={handleSave}
+                loading={isLoading}
+                fullWidth
+              />
+              <TouchableOpacity
+                style={styles.cancelLink}
+                onPress={() => navigation.goBack()}
+                activeOpacity={0.6}
+              >
+                <Text style={styles.cancelLinkText}>{t('common.cancel')}</Text>
+              </TouchableOpacity>
+            </View>
+          </LinearGradient>
+        </View>
       </BottomSheet>
     </View>
   );
 };
 
-const createStyles = (colors: any) => StyleSheet.create({
+const createStyles = (colors: any, isDarkMode: boolean) => StyleSheet.create({
   container: {
     flex: 1,
   },
   backdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: colors.neutral.black + '90',
+    backgroundColor: colors.neutral.black + (isDarkMode ? 'DD' : 'BB'),
   },
   bottomSheet: {
     backgroundColor: colors.background.main,
     shadowColor: colors.neutral.black,
     shadowOffset: { width: 0, height: -8 },
     shadowOpacity: 0.15,
-    shadowRadius: 20,
-    elevation: 20,
+    shadowRadius: 24,
+    elevation: 24,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
   },
   handleIndicator: {
     backgroundColor: colors.text.disabled,
     width: 40,
-    height: 4,
-    borderRadius: 2,
-    marginTop: 8,
+    height: 5,
+    borderRadius: 3,
+    marginTop: 10,
   },
   content: {
-    paddingBottom: spacing.lg,
+    flex: 1,
   },
-  
+  scrollContent: {
+    paddingBottom: spacing.xl,
+  },
+
   // Modern Header with Gradient
-  headerGradient: {
-    marginHorizontal: -spacing.lg,
+  header: {
+    marginHorizontal: spacing.lg,
     marginTop: spacing.sm,
-    marginBottom: spacing.md,
-    paddingHorizontal: spacing.xl,
-    paddingTop: spacing.md,
-    paddingBottom: spacing.lg,
-    borderBottomLeftRadius: borderRadius['2xl'],
-    borderBottomRightRadius: borderRadius['2xl'],
+    marginBottom: spacing.lg,
+    borderRadius: borderRadius.xl,
+    overflow: 'hidden',
+  },
+  headerGradient: {
+    padding: spacing.lg,
+    borderRadius: borderRadius.xl,
+    borderWidth: 1,
+    borderColor: colors.border.light,
   },
   headerContent: {
+    flexDirection: 'row',
     alignItems: 'center',
   },
   headerIconContainer: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+    width: 56,
+    height: 56,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: spacing.sm,
     shadowColor: colors.neutral.black,
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.2,
     shadowRadius: 8,
-    elevation: 4,
+    elevation: 6,
   },
-  headerIcon: {
-    fontSize: 32,
+  headerTextWrapper: {
+    flex: 1,
+    marginLeft: spacing.md,
   },
-  title: {
+  headerTitle: {
     fontSize: typography.fontSize['2xl'],
     fontWeight: typography.fontWeight.bold,
     color: colors.text.primary,
-    marginBottom: spacing.xs,
     letterSpacing: -0.5,
+    marginBottom: 4,
   },
-  subtitle: {
+  headerSubtitle: {
     fontSize: typography.fontSize.sm,
     color: colors.text.secondary,
-    textAlign: 'center',
+    letterSpacing: -0.2,
+    lineHeight: 18,
+  },
+
+  // Section Styles
+  section: {
     paddingHorizontal: spacing.lg,
-    lineHeight: 20,
+    marginBottom: spacing.lg,
   },
-  
-  // Modern Card Styles
-  card: {
-    backgroundColor: colors.background.card,
-    borderRadius: borderRadius['2xl'],
-    marginHorizontal: spacing.lg,
-    marginBottom: spacing.md,
-    borderWidth: 1.5,
-    borderColor: colors.border.light,
-    shadowColor: colors.neutral.black,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 4,
-    overflow: 'hidden',
-  },
-  cardHeader: {
+  sectionHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: spacing.md,
-    paddingBottom: spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border.light + '50',
+    marginBottom: spacing.md,
   },
-  cardIconWrapper: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
+  sectionIconBadge: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: spacing.sm,
   },
-  cardIcon: {
-    fontSize: 20,
-  },
-  cardHeaderText: {
+  sectionTitle: {
     flex: 1,
-  },
-  cardTitle: {
-    fontSize: typography.fontSize.base,
+    fontSize: typography.fontSize.lg,
     fontWeight: typography.fontWeight.bold,
     color: colors.text.primary,
-    marginBottom: 2,
     letterSpacing: -0.3,
   },
-  cardDescription: {
-    fontSize: typography.fontSize.xs,
-    color: colors.text.secondary,
-    marginTop: 1,
-  },
-  cardContent: {
-    padding: spacing.md,
-    paddingTop: spacing.sm,
-  },
-  requiredBadge: {
+  requiredPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: colors.error + '15',
-    paddingHorizontal: spacing.md,
+    paddingHorizontal: spacing.sm,
     paddingVertical: 4,
     borderRadius: borderRadius.full,
-    borderWidth: 1,
-    borderColor: colors.error + '30',
+    gap: 4,
   },
-  requiredText: {
+  requiredPillText: {
     fontSize: typography.fontSize.xs,
     color: colors.error,
     fontWeight: typography.fontWeight.bold,
-    letterSpacing: 0.5,
+    textTransform: 'uppercase',
   },
-  
-  // Modern Status Toggle
-  statusToggle: {
-    flexDirection: 'row',
-    gap: spacing.md,
-  },
-  statusButton: {
-    flex: 1,
-    paddingVertical: spacing.lg,
+  optionalBadge: {
+    backgroundColor: colors.text.disabled + '20',
     paddingHorizontal: spacing.sm,
-    borderRadius: borderRadius.xl,
-    backgroundColor: colors.background.elevated,
-    borderWidth: 2.5,
-    borderColor: colors.border.main,
-    alignItems: 'center',
-    shadowColor: colors.neutral.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  statusButtonVisited: {
-    backgroundColor: colors.status.success + '12',
-    borderColor: colors.status.success,
-    shadowColor: colors.status.success,
-    shadowOpacity: 0.2,
-  },
-  statusButtonWantToGo: {
-    backgroundColor: colors.accent.main + '12',
-    borderColor: colors.accent.main,
-    shadowColor: colors.accent.main,
-    shadowOpacity: 0.2,
-  },
-  statusButtonContent: {
-    alignItems: 'center',
-  },
-  statusIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: colors.background.card,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.sm,
-    borderWidth: 2,
-    borderColor: colors.border.light,
-  },
-  statusIconActive: {
-    backgroundColor: colors.primary.main,
-    borderColor: colors.primary.main,
-  },
-  statusIconText: {
-    fontSize: 24,
-  },
-  statusButtonText: {
-    fontSize: typography.fontSize.base,
-    fontWeight: typography.fontWeight.bold,
-    color: colors.text.primary,
-    marginBottom: 4,
-    letterSpacing: -0.2,
-  },
-  statusButtonTextActive: {
-    color: colors.primary.main,
-  },
-  statusButtonSubtext: {
-    fontSize: typography.fontSize.xs,
-    color: colors.text.secondary,
-    fontWeight: typography.fontWeight.medium,
-  },
-  statusButtonSubtextActive: {
-    color: colors.primary.main,
-    fontWeight: typography.fontWeight.semiBold,
-  },
-  
-  // Input Group
-  inputGroup: {
-    marginBottom: spacing.md,
-  },
-  inputLabel: {
-    fontSize: typography.fontSize.sm,
-    fontWeight: typography.fontWeight.semiBold,
-    color: colors.text.primary,
-    marginBottom: spacing.xs,
-  },
-  
-  // Modern Date Button
-  dateButton: {
-    backgroundColor: colors.background.elevated,
-    padding: spacing.md,
-    borderRadius: borderRadius.xl,
-    borderWidth: 1.5,
-    borderColor: colors.border.main,
-    shadowColor: colors.neutral.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  dateButtonContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-  },
-  dateButtonIcon: {
-    fontSize: 24,
-  },
-  dateButtonText: {
-    flex: 1,
-    fontSize: typography.fontSize.base,
-    color: colors.text.primary,
-    fontWeight: typography.fontWeight.semiBold,
-    letterSpacing: -0.2,
-  },
-  dateButtonChevron: {
-    fontSize: 28,
-    color: colors.text.secondary,
-    fontWeight: typography.fontWeight.regular,
-  },
-  
-  // Modern Rating
-  ratingContainer: {
-    alignItems: 'center',
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.md,
-    backgroundColor: colors.background.elevated + '80',
-    borderRadius: borderRadius.xl,
-    marginBottom: spacing.sm,
-    borderWidth: 1,
-    borderColor: colors.border.light,
-  },
-  rating: {
-    alignSelf: 'center',
-    paddingVertical: spacing.sm,
-  },
-  ratingText: {
-    fontSize: typography.fontSize.base,
-    color: colors.text.secondary,
-    textAlign: 'center',
-    marginTop: spacing.sm,
-  },
-  ratingValue: {
-    fontSize: typography.fontSize['2xl'],
-    fontWeight: typography.fontWeight.bold,
-    color: colors.accent.main,
-    letterSpacing: -0.5,
-  },
-  ratingMax: {
-    fontSize: typography.fontSize.base,
-    color: colors.text.secondary,
-    fontWeight: typography.fontWeight.medium,
-  },
-  ratingEmpty: {
-    fontSize: typography.fontSize.base,
-    color: colors.text.disabled,
-    fontStyle: 'italic',
-  },
-  
-  // Modern Images
-  imageBadge: {
-    backgroundColor: colors.primary.main + '20',
-    paddingHorizontal: spacing.md,
     paddingVertical: 4,
     borderRadius: borderRadius.full,
-    borderWidth: 1,
-    borderColor: colors.primary.main + '40',
   },
-  imageBadgeText: {
+  optionalBadgeText: {
+    fontSize: typography.fontSize.xs,
+    color: colors.text.disabled,
+    fontWeight: typography.fontWeight.medium,
+    textTransform: 'uppercase',
+  },
+
+  // Input Wrapper
+  inputWrapper: {
+    marginTop: spacing.xs,
+  },
+
+  // Modern Toggle Switch
+  statusToggleContainer: {
+    marginTop: spacing.sm,
+  },
+  statusTrack: {
+    flexDirection: 'row',
+    backgroundColor: colors.background.elevated,
+    borderRadius: borderRadius.xl,
+    padding: 4,
+    position: 'relative',
+    borderWidth: 1.5,
+    borderColor: colors.border.main,
+  },
+  statusIndicator: {
+    position: 'absolute',
+    top: 4,
+    left: 4,
+    width: (SCREEN_WIDTH - spacing.lg * 2 - 8) / 2,
+    height: 56,
+    borderRadius: borderRadius.lg,
+    shadowColor: colors.neutral.black,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  statusOption: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.md,
+    gap: spacing.sm,
+    zIndex: 1,
+  },
+  statusOptionText: {
+    fontSize: typography.fontSize.base,
+    fontWeight: typography.fontWeight.bold,
+    color: colors.text.secondary,
+    letterSpacing: -0.3,
+  },
+  statusOptionTextActive: {
+    color: colors.neutral.white,
+  },
+
+  // Card Container
+  cardContainer: {
+    marginTop: spacing.md,
+  },
+  cardLabel: {
+    fontSize: typography.fontSize.sm,
+    fontWeight: typography.fontWeight.semiBold,
+    color: colors.text.secondary,
+    marginBottom: spacing.xs,
+    marginLeft: spacing.xs,
+  },
+
+  // Date Card
+  dateCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.background.card,
+    borderRadius: borderRadius.xl,
+    borderWidth: 1.5,
+    borderColor: colors.border.main,
+    padding: spacing.md,
+    gap: spacing.md,
+    shadowColor: colors.neutral.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: isDarkMode ? 0.15 : 0.08,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  dateIconWrapper: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    backgroundColor: colors.primary.main + '15',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  dateTextContainer: {
+    flex: 1,
+  },
+  dateValue: {
+    fontSize: typography.fontSize.lg,
+    fontWeight: typography.fontWeight.bold,
+    color: colors.text.primary,
+    letterSpacing: -0.3,
+  },
+  dateDayName: {
+    fontSize: typography.fontSize.sm,
+    color: colors.text.secondary,
+    marginTop: 2,
+    textTransform: 'capitalize',
+  },
+
+  // Rating Card
+  ratingCard: {
+    backgroundColor: colors.background.card,
+    borderRadius: borderRadius.xl,
+    borderWidth: 1.5,
+    borderColor: colors.border.main,
+    padding: spacing.lg,
+    alignItems: 'center',
+    shadowColor: colors.neutral.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: isDarkMode ? 0.15 : 0.08,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  ratingStars: {
+    paddingVertical: spacing.sm,
+  },
+  ratingValueContainer: {
+    marginTop: spacing.md,
+    alignItems: 'center',
+  },
+  ratingNumber: {
+    fontSize: 48,
+    fontWeight: typography.fontWeight.bold,
+    color: colors.accent.main,
+    letterSpacing: -2,
+    lineHeight: 52,
+  },
+  ratingMaxContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginTop: spacing.xs,
+  },
+  ratingMaxText: {
+    fontSize: typography.fontSize.base,
+    color: colors.text.secondary,
+    fontWeight: typography.fontWeight.medium,
+  },
+  ratingQualityBadge: {
+    backgroundColor: colors.accent.main + '20',
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
+    borderRadius: borderRadius.full,
+  },
+  ratingQualityText: {
+    fontSize: typography.fontSize.xs,
+    color: colors.accent.main,
+    fontWeight: typography.fontWeight.bold,
+    textTransform: 'uppercase',
+  },
+
+  // Image Gallery
+  imageCountBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.primary.main + '15',
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
+    borderRadius: borderRadius.full,
+    gap: 4,
+  },
+  imageCountText: {
     fontSize: typography.fontSize.xs,
     color: colors.primary.main,
     fontWeight: typography.fontWeight.bold,
-    letterSpacing: 0.5,
   },
-  imageScroll: {
-    marginTop: spacing.md,
+  imageGallery: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+    marginTop: spacing.xs,
   },
-  imageContainer: {
+  imageItem: {
+    width: IMAGE_SIZE,
+    height: IMAGE_SIZE,
     position: 'relative',
-    marginRight: spacing.md,
+    borderRadius: borderRadius.lg,
+    overflow: 'hidden',
   },
   imageThumb: {
-    width: 100,
-    height: 100,
-    borderRadius: borderRadius.lg,
+    width: '100%',
+    height: '100%',
     backgroundColor: colors.background.elevated,
-    borderWidth: 1.5,
-    borderColor: colors.border.light,
   },
-  removeImageButton: {
+  imageOverlay: {
     position: 'absolute',
-    top: -10,
-    right: -10,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: colors.error,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: colors.error,
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.4,
-    shadowRadius: 6,
-    elevation: 6,
-    borderWidth: 2,
-    borderColor: colors.background.card,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: '40%',
+    justifyContent: 'flex-end',
+    padding: spacing.sm,
   },
-  removeImageText: {
-    color: colors.neutral.white,
-    fontSize: 18,
-    fontWeight: typography.fontWeight.bold,
-  },
-  imageNumber: {
-    position: 'absolute',
-    bottom: 10,
-    left: 10,
-    backgroundColor: colors.neutral.black + 'DD',
+  imageIndexBadge: {
+    alignSelf: 'flex-start',
+    backgroundColor: colors.neutral.black + 'CC',
     minWidth: 28,
     height: 28,
     borderRadius: 14,
@@ -885,50 +983,111 @@ const createStyles = (colors: any) => StyleSheet.create({
     borderWidth: 2,
     borderColor: colors.neutral.white + '40',
   },
-  imageNumberText: {
+  imageIndexText: {
     color: colors.neutral.white,
     fontSize: typography.fontSize.sm,
     fontWeight: typography.fontWeight.bold,
   },
-  addImageButton: {
-    width: 100,
-    height: 100,
+  imageDeleteButton: {
+    position: 'absolute',
+    top: spacing.xs,
+    right: spacing.xs,
+  },
+  imageDeleteCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.error,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: colors.neutral.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  imageAddCard: {
+    width: IMAGE_SIZE,
+    height: IMAGE_SIZE,
     borderRadius: borderRadius.lg,
     borderWidth: 2,
     borderColor: colors.border.main,
     borderStyle: 'dashed',
+    backgroundColor: colors.background.card,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.background.elevated,
+    gap: spacing.xs,
   },
-  addImageContent: {
+  imageAddIconWrapper: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: colors.primary.main + '15',
     alignItems: 'center',
+    justifyContent: 'center',
   },
-  addImageIcon: {
-    fontSize: 32,
-    marginBottom: spacing.xs,
-  },
-  addImageText: {
+  imageAddLabel: {
     fontSize: typography.fontSize.sm,
-    color: colors.text.secondary,
+    color: colors.text.primary,
     fontWeight: typography.fontWeight.semiBold,
   },
-  emptyImageState: {
-    paddingVertical: spacing.lg,
-    alignItems: 'center',
-    marginTop: spacing.sm,
+  imageAddHint: {
+    fontSize: typography.fontSize.xs,
+    color: colors.text.disabled,
   },
-  emptyImageText: {
+
+  // Empty State
+  emptyImageState: {
+    alignItems: 'center',
+    paddingVertical: spacing.xl * 1.5,
+    paddingHorizontal: spacing.lg,
+  },
+  emptyImageIconCircle: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: colors.background.elevated,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.md,
+    borderWidth: 2,
+    borderColor: colors.border.light,
+  },
+  emptyImageTitle: {
+    fontSize: typography.fontSize.lg,
+    fontWeight: typography.fontWeight.bold,
+    color: colors.text.secondary,
+    marginBottom: spacing.xs,
+  },
+  emptyImageSubtitle: {
     fontSize: typography.fontSize.sm,
     color: colors.text.disabled,
     textAlign: 'center',
-    fontStyle: 'italic',
+    lineHeight: 20,
   },
-  
-  buttonContainer: {
-    marginHorizontal: spacing.lg,
-    marginTop: spacing.md,
-    marginBottom: spacing.md,
+
+  // Fixed Action Bar
+  actionBar: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+  },
+  actionBarGradient: {
+    paddingTop: spacing.lg,
+    paddingBottom: Platform.OS === 'ios' ? spacing.xl : spacing.lg,
+    paddingHorizontal: spacing.lg,
+  },
+  actionButtonsContainer: {
     gap: spacing.sm,
+  },
+  cancelLink: {
+    paddingVertical: spacing.md,
+    alignItems: 'center',
+  },
+  cancelLinkText: {
+    fontSize: typography.fontSize.base,
+    color: colors.text.secondary,
+    fontWeight: typography.fontWeight.semiBold,
   },
 });
