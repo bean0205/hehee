@@ -95,7 +95,13 @@ const TabButton: React.FC<TabButtonProps> = ({
       accessibilityRole="button"
       accessibilityState={isFocused ? { selected: true } : {}}
       onPress={handlePress}
-      style={styles.tabButton}
+      style={{
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 8,
+        paddingHorizontal: 4,
+      }}
       android_ripple={{
         color: colors.primary.main + '20',
         borderless: true,
@@ -104,7 +110,14 @@ const TabButton: React.FC<TabButtonProps> = ({
     >
       <Animated.View
         style={[
-          styles.tabContent,
+          {
+            alignItems: 'center',
+            justifyContent: 'center',
+            position: 'relative',
+            paddingHorizontal: 12,
+            paddingVertical: 8,
+            minWidth: 64,
+          },
           {
             transform: [{ scale: scaleValue }, { translateY }],
           },
@@ -113,7 +126,14 @@ const TabButton: React.FC<TabButtonProps> = ({
         {/* Pill-shaped background for active tab */}
         <Animated.View
           style={[
-            styles.pillBackground,
+            {
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              borderRadius: 20,
+            },
             {
               opacity: backgroundOpacity,
               backgroundColor: colors.primary.main + '15',
@@ -122,7 +142,7 @@ const TabButton: React.FC<TabButtonProps> = ({
         />
 
         {/* Icon */}
-        <View style={styles.iconContainer}>
+        <View style={{ marginBottom: 2 }}>
           {options.tabBarIcon?.({
             focused: isFocused,
             color: iconColor,
@@ -133,7 +153,11 @@ const TabButton: React.FC<TabButtonProps> = ({
         {/* Label */}
         <Animated.Text
           style={[
-            styles.label,
+            {
+              fontSize: 11,
+              letterSpacing: -0.1,
+              marginTop: 2,
+            },
             {
               color: iconColor,
               opacity: labelOpacity,
@@ -200,10 +224,29 @@ const FABButton: React.FC<FABButtonProps> = ({ onPress, colors, isFocused }) => 
   });
 
   return (
-    <Pressable onPress={handlePress} style={styles.fabContainer}>
+    <Pressable
+      onPress={handlePress}
+      style={{
+        marginHorizontal: 8,
+        marginTop: -24,
+      }}
+    >
       <Animated.View
         style={[
-          styles.fabShadow,
+          {
+            borderRadius: 32,
+            ...Platform.select({
+              ios: {
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 6 },
+                shadowOpacity: 0.25,
+                shadowRadius: 12,
+              },
+              android: {
+                elevation: 12,
+              },
+            }),
+          },
           {
             transform: [{ scale: scaleValue }],
           },
@@ -213,7 +256,15 @@ const FABButton: React.FC<FABButtonProps> = ({ onPress, colors, isFocused }) => 
           colors={[colors.primary.main, colors.primary.dark || colors.primary.main]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          style={styles.fabGradient}
+          style={{
+            width: 64,
+            height: 64,
+            borderRadius: 32,
+            alignItems: 'center',
+            justifyContent: 'center',
+            borderWidth: 4,
+            borderColor: colors.background.card || '#FFFFFF',
+          }}
         >
           <Animated.View
             style={{
@@ -367,65 +418,5 @@ const createStyles = (colors: any, insets: any) =>
       paddingBottom: Math.max(insets.bottom, 8) + 4,
       alignItems: 'center',
       justifyContent: 'space-around',
-    },
-    tabButton: {
-      flex: 1,
-      alignItems: 'center',
-      justifyContent: 'center',
-      paddingVertical: 8,
-      paddingHorizontal: 4,
-    },
-    tabContent: {
-      alignItems: 'center',
-      justifyContent: 'center',
-      position: 'relative',
-      paddingHorizontal: 12,
-      paddingVertical: 8,
-      minWidth: 64,
-    },
-    pillBackground: {
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      borderRadius: 20,
-    },
-    iconContainer: {
-      marginBottom: 2,
-    },
-    label: {
-      fontSize: 11,
-      letterSpacing: -0.1,
-      marginTop: 2,
-    },
-
-    // FAB styles
-    fabContainer: {
-      marginHorizontal: 8,
-      marginTop: -24, // Elevate FAB above tab bar
-    },
-    fabShadow: {
-      borderRadius: 32,
-      ...Platform.select({
-        ios: {
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 6 },
-          shadowOpacity: 0.25,
-          shadowRadius: 12,
-        },
-        android: {
-          elevation: 12,
-        },
-      }),
-    },
-    fabGradient: {
-      width: 64,
-      height: 64,
-      borderRadius: 32,
-      alignItems: 'center',
-      justifyContent: 'center',
-      borderWidth: 4,
-      borderColor: colors.background.card || '#FFFFFF',
     },
   });
