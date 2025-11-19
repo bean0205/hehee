@@ -1,23 +1,13 @@
-import React, { useEffect, useState, useRef } from "react";
-import {
-  Text,
-  View,
-  TouchableOpacity,
-  Animated,
-  Dimensions,
-  StyleSheet,
-  Platform,
-  Pressable,
-} from "react-native";
+import React, { useEffect, useState } from "react";
+import { View } from "react-native";
 import { createStackNavigator } from "@react-navigation/stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { useNavigation } from "@react-navigation/native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import * as Haptics from "expo-haptics";
 import { useAuth } from "../contexts/AuthContext";
 import { useTheme } from "../contexts/ThemeContext";
 import { useLanguage } from "../i18n/LanguageContext";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
+import { ModernTabBar } from "../components/navigation/ModernTabBar";
 
 // Auth Screens
 import { SplashScreen } from "../screens/auth/SplashScreen";
@@ -45,208 +35,6 @@ import { FeedScreenV2 } from '../screens/main/FeedScreen.v2';
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 
-// Tab Button Component with Animation
-const TabButton = ({
-  route,
-  index,
-  isFocused,
-  onPress,
-  options,
-  colors,
-}: any) => {
-  const scaleValue = useRef(new Animated.Value(1)).current;
-  const backgroundOpacity = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    Animated.parallel([
-      Animated.spring(scaleValue, {
-        toValue: isFocused ? 1.1 : 1,
-        useNativeDriver: true,
-        friction: 7,
-        tension: 100,
-      }),
-      Animated.timing(backgroundOpacity, {
-        toValue: isFocused ? 1 : 0,
-        duration: 200,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  }, [isFocused]);
-
-  const handlePress = () => {
-    if (Platform.OS === 'ios') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-    onPress();
-  };
-
-  return (
-    <Pressable
-      key={route.key}
-      accessibilityRole="button"
-      accessibilityState={isFocused ? { selected: true } : {}}
-      onPress={handlePress}
-      style={styles.tabButton}
-      android_ripple={{
-        color: colors.primary.main + '20',
-        borderless: true,
-        radius: 32
-      }}
-    >
-      <Animated.View
-        style={[
-          styles.tabBackground,
-          {
-            opacity: backgroundOpacity,
-            backgroundColor: colors.primary.main + '15',
-          },
-        ]}
-      />
-      <Animated.View
-        style={[
-          styles.tabContent,
-          {
-            transform: [{ scale: scaleValue }],
-          },
-        ]}
-      >
-        {options.tabBarIcon?.({
-          focused: isFocused,
-          color: isFocused ? colors.primary.main : colors.text.secondary,
-          size: 26,
-        })}
-      </Animated.View>
-    </Pressable>
-  );
-};
-
-// Modern Bottom Tab Bar with Material Icons
-const CustomTabBar = ({ state, descriptors, navigation }: any) => {
-  const { colors } = useTheme();
-  const insets = useSafeAreaInsets();
-  const screenWidth = Dimensions.get("window").width;
-  const tabBarWidth = screenWidth - 40; // Trừ đi paddingHorizontal (20 * 2)
-  const tabWidth = tabBarWidth / state.routes.length;
-  const translateX = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    Animated.spring(translateX, {
-      toValue: state.index * tabWidth + (tabWidth - 60) / 2,
-      useNativeDriver: true,
-      friction: 8,
-      tension: 120,
-    }).start();
-  }, [state.index, tabWidth]);
-
-  return (
-    <View
-      style={[
-        styles.tabBarContainer,
-        {
-          backgroundColor: colors.background.card,
-          paddingBottom: Math.max(insets.bottom, 8),
-          borderTopColor: colors.border.light,
-        },
-      ]}
-    >
-      {/* Animated indicator bar */}
-      <Animated.View
-        style={[
-          styles.activeTabIndicator,
-          {
-            backgroundColor: colors.primary.main,
-            transform: [{ translateX }],
-          },
-        ]}
-      />
-
-      {state.routes.map((route: any, index: number) => {
-        const { options } = descriptors[route.key];
-        const isFocused = state.index === index;
-
-        const onPress = () => {
-          const event = navigation.emit({
-            type: "tabPress",
-            target: route.key,
-            canPreventDefault: true,
-          });
-
-          if (!isFocused && !event.defaultPrevented) {
-            navigation.navigate(route.name);
-          }
-        };
-
-        return (
-          <TabButton
-            key={route.key}
-            route={route}
-            isFocused={isFocused}
-            onPress={onPress}
-            options={options}
-            colors={colors}
-          />
-        );
-      })}
-    </View>
-  );
-};
-
-const styles = StyleSheet.create({
-  tabBarContainer: {
-    flexDirection: "row",
-    paddingHorizontal: 20,
-    paddingTop: 4,
-    borderTopWidth: 1,
-    elevation: 12,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: -3,
-    },
-    shadowOpacity: 0.08,
-    shadowRadius: 10,
-    ...Platform.select({
-      ios: {
-        backgroundColor: 'rgba(255, 255, 255, 0.95)',
-      },
-      android: {
-        elevation: 8,
-      },
-    }),
-  },
-  activeTabIndicator: {
-    position: "absolute",
-    top: 0,
-    left: 20,
-    width: 60,
-    height: 3.5,
-    borderBottomLeftRadius: 2,
-    borderBottomRightRadius: 2,
-    shadowColor: "currentColor",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.4,
-    shadowRadius: 2,
-  },
-  tabButton: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingVertical: 10,
-    maxWidth: 80,
-    position: 'relative',
-  },
-  tabBackground: {
-    position: 'absolute',
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-  },
-  tabContent: {
-    alignItems: "center",
-    justifyContent: "center",
-  },
-});
-
 // Auth Stack Navigator
 const AuthNavigator = () => {
   const { colors } = useTheme();
@@ -265,7 +53,7 @@ const AuthNavigator = () => {
   );
 };
 
-// Main Tab Navigator - Version 1.5 (5 tabs)
+// Main Tab Navigator - Version 2.0 (5 tabs with Modern UI)
 const MainTabNavigator = () => {
   const { colors } = useTheme();
   const { t } = useLanguage();
@@ -273,7 +61,7 @@ const MainTabNavigator = () => {
 
   return (
     <Tab.Navigator
-      tabBar={(props) => <CustomTabBar {...props} />}
+      tabBar={(props) => <ModernTabBar {...props} />}
       screenOptions={{
         headerShown: false,
       }}
