@@ -7,7 +7,12 @@ import {
   TouchableOpacity,
   ImageBackground,
   FlatList,
+  Animated,
+  Platform,
+  Vibration,
 } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRoute, useNavigation } from "@react-navigation/native";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useLanguage } from "../../i18n/LanguageContext";
@@ -51,12 +56,42 @@ export const UserProfileScreen: React.FC = () => {
   const mockUser = getMockUser(t);
   const [isFollowing, setIsFollowing] = useState(mockUser.isFollowing);
 
-  const styles = React.useMemo(() => createStyles(colors), [colors]);
+  // Animations
+  const scrollY = React.useRef(new Animated.Value(0)).current;
+  const fadeAnim = React.useRef(new Animated.Value(0)).current;
+  const buttonScale = React.useRef(new Animated.Value(1)).current;
+
+  const styles = React.useMemo(() => createStyles(colors, isDarkMode), [colors, isDarkMode]);
+
+  React.useEffect(() => {
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 400,
+      useNativeDriver: true,
+    }).start();
+  }, []);
 
   const userId = route.params?.userId;
   const user = mockUser; // In production, fetch user by userId
 
   const handleFollowToggle = () => {
+    if (Platform.OS === 'ios') {
+      Vibration.vibrate(10);
+    }
+
+    Animated.sequence([
+      Animated.spring(buttonScale, {
+        toValue: 0.9,
+        useNativeDriver: true,
+        tension: 300,
+      }),
+      Animated.spring(buttonScale, {
+        toValue: 1,
+        useNativeDriver: true,
+        tension: 300,
+      }),
+    ]).start();
+
     setIsFollowing(!isFollowing);
   };
 
@@ -85,10 +120,22 @@ export const UserProfileScreen: React.FC = () => {
     </TouchableOpacity>
   );
 
+  const coverImageScale = scrollY.interpolate({
+    inputRange: [-100, 0],
+    outputRange: [1.3, 1],
+    extrapolate: 'clamp',
+  });
+
   return (
-    <ScrollView
-      style={styles.container}
+    <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
+    <Animated.ScrollView
+      style={styles.scrollView}
       contentContainerStyle={styles.contentContainer}
+      onScroll={Animated.event(
+        [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+        { useNativeDriver: false }
+      )}
+      scrollEventThrottle={16}
     >
       <Header
         title={t("userProfile.title")}
@@ -97,18 +144,27 @@ export const UserProfileScreen: React.FC = () => {
         gradient={false}
         blur={false}
       />
-      {/* Cover Image & Avatar */}
+      {/* Enhanced Cover Image & Avatar */}
       <View style={styles.headerContainer}>
-        <ImageBackground
-          source={
-            user.coverImage
-              ? { uri: user.coverImage }
-              : require("../../../assets/icon.png")
-          }
-          style={styles.coverImage}
+        <Animated.View
+          style={{
+            transform: [{ scale: coverImageScale }],
+          }}
         >
-          <View style={styles.coverOverlay} />
-        </ImageBackground>
+          <ImageBackground
+            source={
+              user.coverImage
+                ? { uri: user.coverImage }
+                : require("../../../assets/icon.png")
+            }
+            style={styles.coverImage}
+          >
+            <LinearGradient
+              colors={['transparent', 'rgba(0,0,0,0.6)']}
+              style={styles.coverOverlay}
+            />
+          </ImageBackground>
+        </Animated.View>
 
         <View style={styles.avatarContainer}>
           <Avatar
@@ -128,17 +184,42 @@ export const UserProfileScreen: React.FC = () => {
         <Text style={styles.userUsername}>@{user.username}</Text>
         {user.bio && <Text style={styles.userBio}>{user.bio}</Text>}
 
-        {/* Follow Button */}
-        <View style={styles.actionButtonContainer}>
-          <Button
-            title={
-              isFollowing ? t("userProfile.following") : t("userProfile.follow")
+        {/* Enhanced Follow Button */}
+        <Animated.View
+          style={[
+            styles.actionButtonContainer,
+            { transform: [{ scale: buttonScale }] },
+          ]}
+        >
+          <LinearGradient
+            colors={
+              isFollowing
+                ? [colors.background.card, colors.background.card]
+                : [colors.primary.main, colors.primary.main]
             }
-            onPress={handleFollowToggle}
-            variant={isFollowing ? "outline" : "primary"}
-            fullWidth
-          />
-        </View>
+            style={styles.followButtonGradient}
+          >
+            <TouchableOpacity
+              style={styles.followButton}
+              onPress={handleFollowToggle}
+              activeOpacity={0.8}
+            >
+              <MaterialCommunityIcons
+                name={isFollowing ? 'check' : 'plus'}
+                size={20}
+                color={isFollowing ? colors.text.primary : colors.neutral.white}
+              />
+              <Text
+                style={[
+                  styles.followButtonText,
+                  isFollowing && styles.followingButtonText,
+                ]}
+              >
+                {isFollowing ? t("userProfile.following") : t("userProfile.follow")}
+              </Text>
+            </TouchableOpacity>
+          </LinearGradient>
+        </Animated.View>
       </View>
 
       {/* Stats Bar */}
@@ -321,29 +402,33 @@ export const UserProfileScreen: React.FC = () => {
           />
         </View>
       )}
-    </ScrollView>
+    </Animated.ScrollView>
+    </Animated.View>
   );
 };
 
-const createStyles = (colors: any) =>
+const createStyles = (colors: any, isDarkMode: boolean) =>
   StyleSheet.create({
     container: {
       flex: 1,
       backgroundColor: colors.background.main,
+    },
+    scrollView: {
+      flex: 1,
     },
     contentContainer: {
       paddingBottom: 100,
     },
     headerContainer: {
       position: "relative",
+      overflow: 'hidden',
     },
     coverImage: {
       width: "100%",
-      height: 200,
+      height: 220,
     },
     coverOverlay: {
       ...StyleSheet.absoluteFillObject,
-      backgroundColor: colors.neutral.black + "4D", // 30% opacity
     },
     avatarContainer: {
       position: "absolute",
@@ -383,7 +468,32 @@ const createStyles = (colors: any) =>
       marginBottom: spacing.lg,
     },
     actionButtonContainer: {
-      marginTop: spacing.sm,
+      marginTop: spacing.lg,
+    },
+    followButtonGradient: {
+      borderRadius: borderRadius.full,
+      shadowColor: colors.primary.main,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 8,
+      elevation: 4,
+      borderWidth: 1.5,
+      borderColor: colors.border.main,
+    },
+    followButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: spacing.sm,
+      paddingVertical: spacing.md,
+    },
+    followButtonText: {
+      fontSize: typography.fontSize.base,
+      fontWeight: typography.fontWeight.bold,
+      color: colors.neutral.white,
+    },
+    followingButtonText: {
+      color: colors.text.primary,
     },
     statsBar: {
       flexDirection: "row",
