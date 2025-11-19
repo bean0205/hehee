@@ -7,6 +7,8 @@ import {
   TextInput,
   Modal,
   FlatList,
+  Alert,
+  ActivityIndicator,
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
@@ -16,9 +18,11 @@ import { typography } from "../../theme/typography";
 import { spacing, borderRadius } from "../../theme/spacing";
 import { usePin } from "../../contexts/PinContext";
 import { useNavigation } from "@react-navigation/native";
+import { MainTabCompositeNavigationProp } from "../../types/navigation";
+import { errorHandler } from "../../services/errorHandler";
 
 export const MapScreen: React.FC = () => {
-  const navigation = useNavigation<any>();
+  const navigation = useNavigation<MainTabCompositeNavigationProp<'Map'>>();
   const { pins, getPinByUser } = usePin();
   const { colors, isDarkMode } = useTheme();
   const { t } = useLanguage();
@@ -27,12 +31,27 @@ export const MapScreen: React.FC = () => {
   const [searchModalVisible, setSearchModalVisible] = useState(false);
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [pinsState, setPinsState] = useState(pins);
+  const [isLoadingPins, setIsLoadingPins] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
   useEffect(() => {
     const fetchPins = async () => {
+      setIsLoadingPins(true);
+      setLoadError(null);
       try {
-        const userPins = await getPinByUser();
-      } catch (error) {
-        console.error("Error fetching user pins:", error);
+        await getPinByUser();
+        setLoadError(null);
+      } catch (error: any) {
+        const appError = errorHandler.handle(error, 'MapScreen.fetchPins');
+        setLoadError(appError.message);
+
+        errorHandler.handleWithAlert(error, {
+          title: t("errors.error") || "Error",
+          context: 'MapScreen.fetchPins',
+          onRetry: fetchPins,
+        });
+      } finally {
+        setIsLoadingPins(false);
       }
     };
 
@@ -41,17 +60,52 @@ export const MapScreen: React.FC = () => {
 
   useEffect(() => {
     setPinsState(pins);
+
+    // Auto-fit map to pins when data loads
+    if (pins.length > 0 && mapRef.current) {
+      const coordinates = pins.map(pin => ({
+        latitude: parseFloat(pin.location.lat),
+        longitude: parseFloat(pin.location.lon),
+      }));
+
+      // Fit map to show all pins
+      mapRef.current.fitToCoordinates(coordinates, {
+        edgePadding: { top: 50, right: 50, bottom: 50, left: 50 },
+        animated: true,
+      });
+    }
   }, [pins]);
 
   // Create styles with current theme colors
   const styles = React.useMemo(() => createStyles(colors), [colors]);
 
-  const initialRegion = {
-    latitude: 0,
-    longitude: 0,
-    latitudeDelta: 180,
-    longitudeDelta: 180,
-  };
+  // Calculate initial region from pins or use default
+  const initialRegion = React.useMemo(() => {
+    if (pinsState.length > 0) {
+      const lats = pinsState.map(p => parseFloat(p.location.lat));
+      const lons = pinsState.map(p => parseFloat(p.location.lon));
+
+      const minLat = Math.min(...lats);
+      const maxLat = Math.max(...lats);
+      const minLon = Math.min(...lons);
+      const maxLon = Math.max(...lons);
+
+      return {
+        latitude: (minLat + maxLat) / 2,
+        longitude: (minLon + maxLon) / 2,
+        latitudeDelta: (maxLat - minLat) * 1.5 || 10,
+        longitudeDelta: (maxLon - minLon) * 1.5 || 10,
+      };
+    }
+
+    // Default: Vietnam center
+    return {
+      latitude: 16.0544,
+      longitude: 108.2022,
+      latitudeDelta: 15,
+      longitudeDelta: 15,
+    };
+  }, [pinsState]);
 
   const handleSearch = (text: string) => {
     setSearchQuery(text);
@@ -207,6 +261,16 @@ export const MapScreen: React.FC = () => {
           </Marker>
         ))} 
       </MapView>
+
+      {/* Loading Overlay */}
+      {isLoadingPins && (
+        <View style={styles.loadingOverlay}>
+          <View style={styles.loadingCard}>
+            <ActivityIndicator size="large" color={colors.primary.main} />
+            <Text style={styles.loadingText}>{t("common.loading") || "Loading pins..."}</Text>
+          </View>
+        </View>
+      )}
 
       {/* Search Bar */}
       <View style={styles.searchBarContainer}>
@@ -379,5 +443,29 @@ const createStyles = (colors: any) =>
     emptyStateText: {
       fontSize: typography.fontSize.base,
       color: colors.text.secondary,
+    },
+    loadingOverlay: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: 'rgba(0, 0, 0, 0.3)',
+      justifyContent: 'center',
+      alignItems: 'center',
+      zIndex: 10,
+    },
+    loadingCard: {
+      backgroundColor: colors.background.card,
+      padding: spacing.xl,
+      borderRadius: borderRadius.lg,
+      alignItems: 'center',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 8,
+      elevation: 8,
+    },
+    loadingText: {
+      marginTop: spacing.md,
+      fontSize: typography.fontSize.base,
+      color: colors.text.primary,
+      fontWeight: typography.fontWeight.medium,
     },
   });

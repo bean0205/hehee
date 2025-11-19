@@ -17,6 +17,8 @@ export default {
     search: 'Search',
     filter: 'Filter',
     all: 'All',
+    retry: 'Retry',
+    remove: 'Remove',
     featureInDevelopmentTitle: 'Feature in Development',
     featureInDevelopmentMessage: 'This feature is currently under development. Please try again later.',
     ok: 'OK',
@@ -127,6 +129,7 @@ export default {
     addPhotos: 'Add Photos',
     deletePin: 'Delete Pin',
     deletePinConfirm: 'Are you sure you want to delete this pin?',
+    removeImageConfirm: 'Are you sure you want to remove this image?',
     // Additional keys for AddPinScreen
     placeName: 'Place Name',
     placeNamePlaceholder: 'Enter location name',
@@ -148,6 +151,10 @@ export default {
     maxImages: 'Maximum 5 images allowed',
     updatePinInfo: 'Update your location information',
     createNewMemory: 'Create a new memory for your journey',
+    searchLocation: 'Search Location',
+    images: 'Images',
+    customName: 'Custom Name',
+    selectLocationFromSearch: 'Please select a location from search',
     // Additional keys for PinDetailsScreen
     pinNotFound: 'Pin not found',
     back: 'Back',
@@ -174,7 +181,7 @@ export default {
 
   feed: {
     feed: 'Feed',
-    share: 'Share',
+    shareAction: 'Share',
     visited: '✓ Visited',
     wantToGo: '⭐ Want to go',
     viewMore: 'View more',
@@ -330,16 +337,20 @@ export default {
   },
 
   errors: {
+    error: 'Error',
     somethingWentWrong: 'Something went wrong',
     tryAgain: 'Try Again',
     networkError: 'Network error',
     invalidCredentials: 'Invalid credentials',
+    loadPinsFailed: 'Failed to load pins',
+    saveFailed: 'Failed to save',
   },
 
   validation: {
     required: 'This field is required',
     invalidEmail: 'Invalid email',
     passwordTooShort: 'Password must be at least 6 characters',
+    nameRequired: 'Name is required',
     passwordsDoNotMatch: 'Passwords do not match',
     emailRequired: 'Email is required',
     emailValid: 'Email must be valid',
@@ -472,6 +483,7 @@ export default {
   },
 
   userProfile: {
+    title: 'User Profile',
     countries: 'Countries',
     cities: 'Cities',
     pins: 'Pins',
@@ -600,6 +612,9 @@ export default {
       reply2: 'Spring time is perfect! The weather is mild and there are fewer crowds.',
       comment3: 'I\'ve been there twice, still can\'t get enough!',
       reply3: 'Yes, it\'s truly a magical place ✨',
+      name: 'John Traveler',
+      username: 'johntraveler',
+      bio: 'Travel enthusiast exploring the world 🌍✈️',
     },
   },
 };

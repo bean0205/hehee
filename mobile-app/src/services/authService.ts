@@ -31,7 +31,7 @@ export const authService = {
   handleRegister: async (email: string, password: string, username: string, displayName: string) => {
     try {
       const response = await authAPI.register(email, password, username, displayName );
-      debugger
+
       // Save token
       await setStorageItem('auth_token', response.data.accessToken);
       await setStorageItem('user_data', response.data.user);

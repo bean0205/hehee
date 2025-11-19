@@ -50,15 +50,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const register = async (email: string, password: string, username: string, displayName: string) => {
     setIsLoading(true);
     try {
-      // Mock API call
       const rs = await authService.handleRegister(email, password, username, displayName);
-      debugger
       setUser({
         id: Date.now().toString(),
         email,
         username,
         displayName: username.charAt(0).toUpperCase() + username.slice(1),
-        avatar: `https://i.pravatar.cc/150?u=${username}`,
+        avatarUrl: `https://i.pravatar.cc/150?u=${username}`,
         bio: 'Người dùng mới của PinYourWord 🎉',
       });
     } catch (error) {
@@ -78,7 +76,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         email: 'user@gmail.com',
         username: 'googleuser',
         displayName: 'Google User',
-        avatar: 'https://i.pravatar.cc/150?u=google',
+        avatarUrl: 'https://i.pravatar.cc/150?u=google',
         bio: 'Đăng nhập qua Google 📧',
       });
     } catch (error) {
@@ -98,7 +96,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         email: 'user@icloud.com',
         username: 'appleuser',
         displayName: 'Apple User',
-        avatar: 'https://i.pravatar.cc/150?u=apple',
+        avatarUrl: 'https://i.pravatar.cc/150?u=apple',
         bio: 'Đăng nhập qua Apple 🍎',
       });
     } catch (error) {

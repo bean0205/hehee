@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 
 // Badge/Rank System Configuration
 export const BADGE_RANKS = [
@@ -308,29 +308,28 @@ export const BadgeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   // Check for new achievements
-  const checkNewAchievements = () => {
+  const checkNewAchievements = useCallback(() => {
     const newBadges: string[] = [];
-    
+
     ACHIEVEMENT_BADGES.forEach(badge => {
       // Check if badge not earned yet and condition is met
       if (!userStats.earnedBadges.includes(badge.id) && badge.condition(userStats)) {
         newBadges.push(badge.id);
-        addPoints('FIRST_PIN', 0); // Don't add duplicate points
-        
-        // Add badge points directly
+
+        // Add badge points directly (batch update to avoid re-renders)
         setUserStats(prev => ({
           ...prev,
           totalPoints: prev.totalPoints + badge.points,
           earnedBadges: [...prev.earnedBadges, badge.id],
         }));
-        
+
         // Show achievement notification
         console.log(`🎉 Thành tựu mới: ${badge.name}! +${badge.points} điểm`);
       }
     });
 
     return newBadges;
-  };
+  }, [userStats]);
 
   // Get all available badges
   const getAvailableBadges = () => {
@@ -344,10 +343,33 @@ export const BadgeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     );
   };
 
-  // Auto-check achievements when stats change
+  // Track previous values to prevent infinite loops
+  const prevStatsRef = useRef({
+    totalPins: userStats.totalPins,
+    visitedCountries: userStats.visitedCountries,
+    followers: userStats.followers,
+    totalPhotos: userStats.totalPhotos,
+  });
+
+  // Auto-check achievements when specific stats change (not points or badges)
   useEffect(() => {
-    checkNewAchievements();
-  }, [userStats.totalPins, userStats.visitedCountries, userStats.followers, userStats.totalPhotos]);
+    const prev = prevStatsRef.current;
+    const hasChanged =
+      prev.totalPins !== userStats.totalPins ||
+      prev.visitedCountries !== userStats.visitedCountries ||
+      prev.followers !== userStats.followers ||
+      prev.totalPhotos !== userStats.totalPhotos;
+
+    if (hasChanged) {
+      checkNewAchievements();
+      prevStatsRef.current = {
+        totalPins: userStats.totalPins,
+        visitedCountries: userStats.visitedCountries,
+        followers: userStats.followers,
+        totalPhotos: userStats.totalPhotos,
+      };
+    }
+  }, [userStats.totalPins, userStats.visitedCountries, userStats.followers, userStats.totalPhotos, checkNewAchievements]);
 
   const value: BadgeContextType = {
     userStats,

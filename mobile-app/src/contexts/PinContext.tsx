@@ -35,7 +35,6 @@ export const PinProvider: React.FC<{ children: ReactNode }> = ({
 
   const addPin = async (pin: Pin) => {
     try {
-      debugger
       const formData = new FormData();
 
       // Gộp toàn bộ dữ liệu thành 1 object

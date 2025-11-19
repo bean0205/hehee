@@ -113,6 +113,7 @@ export const AddPinScreen: React.FC = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const searchAbortControllerRef = useRef<AbortController | null>(null);
 
   // Enhanced animation values
   const backdropOpacity = useRef(new Animated.Value(0)).current;
@@ -153,6 +154,9 @@ export const AddPinScreen: React.FC = () => {
       if (searchTimeoutRef.current) {
         clearTimeout(searchTimeoutRef.current);
       }
+      if (searchAbortControllerRef.current) {
+        searchAbortControllerRef.current.abort();
+      }
     };
   }, []);
 
@@ -165,10 +169,18 @@ export const AddPinScreen: React.FC = () => {
         return;
       }
 
+      // Cancel previous request if exists
+      if (searchAbortControllerRef.current) {
+        searchAbortControllerRef.current.abort();
+      }
+
+      // Create new AbortController for this request
+      const controller = new AbortController();
+      searchAbortControllerRef.current = controller;
+
       setIsSearching(true);
 
       // Setup timeout for fetch
-      const controller = new AbortController();
       const timeoutMs = 8000;
       const timeout = setTimeout(() => controller.abort(), timeoutMs);
 
@@ -358,7 +370,6 @@ export const AddPinScreen: React.FC = () => {
     ]);
   };
   function mapNominatimToLocationPin(place: NominatimPlace): LocationPin {
-    debugger
     return {
       placeId: place.place_id,
       licence: place.licence,
@@ -403,7 +414,7 @@ export const AddPinScreen: React.FC = () => {
     }
 
     if (!selectedLocation) {
-      Alert.alert(t("errors.error"), "Please select a location from search");
+      Alert.alert(t("errors.error"), t("pin.selectLocationFromSearch"));
       return;
     }
 

@@ -245,8 +245,8 @@ export const UserProfileScreen: React.FC = () => {
               <Marker
                 key={pin.id}
                 coordinate={{
-                  latitude: pin.latitude,
-                  longitude: pin.longitude,
+                  latitude: parseFloat(pin.location.lat),
+                  longitude: parseFloat(pin.location.lon),
                 }}
                 pinColor={
                   pin.status === "visited"
