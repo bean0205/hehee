@@ -8,11 +8,17 @@ import {
   TouchableOpacity,
   Alert,
   Dimensions,
+  Animated,
+  Modal,
+  Share,
+  Platform,
+  Vibration,
 } from "react-native";
 import { MaterialCommunityIcons, FontAwesome } from "@expo/vector-icons";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import Swiper from "react-native-swiper";
 import { Rating } from "react-native-ratings";
+import { LinearGradient } from "expo-linear-gradient";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useLanguage } from "../../i18n/LanguageContext";
 import { typography } from "../../theme/typography";
@@ -21,21 +27,45 @@ import { Button } from "../../components/common/Button";
 import { usePin } from "../../contexts/PinContext";
 import { Header } from "../../components/common/Header";
 
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 export const PinDetailsScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
   const { deletePin, getPinById } = usePin();
-  const { colors } = useTheme();
+  const { colors, isDarkMode } = useTheme();
   const { t } = useLanguage();
 
   const pinId = route.params?.pinId;
   const pin = getPinById(pinId);
 
   const [isDeleting, setIsDeleting] = useState(false);
+  const [lightboxVisible, setLightboxVisible] = useState(false);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
-  const styles = React.useMemo(() => createStyles(colors), [colors]);
+  // Animations
+  const scrollY = React.useRef(new Animated.Value(0)).current;
+  const fadeAnim = React.useRef(new Animated.Value(0)).current;
+  const scaleAnim = React.useRef(new Animated.Value(0.9)).current;
+
+  const styles = React.useMemo(() => createStyles(colors, isDarkMode), [colors, isDarkMode]);
+
+  React.useEffect(() => {
+    // Entrance animation
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 400,
+        useNativeDriver: true,
+      }),
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        tension: 50,
+        friction: 7,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
 
   if (!pin) {
     return (
@@ -46,7 +76,32 @@ export const PinDetailsScreen: React.FC = () => {
     );
   }
 
+  const handleShare = async () => {
+    if (Platform.OS === 'ios') {
+      Vibration.vibrate(10);
+    }
+    try {
+      await Share.share({
+        message: `Check out my pin: ${pin.placeName}!\n${pin.notes || ''}`,
+        title: pin.placeName,
+      });
+    } catch (error) {
+      console.error('Error sharing:', error);
+    }
+  };
+
+  const handleImagePress = (index: number) => {
+    if (Platform.OS === 'ios') {
+      Vibration.vibrate(10);
+    }
+    setSelectedImageIndex(index);
+    setLightboxVisible(true);
+  };
+
   const handleEdit = () => {
+    if (Platform.OS === 'ios') {
+      Vibration.vibrate(10);
+    }
     navigation.navigate("AddPin", { pinId: pin.id });
   };
 
@@ -100,43 +155,92 @@ export const PinDetailsScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <Header
-        title={t("pin.pinDetails")}
-        showBackButton={true}
-        onBackPress={() => navigation.goBack()}
-        gradient={false}
-        blur={false}
-      />
-      <ScrollView style={styles.scrollView}>
-        {/* Image Gallery */}
-        {pin.images && pin.images.length > 0 ? (
-          <View style={styles.galleryContainer}>
-            <Swiper
-              style={styles.swiper}
-              showsButtons={false}
-              loop={false}
-              dotColor={colors.neutral.gray400}
-              activeDotColor={colors.primary.main}
-              paginationStyle={styles.pagination}
+      <Animated.View style={{ flex: 1, opacity: fadeAnim }}>
+        <Header
+          title={t("pin.pinDetails")}
+          showBackButton={true}
+          onBackPress={() => navigation.goBack()}
+          gradient={false}
+          blur={false}
+          actions={[
+            {
+              icon: 'share-variant',
+              onPress: handleShare,
+            },
+          ]}
+        />
+        <Animated.ScrollView
+          style={styles.scrollView}
+          onScroll={Animated.event(
+            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+            { useNativeDriver: false }
+          )}
+          scrollEventThrottle={16}
+        >
+          {/* Enhanced Image Gallery */}
+          {pin.images && pin.images.length > 0 ? (
+            <Animated.View
+              style={[
+                styles.galleryContainer,
+                {
+                  transform: [
+                    {
+                      scale: scaleAnim,
+                    },
+                  ],
+                },
+              ]}
             >
-              {pin.images.map((uri: string, index: number) => (
-                <View key={index} style={styles.slide}>
-                  <Image source={{ uri }} style={styles.galleryImage} />
-                </View>
-              ))}
-            </Swiper>
-          </View>
-        ) : (
-          <View style={styles.noImageContainer}>
-            <MaterialCommunityIcons
-              name="camera-outline"
-              size={60}
-              color={colors.text.secondary}
-              style={{ marginBottom: spacing.sm }}
-            />
-            <Text style={styles.noImageLabel}>{t("pin.noImagesYet")}</Text>
-          </View>
-        )}
+              <Swiper
+                style={styles.swiper}
+                showsButtons={false}
+                loop={false}
+                dotColor={colors.neutral.gray400}
+                activeDotColor={colors.primary.main}
+                paginationStyle={styles.pagination}
+              >
+                {pin.images.map((uri: string, index: number) => (
+                  <TouchableOpacity
+                    key={index}
+                    style={styles.slide}
+                    onPress={() => handleImagePress(index)}
+                    activeOpacity={0.9}
+                  >
+                    <Image source={{ uri }} style={styles.galleryImage} />
+                    <LinearGradient
+                      colors={['transparent', 'rgba(0,0,0,0.6)']}
+                      style={styles.imageGradient}
+                    >
+                      <View style={styles.imageCounter}>
+                        <MaterialCommunityIcons
+                          name="image-multiple"
+                          size={16}
+                          color={colors.neutral.white}
+                        />
+                        <Text style={styles.imageCounterText}>
+                          {index + 1} / {pin.images.length}
+                        </Text>
+                      </View>
+                    </LinearGradient>
+                  </TouchableOpacity>
+                ))}
+              </Swiper>
+            </Animated.View>
+          ) : (
+            <LinearGradient
+              colors={[colors.background.elevated, colors.background.card]}
+              style={styles.noImageContainer}
+            >
+              <View style={styles.noImageIconCircle}>
+                <MaterialCommunityIcons
+                  name="camera-outline"
+                  size={60}
+                  color={colors.text.disabled}
+                />
+              </View>
+              <Text style={styles.noImageLabel}>{t("pin.noImagesYet")}</Text>
+            </LinearGradient>
+          )}
 
         {/* Content */}
         <View style={styles.content}>
@@ -268,29 +372,83 @@ export const PinDetailsScreen: React.FC = () => {
             </View>
           )}
         </View>
-      </ScrollView>
+        </Animated.ScrollView>
 
-      {/* Bottom Action Bar */}
-      <View style={styles.bottomBar}>
-        <Button
-          title={t("pin.edit")}
-          onPress={handleEdit}
-          variant="primary"
-          style={styles.bottomButton}
-        />
-        <Button
-          title={t("pin.delete")}
-          onPress={handleDelete}
-          variant="outline"
-          loading={isDeleting}
-          style={styles.bottomButton}
-        />
-      </View>
+        {/* Bottom Action Bar */}
+        <LinearGradient
+          colors={[colors.background.main + '00', colors.background.main]}
+          style={styles.bottomBar}
+        >
+          <View style={styles.bottomButtonsRow}>
+            <Button
+              title={t("pin.edit")}
+              onPress={handleEdit}
+              variant="primary"
+              style={styles.bottomButton}
+            />
+            <Button
+              title={t("pin.delete")}
+              onPress={handleDelete}
+              variant="outline"
+              loading={isDeleting}
+              style={styles.bottomButton}
+            />
+          </View>
+        </LinearGradient>
+      </Animated.View>
+
+      {/* Image Lightbox Modal */}
+      <Modal
+        visible={lightboxVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setLightboxVisible(false)}
+      >
+        <View style={styles.lightboxContainer}>
+          <TouchableOpacity
+            style={styles.lightboxClose}
+            onPress={() => setLightboxVisible(false)}
+            activeOpacity={0.8}
+          >
+            <LinearGradient
+              colors={['rgba(0,0,0,0.8)', 'rgba(0,0,0,0.6)']}
+              style={styles.closeButtonGradient}
+            >
+              <MaterialCommunityIcons
+                name="close"
+                size={28}
+                color={colors.neutral.white}
+              />
+            </LinearGradient>
+          </TouchableOpacity>
+
+          {pin.images && pin.images.length > 0 && (
+            <Swiper
+              index={selectedImageIndex}
+              style={styles.lightboxSwiper}
+              showsButtons={false}
+              loop={false}
+              dotColor={colors.neutral.white + '40'}
+              activeDotColor={colors.neutral.white}
+            >
+              {pin.images.map((uri: string, index: number) => (
+                <View key={index} style={styles.lightboxSlide}>
+                  <Image
+                    source={{ uri }}
+                    style={styles.lightboxImage}
+                    resizeMode="contain"
+                  />
+                </View>
+              ))}
+            </Swiper>
+          )}
+        </View>
+      </Modal>
     </View>
   );
 };
 
-const createStyles = (colors: any) =>
+const createStyles = (colors: any, isDarkMode: boolean) =>
   StyleSheet.create({
     container: {
       flex: 1,
@@ -313,11 +471,16 @@ const createStyles = (colors: any) =>
     },
     galleryContainer: {
       width: SCREEN_WIDTH,
-      height: 300,
+      height: 350,
       backgroundColor: colors.neutral.black,
+      shadowColor: colors.neutral.black,
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.3,
+      shadowRadius: 16,
+      elevation: 10,
     },
     swiper: {
-      height: 300,
+      height: 350,
     },
     slide: {
       flex: 1,
@@ -326,22 +489,58 @@ const createStyles = (colors: any) =>
     },
     galleryImage: {
       width: SCREEN_WIDTH,
-      height: 300,
+      height: 350,
       resizeMode: "cover",
     },
+    imageGradient: {
+      position: 'absolute',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      height: 80,
+      justifyContent: 'flex-end',
+      padding: spacing.md,
+    },
+    imageCounter: {
+      alignSelf: 'flex-start',
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.xs,
+      backgroundColor: 'rgba(0,0,0,0.6)',
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.xs,
+      borderRadius: borderRadius.full,
+      backdropFilter: 'blur(10px)',
+    },
+    imageCounterText: {
+      color: colors.neutral.white,
+      fontSize: typography.fontSize.sm,
+      fontWeight: typography.fontWeight.semiBold,
+    },
     pagination: {
-      bottom: 10,
+      bottom: 16,
     },
     noImageContainer: {
       width: SCREEN_WIDTH,
-      height: 200,
-      backgroundColor: colors.background.elevated,
+      height: 250,
       alignItems: "center",
       justifyContent: "center",
+    },
+    noImageIconCircle: {
+      width: 120,
+      height: 120,
+      borderRadius: 60,
+      backgroundColor: colors.background.card,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: spacing.md,
+      borderWidth: 2,
+      borderColor: colors.border.light,
     },
     noImageLabel: {
       fontSize: typography.fontSize.base,
       color: colors.text.secondary,
+      fontWeight: typography.fontWeight.medium,
     },
     content: {
       padding: spacing.xl,
@@ -474,14 +673,53 @@ const createStyles = (colors: any) =>
       paddingHorizontal: spacing.xl,
     },
     bottomBar: {
-      flexDirection: "row",
-      padding: spacing.lg,
-      backgroundColor: colors.background.card,
+      position: 'absolute',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      paddingTop: spacing.xl,
+      paddingBottom: Platform.OS === 'ios' ? spacing.xl : spacing.lg,
+      paddingHorizontal: spacing.lg,
       borderTopWidth: 1,
-      borderTopColor: colors.border.main,
+      borderTopColor: colors.border.light,
+    },
+    bottomButtonsRow: {
+      flexDirection: "row",
       gap: spacing.md,
     },
     bottomButton: {
       flex: 1,
+    },
+    // Lightbox styles
+    lightboxContainer: {
+      flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.95)',
+    },
+    lightboxClose: {
+      position: 'absolute',
+      top: Platform.OS === 'ios' ? 50 : 30,
+      right: spacing.lg,
+      zIndex: 10,
+    },
+    closeButtonGradient: {
+      width: 48,
+      height: 48,
+      borderRadius: 24,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 2,
+      borderColor: 'rgba(255,255,255,0.3)',
+    },
+    lightboxSwiper: {
+      flex: 1,
+    },
+    lightboxSlide: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    lightboxImage: {
+      width: SCREEN_WIDTH,
+      height: SCREEN_HEIGHT,
     },
   });

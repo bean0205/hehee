@@ -6,7 +6,12 @@ import {
   ScrollView,
   TouchableOpacity,
   Image,
+  Animated,
+  Platform,
+  Vibration,
 } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useAuth } from "../../contexts/AuthContext";
 import { usePin } from "../../contexts/PinContext";
 import { useTheme } from "../../contexts/ThemeContext";
@@ -25,13 +30,17 @@ export const ProfileScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const { user, logout } = useAuth();
   const { pins } = usePin();
-  const { colors } = useTheme();
+  const { colors, isDarkMode } = useTheme();
   const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState<"map" | "list">("list");
   const [filter, setFilter] = useState<"all" | "visited" | "wantToGo">("all");
 
+  // Animation values
+  const scrollY = React.useRef(new Animated.Value(0)).current;
+  const tabIndicatorAnim = React.useRef(new Animated.Value(activeTab === "map" ? 0 : 1)).current;
+
   // Create styles with current theme colors
-  const styles = React.useMemo(() => createStyles(colors), [colors]);
+  const styles = React.useMemo(() => createStyles(colors, isDarkMode), [colors, isDarkMode]);
 
   const filteredPins = pins.filter((pin) => {
     if (filter === "all") return true;
@@ -147,6 +156,39 @@ export const ProfileScreen: React.FC = () => {
     continentPercentage: Math.round((continents.size / 7) * 100), // 7 continents
   };
 
+  const handleTabChange = (tab: "map" | "list") => {
+    if (Platform.OS === 'ios') {
+      Vibration.vibrate(10);
+    }
+    setActiveTab(tab);
+    Animated.spring(tabIndicatorAnim, {
+      toValue: tab === "map" ? 0 : 1,
+      useNativeDriver: true,
+      tension: 50,
+      friction: 7,
+    }).start();
+  };
+
+  const handleFilterChange = (newFilter: "all" | "visited" | "wantToGo") => {
+    if (Platform.OS === 'ios') {
+      Vibration.vibrate(10);
+    }
+    setFilter(newFilter);
+  };
+
+  // Parallax effect for cover image
+  const coverImageTranslate = scrollY.interpolate({
+    inputRange: [0, 150],
+    outputRange: [0, -50],
+    extrapolate: 'clamp',
+  });
+
+  const coverImageScale = scrollY.interpolate({
+    inputRange: [-100, 0],
+    outputRange: [1.3, 1],
+    extrapolate: 'clamp',
+  });
+
   return (
     <View style={styles.container}>
       <Header
@@ -162,13 +204,36 @@ export const ProfileScreen: React.FC = () => {
         ]}
       />
 
-      <ScrollView style={styles.scrollView}>
-        {/* Profile Header */}
+      <Animated.ScrollView
+        style={styles.scrollView}
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+          { useNativeDriver: false }
+        )}
+        scrollEventThrottle={16}
+      >
+        {/* Profile Header with Parallax */}
         <View style={styles.profileHeader}>
-          <Image
-            source={{ uri: user?.coverUrl}}
-            style={styles.coverImage}
-          />
+          <Animated.View
+            style={[
+              styles.coverImageContainer,
+              {
+                transform: [
+                  { translateY: coverImageTranslate },
+                  { scale: coverImageScale },
+                ],
+              },
+            ]}
+          >
+            <Image
+              source={{ uri: user?.coverUrl }}
+              style={styles.coverImage}
+            />
+            <LinearGradient
+              colors={['transparent', 'rgba(0,0,0,0.5)']}
+              style={styles.coverGradient}
+            />
+          </Animated.View>
           <View style={styles.profileInfo}>
             <Avatar uri={user?.avatarUrl} size={80} style={styles.avatar} />
             <View style={styles.nameRow}>
@@ -283,12 +348,32 @@ export const ProfileScreen: React.FC = () => {
           <TravelMapComponent />
         </View>
 
-        {/* Tab Navigator */}
+        {/* Enhanced Tab Navigator */}
         <View style={styles.tabBar}>
+          <Animated.View
+            style={[
+              styles.tabIndicator,
+              {
+                transform: [
+                  {
+                    translateX: tabIndicatorAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0, styles.tab.flex * 100],
+                    }),
+                  },
+                ],
+              },
+            ]}
+          />
           <TouchableOpacity
-            style={[styles.tab, activeTab === "map" && styles.activeTab]}
-            onPress={() => setActiveTab("map")}
+            style={styles.tab}
+            onPress={() => handleTabChange("map")}
           >
+            <MaterialCommunityIcons
+              name="map-outline"
+              size={20}
+              color={activeTab === "map" ? colors.primary.main : colors.text.secondary}
+            />
             <Text
               style={[
                 styles.tabText,
@@ -299,9 +384,14 @@ export const ProfileScreen: React.FC = () => {
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.tab, activeTab === "list" && styles.activeTab]}
-            onPress={() => setActiveTab("list")}
+            style={styles.tab}
+            onPress={() => handleTabChange("list")}
           >
+            <MaterialCommunityIcons
+              name="format-list-bulleted"
+              size={20}
+              color={activeTab === "list" ? colors.primary.main : colors.text.secondary}
+            />
             <Text
               style={[
                 styles.tabText,
@@ -316,15 +406,20 @@ export const ProfileScreen: React.FC = () => {
         {/* Content */}
         {activeTab === "list" && (
           <View style={styles.listContent}>
-            {/* Filter */}
+            {/* Enhanced Filter */}
             <View style={styles.filterBar}>
               <TouchableOpacity
                 style={[
                   styles.filterButton,
                   filter === "all" && styles.activeFilter,
                 ]}
-                onPress={() => setFilter("all")}
+                onPress={() => handleFilterChange("all")}
               >
+                <MaterialCommunityIcons
+                  name="dots-grid"
+                  size={18}
+                  color={filter === "all" ? colors.neutral.white : colors.text.secondary}
+                />
                 <Text
                   style={[
                     styles.filterText,
@@ -333,14 +428,24 @@ export const ProfileScreen: React.FC = () => {
                 >
                   {t("common.all")}
                 </Text>
+                {filter === "all" && (
+                  <View style={styles.filterBadge}>
+                    <Text style={styles.filterBadgeText}>{pins.length}</Text>
+                  </View>
+                )}
               </TouchableOpacity>
               <TouchableOpacity
                 style={[
                   styles.filterButton,
                   filter === "visited" && styles.activeFilter,
                 ]}
-                onPress={() => setFilter("visited")}
+                onPress={() => handleFilterChange("visited")}
               >
+                <MaterialCommunityIcons
+                  name="check-circle"
+                  size={18}
+                  color={filter === "visited" ? colors.neutral.white : colors.text.secondary}
+                />
                 <Text
                   style={[
                     styles.filterText,
@@ -349,14 +454,24 @@ export const ProfileScreen: React.FC = () => {
                 >
                   {t("pin.visited")}
                 </Text>
+                {filter === "visited" && (
+                  <View style={styles.filterBadge}>
+                    <Text style={styles.filterBadgeText}>{stats.visited}</Text>
+                  </View>
+                )}
               </TouchableOpacity>
               <TouchableOpacity
                 style={[
                   styles.filterButton,
                   filter === "wantToGo" && styles.activeFilter,
                 ]}
-                onPress={() => setFilter("wantToGo")}
+                onPress={() => handleFilterChange("wantToGo")}
               >
+                <MaterialCommunityIcons
+                  name="star"
+                  size={18}
+                  color={filter === "wantToGo" ? colors.neutral.white : colors.text.secondary}
+                />
                 <Text
                   style={[
                     styles.filterText,
@@ -365,6 +480,11 @@ export const ProfileScreen: React.FC = () => {
                 >
                   {t("pin.wantToGo")}
                 </Text>
+                {filter === "wantToGo" && (
+                  <View style={styles.filterBadge}>
+                    <Text style={styles.filterBadgeText}>{stats.wantToGo}</Text>
+                  </View>
+                )}
               </TouchableOpacity>
             </View>
 
@@ -401,12 +521,12 @@ export const ProfileScreen: React.FC = () => {
         {/* <TouchableOpacity style={styles.logoutButton} onPress={logout}>
         <Text style={styles.logoutText}>{t('auth.logout')}</Text>
       </TouchableOpacity> */}
-      </ScrollView>
+      </Animated.ScrollView>
     </View>
   );
 };
 
-const createStyles = (colors: any) =>
+const createStyles = (colors: any, isDarkMode: boolean) =>
   StyleSheet.create({
     container: {
       flex: 1,
@@ -418,9 +538,21 @@ const createStyles = (colors: any) =>
     profileHeader: {
       marginBottom: spacing.md,
     },
+    coverImageContainer: {
+      width: "100%",
+      height: 180,
+      overflow: 'hidden',
+    },
     coverImage: {
       width: "100%",
-      height: 150,
+      height: "100%",
+    },
+    coverGradient: {
+      position: 'absolute',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      height: 100,
     },
     settingsButton: {
       position: "absolute",
@@ -660,52 +792,97 @@ const createStyles = (colors: any) =>
     },
     tabBar: {
       flexDirection: "row",
+      backgroundColor: colors.background.card,
       borderBottomWidth: 1,
-      borderBottomColor: colors.border.main,
+      borderBottomColor: colors.border.light,
+      position: 'relative',
+    },
+    tabIndicator: {
+      position: 'absolute',
+      bottom: 0,
+      left: 0,
+      width: '50%',
+      height: 3,
+      backgroundColor: colors.primary.main,
+      borderTopLeftRadius: borderRadius.sm,
+      borderTopRightRadius: borderRadius.sm,
     },
     tab: {
       flex: 1,
+      flexDirection: 'row',
+      gap: spacing.xs,
       paddingVertical: spacing.md,
       alignItems: "center",
+      justifyContent: 'center',
     },
     activeTab: {
-      borderBottomWidth: 2,
-      borderBottomColor: colors.primary.main,
+      borderBottomWidth: 0,
     },
     tabText: {
       fontSize: typography.fontSize.base,
       color: colors.text.secondary,
+      fontWeight: typography.fontWeight.medium,
     },
     activeTabText: {
       color: colors.primary.main,
-      fontWeight: typography.fontWeight.semiBold,
+      fontWeight: typography.fontWeight.bold,
     },
     listContent: {
       padding: spacing.md,
     },
     filterBar: {
       flexDirection: "row",
-      marginBottom: spacing.md,
+      marginBottom: spacing.lg,
       gap: spacing.sm,
     },
     filterButton: {
       flex: 1,
-      paddingVertical: spacing.sm,
-      paddingHorizontal: spacing.md,
-      borderRadius: borderRadius.md,
-      backgroundColor: colors.background.secondary,
+      flexDirection: 'row',
+      gap: spacing.xs,
+      paddingVertical: spacing.md,
+      paddingHorizontal: spacing.sm,
+      borderRadius: borderRadius.full,
+      backgroundColor: colors.background.elevated,
       alignItems: "center",
+      justifyContent: 'center',
+      borderWidth: 1.5,
+      borderColor: colors.border.main,
+      shadowColor: colors.neutral.black,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.05,
+      shadowRadius: 4,
+      elevation: 2,
     },
     activeFilter: {
       backgroundColor: colors.primary.main,
+      borderColor: colors.primary.main,
+      shadowColor: colors.primary.main,
+      shadowOpacity: 0.3,
+      shadowRadius: 8,
+      elevation: 4,
     },
     filterText: {
       fontSize: typography.fontSize.sm,
       color: colors.text.secondary,
+      fontWeight: typography.fontWeight.semiBold,
     },
     activeFilterText: {
-      color: colors.text.inverse,
-      fontWeight: typography.fontWeight.semiBold,
+      color: colors.neutral.white,
+      fontWeight: typography.fontWeight.bold,
+    },
+    filterBadge: {
+      backgroundColor: colors.neutral.white + '30',
+      paddingHorizontal: spacing.xs,
+      paddingVertical: 2,
+      borderRadius: borderRadius.full,
+      minWidth: 24,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    filterBadgeText: {
+      fontSize: typography.fontSize.xs,
+      color: colors.neutral.white,
+      fontWeight: typography.fontWeight.bold,
     },
     emptyState: {
       alignItems: "center",
