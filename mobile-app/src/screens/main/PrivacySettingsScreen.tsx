@@ -102,10 +102,11 @@ export const PrivacySettingsScreen = ({ navigation }: any) => {
     <View style={styles.container}>
       <Header
         title={t('privacy.privacy')}
-        showBackButton={true}
+        subtitle="Control your data"
+        showBackButton
         onBackPress={() => navigation.goBack()}
-        gradient={false}
-        blur={false}
+        centerTitle
+        elevation={2}
       />
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>

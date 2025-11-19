@@ -49,10 +49,11 @@ export const ThemeSettingsScreen = ({ navigation }: any) => {
     <View style={styles.container}>
       <Header
         title={t('theme.appearance')}
-        showBackButton={true}
+        subtitle="Customize your experience"
+        showBackButton
         onBackPress={() => navigation.goBack()}
-        gradient={false}
-        blur={false}
+        centerTitle
+        elevation={2}
       />
 
       <View style={styles.content}>

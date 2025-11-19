@@ -192,16 +192,21 @@ export const ProfileScreen: React.FC = () => {
   return (
     <View style={styles.container}>
       <Header
-        title={t("profile.profile") || "Profile"}
-        // gradient={true}
-        // blur={true}
+        title={user?.displayName || t("profile.profile") || "Profile"}
+        subtitle={`@${user?.username || "username"}`}
+        gradient
         gradientColors={["#3B82F6", "#60A5FA", "#93C5FD"]}
         actions={[
+          {
+            icon: "share-variant",
+            onPress: () => console.log('Share profile'),
+          },
           {
             icon: "cog-outline",
             onPress: () => navigation.navigate("Settings"),
           },
         ]}
+        elevation={6}
       />
 
       <Animated.ScrollView

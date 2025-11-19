@@ -633,10 +633,20 @@ export const PostDetailsScreen: React.FC = () => {
     <View style={styles.container}>
       <Header
         title={t('postDetails.postDetails')}
-        showBackButton={true}
+        showBackButton
         onBackPress={() => navigation.goBack()}
-        gradient={false}
-        blur={false}
+        centerTitle
+        actions={[
+          {
+            icon: 'share-variant',
+            onPress: () => console.log('Share post'),
+          },
+          {
+            icon: 'dots-vertical',
+            onPress: () => console.log('More options'),
+          },
+        ]}
+        elevation={2}
       />
 
       <ScrollView style={styles.scrollView}>

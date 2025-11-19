@@ -648,17 +648,21 @@ export const DiscoverScreen: React.FC = () => {
     <View style={[styles.container, { backgroundColor: colors.background.main }]}>
       <Header
         title="Discover"
+        subtitle="Explore amazing places"
+        gradient
         gradientColors={['#3B82F6', '#60A5FA', '#93C5FD']}
         actions={[
           {
             icon: 'bell-outline',
             onPress: () => console.log('Notifications'),
+            badge: 3,
           },
           {
             icon: 'cog-outline',
             onPress: () => navigation.navigate('Settings'),
           },
         ]}
+        elevation={8}
       />
 
       {/* Tabs */}
