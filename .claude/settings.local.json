@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(openssl rand:*)",
+      "Bash(mvn clean compile:*)",
+      "Bash(mvn dependency:resolve:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

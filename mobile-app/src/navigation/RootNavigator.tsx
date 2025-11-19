@@ -38,6 +38,7 @@ import { UserProfileScreen } from "../screens/main/UserProfileScreen";
 import { PrivacySettingsScreen } from "../screens/main/PrivacySettingsScreen";
 import { BadgeDetailsScreen } from "../screens/main/BadgeDetailsScreen";
 import { PostDetailsScreen } from "../screens/main/PostDetailsScreen";
+import { FeedScreenV2 } from '../screens/main/FeedScreen.v2';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -246,7 +247,7 @@ const MainTabNavigator = () => {
       {/* Tab 2: Feed */}
       <Tab.Screen
         name="Feed"
-        component={FeedScreen}
+        component={FeedScreenV2}
         options={{
           title: "Feed",
           tabBarIcon: ({ color, size, focused }) => (

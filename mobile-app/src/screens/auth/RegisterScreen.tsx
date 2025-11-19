@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   View,
   Text,
@@ -7,19 +7,32 @@ import {
   Platform,
   ScrollView,
   TouchableOpacity,
+  ActivityIndicator,
+  Keyboard,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { BlurView } from "expo-blur";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
+import * as Haptics from "expo-haptics";
 import { useTheme } from "../../contexts/ThemeContext";
 import { typography } from "../../theme/typography";
 import { spacing, borderRadius } from "../../theme/spacing";
-import { Button } from "../../components/common/Button";
 import { Input } from "../../components/common/Input";
 import { Alert } from "../../components/common/Alert";
 import { useAuth } from "../../contexts/AuthContext";
 import { useLanguage } from "../../i18n/LanguageContext";
 import { useAlert } from "../../hooks/useAlert";
+import { useFormValidation, ValidationPresets } from "../../hooks/useFormValidation";
+import { PasswordStrengthIndicator } from "../../components/auth/PasswordStrengthIndicator";
+
+interface RegisterFormValues {
+  email: string;
+  username: string;
+  displayName: string;
+  password: string;
+  confirmPassword: string;
+}
 
 export const RegisterScreen: React.FC = () => {
   const navigation = useNavigation<any>();
@@ -28,44 +41,74 @@ export const RegisterScreen: React.FC = () => {
   const { colors, isDarkMode } = useTheme();
   const { alertVisible, alertConfig, hideAlert, showSuccess, showError } =
     useAlert();
-  const [email, setEmail] = useState("williamnguyen8888@gmail.com");
-  const [username, setUsername] = useState("williamnguyen");
-  const [displayName, setDisplayName] = useState("William Nguyen");
-  const [password, setPassword] = useState("250696Aa@");
-  const [confirmPassword, setConfirmPassword] = useState("250696Aa@");
-  const [errors, setErrors] = useState({
-    email: "",
-    username: "",
-    password: "",
-    confirmPassword: "",
-    displayName: "",
-  });
+
+  const emailInputRef = useRef<any>(null);
+  const usernameInputRef = useRef<any>(null);
+  const displayNameInputRef = useRef<any>(null);
+  const passwordInputRef = useRef<any>(null);
+  const confirmPasswordInputRef = useRef<any>(null);
 
   const styles = React.useMemo(() => createStyles(colors), [colors]);
 
-
-  const handleRegister = async () => {
-    // Validate
-    const newErrors = {
+  // Form validation với hook
+  const {
+    values,
+    errors,
+    touched,
+    handleChange,
+    handleBlur,
+    validateForm,
+    setError,
+  } = useFormValidation<RegisterFormValues>(
+    {
       email: "",
       username: "",
+      displayName: "",
       password: "",
       confirmPassword: "",
-      displayName: "",
-    };
-    if (!email) newErrors.email = t("validation.emailRequired");
-    if (!username) newErrors.username = t("validation.usernameRequired");
-    if (!password) newErrors.password = t("validation.passwordRequired");
-    if (password !== confirmPassword)
-      newErrors.confirmPassword = t("validation.passwordNotMatch");
-    if (!displayName)
-      newErrors.displayName = t("validation.displayNameRequired");
+    },
+    {
+      email: ValidationPresets.email,
+      username: ValidationPresets.username,
+      displayName: ValidationPresets.required("Tên hiển thị"),
+      password: ValidationPresets.strongPassword,
+      confirmPassword: (value: string) =>
+        ValidationPresets.match("Mật khẩu", values.password)(value),
+    }
+  );
 
-    setErrors(newErrors);
-    if (Object.values(newErrors).some((e) => e)) return;
+  // Auto-focus email input khi mount
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      emailInputRef.current?.focus();
+    }, 500);
+    return () => clearTimeout(timeout);
+  }, []);
+
+  const handleRegister = async () => {
+    // Dismiss keyboard
+    Keyboard.dismiss();
+
+    // Validate form
+    const isValid = validateForm();
+    if (!isValid) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      return;
+    }
+
+    // Haptic feedback
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
     try {
-      await register(email, password, username, displayName);
+      await register(
+        values.email,
+        values.password,
+        values.username,
+        values.displayName
+      );
+
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+
       showSuccess(
         t("auth.registerSuccess") || "Đăng ký thành công!",
         t("auth.registerSuccessMessage") ||
@@ -76,11 +119,20 @@ export const RegisterScreen: React.FC = () => {
       );
     } catch (error: any) {
       console.log("Register error:", error);
-      if (error?.errors?.email) newErrors.email = t(error?.errors.email);
-      if (error?.errors?.username) newErrors.username = t(error?.errors.username);
-      if (error?.errors?.password) newErrors.password = t(error?.errors.password);
-      if (error?.errors?.displayName) newErrors.displayName = t(error?.errors.displayName);
-      setErrors(newErrors);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+
+      // Hiển thị error từ backend
+      if (error?.errors) {
+        if (error.errors.email) setError("email", error.errors.email);
+        if (error.errors.username) setError("username", error.errors.username);
+        if (error.errors.password) setError("password", error.errors.password);
+        if (error.errors.displayName)
+          setError("displayName", error.errors.displayName);
+      } else if (error?.message) {
+        showError("Đăng ký thất bại", error.message);
+      } else {
+        showError("Lỗi", "Đăng ký thất bại. Vui lòng thử lại.");
+      }
     }
   };
 
@@ -132,66 +184,121 @@ export const RegisterScreen: React.FC = () => {
           >
             <View style={styles.form}>
               <Input
+                ref={emailInputRef}
                 label={t("auth.email")}
                 placeholder={t("auth.emailPlaceholder")}
-                value={email}
-                onChangeText={setEmail}
-                error={errors.email}
+                value={values.email}
+                onChangeText={handleChange("email")}
+                onBlur={handleBlur("email")}
+                error={touched.email ? errors.email : ""}
+                leftIcon="email-outline"
                 keyboardType="email-address"
                 autoCapitalize="none"
+                autoCorrect={false}
+                returnKeyType="next"
+                onSubmitEditing={() => usernameInputRef.current?.focus()}
+                blurOnSubmit={false}
               />
 
               <Input
+                ref={usernameInputRef}
                 label={t("auth.username")}
                 placeholder={t("auth.usernamePlaceholder")}
-                value={username}
-                onChangeText={setUsername}
-                error={errors.username}
+                value={values.username}
+                onChangeText={handleChange("username")}
+                onBlur={handleBlur("username")}
+                error={touched.username ? errors.username : ""}
+                leftIcon="at"
                 autoCapitalize="none"
+                autoCorrect={false}
+                returnKeyType="next"
+                onSubmitEditing={() => displayNameInputRef.current?.focus()}
+                blurOnSubmit={false}
               />
 
               <Input
-                label={t("auth.password")}
-                placeholder={t("auth.passwordPlaceholder")}
-                value={password}
-                onChangeText={setPassword}
-                error={errors.password}
-                secureTextEntry
-              />
-
-              <Input
-                label={t("auth.confirmPassword")}
-                placeholder={t("auth.passwordPlaceholder")}
-                value={confirmPassword}
-                onChangeText={setConfirmPassword}
-                error={errors.confirmPassword}
-                secureTextEntry
-              />
-
-              <Input
+                ref={displayNameInputRef}
                 label={t("auth.displayName")}
                 placeholder={t("auth.displayNamePlaceholder")}
-                value={displayName}
-                onChangeText={setDisplayName}
-                error={errors.displayName}
+                value={values.displayName}
+                onChangeText={handleChange("displayName")}
+                onBlur={handleBlur("displayName")}
+                error={touched.displayName ? errors.displayName : ""}
+                leftIcon="account-outline"
+                returnKeyType="next"
+                onSubmitEditing={() => passwordInputRef.current?.focus()}
+                blurOnSubmit={false}
+              />
+
+              <Input
+                ref={passwordInputRef}
+                label={t("auth.password")}
+                placeholder={t("auth.passwordPlaceholder")}
+                value={values.password}
+                onChangeText={handleChange("password")}
+                onBlur={handleBlur("password")}
+                error={touched.password ? errors.password : ""}
+                leftIcon="lock-outline"
+                showPasswordToggle
+                returnKeyType="next"
+                onSubmitEditing={() => confirmPasswordInputRef.current?.focus()}
+                blurOnSubmit={false}
+              />
+
+              {/* Password Strength Indicator */}
+              {values.password.length > 0 && (
+                <PasswordStrengthIndicator password={values.password} />
+              )}
+
+              <Input
+                ref={confirmPasswordInputRef}
+                label={t("auth.confirmPassword")}
+                placeholder={t("auth.passwordPlaceholder")}
+                value={values.confirmPassword}
+                onChangeText={handleChange("confirmPassword")}
+                onBlur={handleBlur("confirmPassword")}
+                error={touched.confirmPassword ? errors.confirmPassword : ""}
+                leftIcon="lock-check-outline"
+                showPasswordToggle
+                returnKeyType="go"
+                onSubmitEditing={handleRegister}
               />
 
               <TouchableOpacity
-                style={styles.registerButton}
+                style={[
+                  styles.registerButton,
+                  isLoading && styles.registerButtonDisabled,
+                ]}
                 onPress={handleRegister}
                 disabled={isLoading}
                 activeOpacity={0.8}
               >
                 <LinearGradient
-                  colors={["#737ab8ff", "#384bf9ff"]}
+                  colors={
+                    isLoading
+                      ? ["#9CA3AF", "#6B7280"]
+                      : ["#737ab8ff", "#384bf9ff"]
+                  }
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                   style={styles.registerButtonGradient}
                 >
+                  {isLoading ? (
+                    <ActivityIndicator
+                      size="small"
+                      color={colors.neutral.white}
+                      style={{ marginRight: spacing.xs }}
+                    />
+                  ) : (
+                    <MaterialCommunityIcons
+                      name="account-plus"
+                      size={20}
+                      color={colors.neutral.white}
+                      style={{ marginRight: spacing.xs }}
+                    />
+                  )}
                   <Text style={styles.registerButtonText}>
-                    {isLoading
-                      ? t("auth.processing")
-                      : t("auth.register")}
+                    {isLoading ? t("auth.processing") : t("auth.register")}
                   </Text>
                 </LinearGradient>
               </TouchableOpacity>
@@ -302,7 +409,12 @@ const createStyles = (colors: any) =>
     },
     registerButtonGradient: {
       paddingVertical: spacing.md + 4,
+      flexDirection: "row",
       alignItems: "center",
+      justifyContent: "center",
+    },
+    registerButtonDisabled: {
+      opacity: 0.7,
     },
     registerButtonText: {
       fontSize: typography.fontSize.lg,

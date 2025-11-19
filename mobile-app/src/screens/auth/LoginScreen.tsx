@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,51 +7,97 @@ import {
   Platform,
   ScrollView,
   TouchableOpacity,
-  Alert,
+  ActivityIndicator,
+  Keyboard,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import * as Haptics from 'expo-haptics';
 import { useTheme } from '../../contexts/ThemeContext';
 import { typography } from '../../theme/typography';
 import { spacing, borderRadius } from '../../theme/spacing';
-import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../i18n/LanguageContext';
-import { blue } from 'react-native-reanimated/lib/typescript/Colors';
+import { useFormValidation, ValidationPresets } from '../../hooks/useFormValidation';
+import { useAlert } from '../../hooks/useAlert';
+
+interface LoginFormValues {
+  email: string;
+  password: string;
+}
 
 export const LoginScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const { login, isLoading } = useAuth();
   const { t } = useLanguage();
   const { colors, isDarkMode } = useTheme();
-  const [email, setEmail] = useState('williamnguyen8888@gmail.com');
-  const [password, setPassword] = useState('250696Aa@');
-  const [errors, setErrors] = useState({ email: '', password: '' });
+  const { showError } = useAlert();
+  const emailInputRef = useRef<any>(null);
+  const passwordInputRef = useRef<any>(null);
 
   const styles = React.useMemo(() => createStyles(colors), [colors]);
 
-  const handleLogin = async () => { 
-    // Validate
-    const newErrors = { email: '', password: '' };
-    if (!email) newErrors.email = t('validation.emailRequired');
-    if (!password) newErrors.password = t('validation.passwordRequired');
-    
-    setErrors(newErrors);
-    if (newErrors.email || newErrors.password) {
-      console.log('Validation errors:', newErrors);
+  // Form validation với hook
+  const {
+    values,
+    errors,
+    touched,
+    handleChange,
+    handleBlur,
+    validateForm,
+    setError,
+  } = useFormValidation<LoginFormValues>(
+    {
+      email: '',
+      password: '',
+    },
+    {
+      email: ValidationPresets.email,
+      password: ValidationPresets.required('Mật khẩu'),
+    }
+  );
+
+  // Auto-focus email input khi mount
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      emailInputRef.current?.focus();
+    }, 500);
+    return () => clearTimeout(timeout);
+  }, []);
+
+  const handleLogin = async () => {
+    // Dismiss keyboard
+    Keyboard.dismiss();
+
+    // Validate form
+    const isValid = validateForm();
+    if (!isValid) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       return;
     }
 
+    // Haptic feedback
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
     try {
-      console.log('Attempting login...');
-      await login(email, password);
-      console.log('Login successful!');
-    } catch (error) {
+      await login(values.email, values.password);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } catch (error: any) {
       console.error('Login error:', error);
-      Alert.alert(t('errors.error'), t('errors.loginFailed'));
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+
+      // Hiển thị error từ backend
+      if (error?.message) {
+        showError('Đăng nhập thất bại', error.message);
+      } else if (error?.statusCode === 401) {
+        setError('email', 'Email hoặc mật khẩu không đúng');
+        setError('password', 'Email hoặc mật khẩu không đúng');
+      } else {
+        showError('Lỗi', 'Đăng nhập thất bại. Vui lòng thử lại.');
+      }
     }
   };
 
@@ -125,22 +171,34 @@ export const LoginScreen: React.FC = () => {
           <BlurView intensity={isDarkMode ? 60 : 100} tint={isDarkMode ? 'dark' : 'light'} style={styles.formCard}>
             <View style={styles.form}>
               <Input
+                ref={emailInputRef}
                 label={t('auth.email')}
                 placeholder={t('auth.emailPlaceholder')}
-                value={email}
-                onChangeText={setEmail}
-                error={errors.email}
+                value={values.email}
+                onChangeText={handleChange('email')}
+                onBlur={handleBlur('email')}
+                error={touched.email ? errors.email : ''}
+                leftIcon="email-outline"
                 keyboardType="email-address"
                 autoCapitalize="none"
+                autoCorrect={false}
+                returnKeyType="next"
+                onSubmitEditing={() => passwordInputRef.current?.focus()}
+                blurOnSubmit={false}
               />
 
               <Input
+                ref={passwordInputRef}
                 label={t('auth.password')}
                 placeholder={t('auth.passwordPlaceholder')}
-                value={password}
-                onChangeText={setPassword}
-                error={errors.password}
-                secureTextEntry
+                value={values.password}
+                onChangeText={handleChange('password')}
+                onBlur={handleBlur('password')}
+                error={touched.password ? errors.password : ''}
+                leftIcon="lock-outline"
+                showPasswordToggle
+                returnKeyType="go"
+                onSubmitEditing={handleLogin}
               />
 
               <TouchableOpacity style={styles.forgotPassword}>
@@ -148,27 +206,26 @@ export const LoginScreen: React.FC = () => {
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={styles.loginButton}
+                style={[styles.loginButton, isLoading && styles.loginButtonDisabled]}
                 onPress={handleLogin}
                 disabled={isLoading}
                 activeOpacity={0.8}
               >
                 <LinearGradient
-                  colors={['#F59E0B', '#EF4444']}
+                  colors={isLoading ? ['#9CA3AF', '#6B7280'] : ['#F59E0B', '#EF4444']}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                   style={styles.loginButtonGradient}
                 >
                   {isLoading ? (
-                    <MaterialCommunityIcons
-                      name="loading" // Spinner icon for loading state
-                      size={20}
+                    <ActivityIndicator
+                      size="small"
                       color={colors.neutral.white}
                       style={{ marginRight: spacing.xs }}
                     />
                   ) : (
                     <MaterialCommunityIcons
-                      name="login" // Default login icon
+                      name="login"
                       size={20}
                       color={colors.neutral.white}
                       style={{ marginRight: spacing.xs }}
@@ -179,9 +236,6 @@ export const LoginScreen: React.FC = () => {
                   </Text>
                 </LinearGradient>
               </TouchableOpacity>
-
-              {/* Demo Account Info */}
-              
             </View>
           </BlurView>
 
@@ -300,6 +354,9 @@ const createStyles = (colors: any) => StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  loginButtonDisabled: {
+    opacity: 0.7,
   },
   loginButtonText: {
     fontSize: typography.fontSize.lg,
