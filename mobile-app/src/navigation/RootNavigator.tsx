@@ -128,23 +128,14 @@ const CustomTabBar = ({ state, descriptors, navigation }: any) => {
   const tabBarWidth = screenWidth - 40; // Trừ đi paddingHorizontal (20 * 2)
   const tabWidth = tabBarWidth / state.routes.length;
   const translateX = useRef(new Animated.Value(0)).current;
-  const indicatorWidth = useRef(new Animated.Value(60)).current;
 
   useEffect(() => {
-    Animated.parallel([
-      Animated.spring(translateX, {
-        toValue: state.index * tabWidth + (tabWidth - 60) / 2,
-        useNativeDriver: true,
-        friction: 8,
-        tension: 120,
-      }),
-      Animated.spring(indicatorWidth, {
-        toValue: 60,
-        useNativeDriver: false,
-        friction: 8,
-        tension: 120,
-      }),
-    ]).start();
+    Animated.spring(translateX, {
+      toValue: state.index * tabWidth + (tabWidth - 60) / 2,
+      useNativeDriver: true,
+      friction: 8,
+      tension: 120,
+    }).start();
   }, [state.index, tabWidth]);
 
   return (
@@ -163,7 +154,6 @@ const CustomTabBar = ({ state, descriptors, navigation }: any) => {
         style={[
           styles.activeTabIndicator,
           {
-            width: indicatorWidth,
             backgroundColor: colors.primary.main,
             transform: [{ translateX }],
           },
@@ -228,6 +218,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 0,
     left: 20,
+    width: 60,
     height: 3.5,
     borderBottomLeftRadius: 2,
     borderBottomRightRadius: 2,
