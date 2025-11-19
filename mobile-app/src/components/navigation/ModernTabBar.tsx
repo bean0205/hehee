@@ -37,19 +37,20 @@ const TabButton: React.FC<TabButtonProps> = ({
   colors,
 }) => {
   const scaleValue = useRef(new Animated.Value(1)).current;
-  const dotOpacity = useRef(new Animated.Value(0)).current;
+  const opacityValue = useRef(new Animated.Value(isFocused ? 1 : 0.5)).current;
 
   useEffect(() => {
     Animated.parallel([
-      // Subtle scale animation on active
+      // Scale animation with bounce effect
       Animated.spring(scaleValue, {
-        toValue: isFocused ? 1.05 : 1,
+        toValue: isFocused ? 1.1 : 1,
         ...SPRING_CONFIG,
       }),
-      // Dot indicator animation
-      Animated.spring(dotOpacity, {
-        toValue: isFocused ? 1 : 0,
-        ...SPRING_CONFIG,
+      // Opacity animation for smooth fade
+      Animated.timing(opacityValue, {
+        toValue: isFocused ? 1 : 0.5,
+        duration: 250,
+        useNativeDriver: true,
       }),
     ]).start();
   }, [isFocused]);
@@ -58,6 +59,20 @@ const TabButton: React.FC<TabButtonProps> = ({
     if (Platform.OS === 'ios') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
+
+    // Tap animation
+    Animated.sequence([
+      Animated.timing(scaleValue, {
+        toValue: 0.85,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+      Animated.spring(scaleValue, {
+        toValue: isFocused ? 1.1 : 1,
+        ...SPRING_CONFIG,
+      }),
+    ]).start();
+
     onPress();
   };
 
@@ -73,12 +88,12 @@ const TabButton: React.FC<TabButtonProps> = ({
         flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
-        paddingVertical: 12,
+        paddingVertical: 8,
       }}
       android_ripple={{
         color: colors.primary.main + '15',
         borderless: true,
-        radius: 32,
+        radius: 28,
       }}
     >
       <Animated.View
@@ -89,31 +104,16 @@ const TabButton: React.FC<TabButtonProps> = ({
           },
           {
             transform: [{ scale: scaleValue }],
+            opacity: opacityValue,
           },
         ]}
       >
-        {/* Icon only - no labels */}
+        {/* Icon only - no labels, no dots */}
         {options.tabBarIcon?.({
           focused: isFocused,
           color: iconColor,
-          size: 26,
+          size: 27,
         })}
-
-        {/* Subtle dot indicator below icon (optional) */}
-        <Animated.View
-          style={[
-            {
-              width: 4,
-              height: 4,
-              borderRadius: 2,
-              backgroundColor: colors.primary.main,
-              marginTop: 4,
-            },
-            {
-              opacity: dotOpacity,
-            },
-          ]}
-        />
       </Animated.View>
     </Pressable>
   );
@@ -128,12 +128,20 @@ interface FABButtonProps {
 
 const FABButton: React.FC<FABButtonProps> = ({ onPress, colors, isFocused }) => {
   const scaleValue = useRef(new Animated.Value(1)).current;
+  const opacityValue = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
-    Animated.spring(scaleValue, {
-      toValue: isFocused ? 1.05 : 1,
-      ...SPRING_CONFIG,
-    }).start();
+    Animated.parallel([
+      Animated.spring(scaleValue, {
+        toValue: isFocused ? 1.08 : 1,
+        ...SPRING_CONFIG,
+      }),
+      Animated.timing(opacityValue, {
+        toValue: isFocused ? 1 : 0.95,
+        duration: 250,
+        useNativeDriver: true,
+      }),
+    ]).start();
   }, [isFocused]);
 
   const handlePress = () => {
@@ -141,10 +149,10 @@ const FABButton: React.FC<FABButtonProps> = ({ onPress, colors, isFocused }) => 
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
 
-    // Quick press animation
+    // Press animation with bounce
     Animated.sequence([
       Animated.timing(scaleValue, {
-        toValue: 0.92,
+        toValue: 0.88,
         duration: 100,
         useNativeDriver: true,
       }),
@@ -164,15 +172,15 @@ const FABButton: React.FC<FABButtonProps> = ({ onPress, colors, isFocused }) => 
         flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
-        paddingVertical: 12,
+        paddingVertical: 8,
       }}
     >
       <Animated.View
         style={[
           {
-            width: 48,
-            height: 48,
-            borderRadius: 12,
+            width: 46,
+            height: 46,
+            borderRadius: 11,
             backgroundColor: colors.primary.main,
             alignItems: 'center',
             justifyContent: 'center',
@@ -190,10 +198,11 @@ const FABButton: React.FC<FABButtonProps> = ({ onPress, colors, isFocused }) => 
           },
           {
             transform: [{ scale: scaleValue }],
+            opacity: opacityValue,
           },
         ]}
       >
-        <MaterialCommunityIcons name="plus" size={28} color="#FFFFFF" />
+        <MaterialCommunityIcons name="plus" size={26} color="#FFFFFF" />
       </Animated.View>
     </Pressable>
   );
@@ -297,10 +306,11 @@ const createStyles = (colors: any, insets: any, isDarkMode: boolean) =>
     },
     tabsContainer: {
       flexDirection: 'row',
-      paddingTop: 4,
-      paddingBottom: Math.max(insets.bottom, 4),
+      paddingTop: 2,
+      paddingBottom: Math.max(insets.bottom, 2),
       alignItems: 'center',
       justifyContent: 'space-around',
       backgroundColor: 'transparent',
+      height: 52,
     },
   });
