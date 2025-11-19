@@ -88,12 +88,12 @@ const TabButton: React.FC<TabButtonProps> = ({
         flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
-        paddingVertical: 8,
+        paddingVertical: 10,
       }}
       android_ripple={{
         color: colors.primary.main + '15',
         borderless: true,
-        radius: 28,
+        radius: 30,
       }}
     >
       <Animated.View
@@ -112,7 +112,7 @@ const TabButton: React.FC<TabButtonProps> = ({
         {options.tabBarIcon?.({
           focused: isFocused,
           color: iconColor,
-          size: 27,
+          size: 26,
         })}
       </Animated.View>
     </Pressable>
@@ -172,15 +172,15 @@ const FABButton: React.FC<FABButtonProps> = ({ onPress, colors, isFocused }) => 
         flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
-        paddingVertical: 8,
+        paddingVertical: 10,
       }}
     >
       <Animated.View
         style={[
           {
-            width: 46,
-            height: 46,
-            borderRadius: 11,
+            width: 48,
+            height: 48,
+            borderRadius: 12,
             backgroundColor: colors.primary.main,
             alignItems: 'center',
             justifyContent: 'center',
@@ -188,11 +188,11 @@ const FABButton: React.FC<FABButtonProps> = ({ onPress, colors, isFocused }) => 
               ios: {
                 shadowColor: '#000',
                 shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.15,
-                shadowRadius: 6,
+                shadowOpacity: 0.2,
+                shadowRadius: 8,
               },
               android: {
-                elevation: 6,
+                elevation: 8,
               },
             }),
           },
@@ -202,7 +202,7 @@ const FABButton: React.FC<FABButtonProps> = ({ onPress, colors, isFocused }) => 
           },
         ]}
       >
-        <MaterialCommunityIcons name="plus" size={26} color="#FFFFFF" />
+        <MaterialCommunityIcons name="plus" size={28} color="#FFFFFF" />
       </Animated.View>
     </Pressable>
   );
@@ -306,11 +306,11 @@ const createStyles = (colors: any, insets: any, isDarkMode: boolean) =>
     },
     tabsContainer: {
       flexDirection: 'row',
-      paddingTop: 2,
-      paddingBottom: Math.max(insets.bottom, 2),
+      paddingTop: 6,
+      paddingBottom: Math.max(insets.bottom + 4, 8),
       alignItems: 'center',
       justifyContent: 'space-around',
       backgroundColor: 'transparent',
-      height: 52,
+      minHeight: 60,
     },
   });
