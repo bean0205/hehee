@@ -225,16 +225,19 @@ export const FeedScreenV2: React.FC = () => {
   return (
     <View style={styles.container}>
       <Header
-        title={t('feed.feed')}
-        gradientColors={['#3B82F6', '#60A5FA', '#93C5FD']}
+        title="Feed"
+        variant="logo"
+        logo="PinYourWord"
         actions={[
           {
-            icon: 'magnify',
-            onPress: () => console.log('Search'),
+            icon: 'heart-outline',
+            onPress: () => console.log('Likes'),
+            badge: 3,
           },
           {
-            icon: 'bell-outline',
-            onPress: () => console.log('Notifications'),
+            icon: 'chat-outline',
+            onPress: () => console.log('Messages'),
+            badge: 5,
           },
         ]}
       />

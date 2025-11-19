@@ -2,12 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import {
   View,
   StyleSheet,
-  TouchableOpacity,
   Text,
-  TextInput,
-  Modal,
-  FlatList,
-  Alert,
   ActivityIndicator,
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -20,6 +15,7 @@ import { usePin } from "../../contexts/PinContext";
 import { useNavigation } from "@react-navigation/native";
 import { MainTabCompositeNavigationProp } from "../../types/navigation";
 import { errorHandler } from "../../services/errorHandler";
+import { SearchHeader } from "../../components/common/SearchHeader";
 
 export const MapScreen: React.FC = () => {
   const navigation = useNavigation<MainTabCompositeNavigationProp<'Map'>>();
@@ -28,11 +24,10 @@ export const MapScreen: React.FC = () => {
   const { t } = useLanguage();
   const mapRef = useRef<MapView>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [searchModalVisible, setSearchModalVisible] = useState(false);
-  const [searchResults, setSearchResults] = useState<any[]>([]);
   const [pinsState, setPinsState] = useState(pins);
   const [isLoadingPins, setIsLoadingPins] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [showFilterModal, setShowFilterModal] = useState(false);
 
   useEffect(() => {
     const fetchPins = async () => {
@@ -109,20 +104,26 @@ export const MapScreen: React.FC = () => {
 
   const handleSearch = (text: string) => {
     setSearchQuery(text);
-    // Mock search results
+    // TODO: Implement actual search logic
     if (text.length > 2) {
-      setSearchResults([
-        { id: "1", name: "Hồ Hoàn Kiếm, Hà Nội", lat: 21.0285, lng: 105.8542 },
-        {
-          id: "2",
-          name: "Vịnh Hạ Long, Quảng Ninh",
-          lat: 20.9101,
-          lng: 107.1839,
-        },
-      ]);
+      // Filter pins based on search query
+      const filtered = pins.filter(pin =>
+        pin.name?.toLowerCase().includes(text.toLowerCase()) ||
+        pin.description?.toLowerCase().includes(text.toLowerCase())
+      );
+      setPinsState(filtered);
     } else {
-      setSearchResults([]);
+      setPinsState(pins);
     }
+  };
+
+  const handleSearchSubmit = () => {
+    console.log('Search submitted:', searchQuery);
+    // TODO: Navigate to search results screen
+  };
+
+  const handleClearSearch = () => {
+    setPinsState(pins);
   };
 
   const handleMarkerPress = (pinId: string) => {
@@ -217,6 +218,17 @@ export const MapScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
+      {/* Search Header */}
+      <SearchHeader
+        placeholder={t("map.searchPlaceholder") || "Search places..."}
+        value={searchQuery}
+        onChangeText={handleSearch}
+        onSubmit={handleSearchSubmit}
+        onClear={handleClearSearch}
+        showFilter
+        onFilterPress={() => setShowFilterModal(true)}
+      />
+
       {/* Map */}
       <MapView
         ref={mapRef}
@@ -259,7 +271,7 @@ export const MapScreen: React.FC = () => {
               />
             </View>
           </Marker>
-        ))} 
+        ))}
       </MapView>
 
       {/* Loading Overlay */}
@@ -271,84 +283,6 @@ export const MapScreen: React.FC = () => {
           </View>
         </View>
       )}
-
-      {/* Search Bar */}
-      <View style={styles.searchBarContainer}>
-        <TouchableOpacity
-          style={styles.searchBar}
-          onPress={() => setSearchModalVisible(true)}
-        >
-          <MaterialCommunityIcons
-            name="magnify"
-            size={20}
-            color={colors.text.secondary}
-          />
-          <Text style={styles.searchPlaceholder}>
-            {t("map.searchPlaceholder")}
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Search Modal */}
-      <Modal
-        visible={searchModalVisible}
-        animationType="slide"
-        onRequestClose={() => setSearchModalVisible(false)}
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalHeader}>
-            <TouchableOpacity onPress={() => setSearchModalVisible(false)}>
-              <MaterialCommunityIcons
-                name="close"
-                size={24}
-                color={colors.text.primary}
-              />
-            </TouchableOpacity>
-            <TextInput
-              style={styles.modalSearchInput}
-              placeholder={t("map.searchPlaceholder")}
-              placeholderTextColor={colors.text.secondary}
-              value={searchQuery}
-              onChangeText={handleSearch}
-              autoFocus
-            />
-          </View>
-          <FlatList
-            data={searchResults}
-            keyExtractor={(item) => item.id}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                style={styles.searchResultItem}
-                onPress={() => {
-                  setSearchModalVisible(false);
-                  mapRef.current?.animateToRegion({
-                    latitude: item.lat,
-                    longitude: item.lng,
-                    latitudeDelta: 0.05,
-                    longitudeDelta: 0.05,
-                  });
-                }}
-              >
-                <MaterialCommunityIcons
-                  name="map-marker"
-                  size={20}
-                  color={colors.primary.main}
-                />
-                <Text style={styles.searchResultName}>{item.name}</Text>
-              </TouchableOpacity>
-            )}
-            ListEmptyComponent={
-              <View style={styles.emptyState}>
-                <Text style={styles.emptyStateText}>
-                  {searchQuery.length > 2
-                    ? t("map.noResults")
-                    : t("map.searchHint")}
-                </Text>
-              </View>
-            }
-          />
-        </View>
-      </Modal>
     </View>
   );
 };
@@ -361,32 +295,6 @@ const createStyles = (colors: any) =>
     map: {
       flex: 1,
     },
-    searchBarContainer: {
-      position: "absolute",
-      top: 60,
-      left: spacing.md,
-      right: spacing.md,
-    },
-    searchBar: {
-      backgroundColor: colors.background.card,
-      borderRadius: borderRadius.lg,
-      padding: spacing.md,
-      flexDirection: "row",
-      alignItems: "center",
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.2,
-      shadowRadius: 4,
-      elevation: 5,
-    },
-    searchIcon: {
-      fontSize: 20,
-      marginRight: spacing.sm,
-    },
-    searchPlaceholder: {
-      fontSize: typography.fontSize.base,
-      color: colors.text.secondary,
-    },
     markerContainer: {
       width: 40,
       height: 40,
@@ -395,54 +303,6 @@ const createStyles = (colors: any) =>
       justifyContent: "center",
       borderWidth: 3,
       borderColor: colors.background.card,
-    },
-    markerText: {
-      fontSize: 20,
-    },
-    modalContainer: {
-      flex: 1,
-      backgroundColor: colors.background.main,
-    },
-    modalHeader: {
-      flexDirection: "row",
-      alignItems: "center",
-      padding: spacing.md,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border.main,
-    },
-    modalCloseButton: {
-      fontSize: 24,
-      color: colors.text.secondary,
-      marginRight: spacing.md,
-    },
-    modalSearchInput: {
-      flex: 1,
-      fontSize: typography.fontSize.base,
-      color: colors.text.primary,
-    },
-    searchResultItem: {
-      flexDirection: "row",
-      alignItems: "center",
-      padding: spacing.md,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border.light,
-    },
-    searchResultIcon: {
-      fontSize: 24,
-      marginRight: spacing.md,
-    },
-    searchResultName: {
-      fontSize: typography.fontSize.base,
-      color: colors.text.primary,
-    },
-    emptyState: {
-      alignItems: "center",
-      justifyContent: "center",
-      paddingVertical: spacing.xl,
-    },
-    emptyStateText: {
-      fontSize: typography.fontSize.base,
-      color: colors.text.secondary,
     },
     loadingOverlay: {
       ...StyleSheet.absoluteFillObject,

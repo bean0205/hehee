@@ -45,7 +45,7 @@ import { FeedScreenV2 } from '../screens/main/FeedScreen.v2';
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 
-// Tab Button Component with Animation
+// Tab Button Component with Animation - Instagram Style
 const TabButton = ({
   route,
   index,
@@ -55,17 +55,17 @@ const TabButton = ({
   colors,
 }: any) => {
   const scaleValue = useRef(new Animated.Value(1)).current;
-  const backgroundOpacity = useRef(new Animated.Value(0)).current;
+  const labelOpacity = useRef(new Animated.Value(isFocused ? 1 : 0)).current;
 
   useEffect(() => {
     Animated.parallel([
       Animated.spring(scaleValue, {
-        toValue: isFocused ? 1.1 : 1,
+        toValue: isFocused ? 1 : 0.9,
         useNativeDriver: true,
-        friction: 7,
+        friction: 8,
         tension: 100,
       }),
-      Animated.timing(backgroundOpacity, {
+      Animated.timing(labelOpacity, {
         toValue: isFocused ? 1 : 0,
         duration: 200,
         useNativeDriver: true,
@@ -80,6 +80,9 @@ const TabButton = ({
     onPress();
   };
 
+  // Get label from options
+  const label = options.title || route.name;
+
   return (
     <Pressable
       key={route.key}
@@ -88,20 +91,11 @@ const TabButton = ({
       onPress={handlePress}
       style={styles.tabButton}
       android_ripple={{
-        color: colors.primary.main + '20',
+        color: colors.primary.main + '10',
         borderless: true,
-        radius: 32
+        radius: 28
       }}
     >
-      <Animated.View
-        style={[
-          styles.tabBackground,
-          {
-            opacity: backgroundOpacity,
-            backgroundColor: colors.primary.main + '15',
-          },
-        ]}
-      />
       <Animated.View
         style={[
           styles.tabContent,
@@ -113,30 +107,42 @@ const TabButton = ({
         {options.tabBarIcon?.({
           focused: isFocused,
           color: isFocused ? colors.primary.main : colors.text.secondary,
-          size: 26,
+          size: isFocused ? 26 : 24,
         })}
+
+        {/* Label - Instagram Style (only show when focused) */}
+        <Animated.Text
+          style={[
+            styles.tabLabel,
+            {
+              opacity: labelOpacity,
+              color: colors.primary.main,
+            },
+          ]}
+          numberOfLines={1}
+        >
+          {label}
+        </Animated.Text>
       </Animated.View>
+
+      {/* Badge notification (optional) */}
+      {options.tabBarBadge && (
+        <View style={[styles.tabBadge, { backgroundColor: colors.error }]}>
+          <Text style={styles.tabBadgeText}>
+            {typeof options.tabBarBadge === 'number' && options.tabBarBadge > 9
+              ? '9+'
+              : options.tabBarBadge}
+          </Text>
+        </View>
+      )}
     </Pressable>
   );
 };
 
-// Modern Bottom Tab Bar with Material Icons
+// Modern Bottom Tab Bar - Instagram Style (No Indicator)
 const CustomTabBar = ({ state, descriptors, navigation }: any) => {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
-  const screenWidth = Dimensions.get("window").width;
-  const tabBarWidth = screenWidth - 40; // Trừ đi paddingHorizontal (20 * 2)
-  const tabWidth = tabBarWidth / state.routes.length;
-  const translateX = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    Animated.spring(translateX, {
-      toValue: state.index * tabWidth + (tabWidth - 60) / 2,
-      useNativeDriver: true,
-      friction: 8,
-      tension: 120,
-    }).start();
-  }, [state.index, tabWidth]);
 
   return (
     <View
@@ -144,22 +150,11 @@ const CustomTabBar = ({ state, descriptors, navigation }: any) => {
         styles.tabBarContainer,
         {
           backgroundColor: colors.background.card,
-          paddingBottom: Math.max(insets.bottom, 8),
+          paddingBottom: Math.max(insets.bottom, 4),
           borderTopColor: colors.border.light,
         },
       ]}
     >
-      {/* Animated indicator bar */}
-      <Animated.View
-        style={[
-          styles.activeTabIndicator,
-          {
-            backgroundColor: colors.primary.main,
-            transform: [{ translateX }],
-          },
-        ]}
-      />
-
       {state.routes.map((route: any, index: number) => {
         const { options } = descriptors[route.key];
         const isFocused = state.index === index;
@@ -180,6 +175,7 @@ const CustomTabBar = ({ state, descriptors, navigation }: any) => {
           <TabButton
             key={route.key}
             route={route}
+            index={index}
             isFocused={isFocused}
             onPress={onPress}
             options={options}
@@ -194,56 +190,62 @@ const CustomTabBar = ({ state, descriptors, navigation }: any) => {
 const styles = StyleSheet.create({
   tabBarContainer: {
     flexDirection: "row",
-    paddingHorizontal: 20,
-    paddingTop: 4,
-    borderTopWidth: 1,
-    elevation: 12,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: -3,
-    },
-    shadowOpacity: 0.08,
-    shadowRadius: 10,
+    paddingHorizontal: 8,
+    paddingTop: 8,
+    borderTopWidth: 0.5,
     ...Platform.select({
       ios: {
-        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+        backgroundColor: 'rgba(255, 255, 255, 0.98)',
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: -2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 8,
       },
       android: {
         elevation: 8,
+        backgroundColor: '#FFFFFF',
       },
     }),
-  },
-  activeTabIndicator: {
-    position: "absolute",
-    top: 0,
-    left: 20,
-    width: 60,
-    height: 3.5,
-    borderBottomLeftRadius: 2,
-    borderBottomRightRadius: 2,
-    shadowColor: "currentColor",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.4,
-    shadowRadius: 2,
   },
   tabButton: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    paddingVertical: 10,
-    maxWidth: 80,
+    paddingVertical: 6,
+    paddingHorizontal: 4,
+    minHeight: 56,
     position: 'relative',
-  },
-  tabBackground: {
-    position: 'absolute',
-    width: 56,
-    height: 56,
-    borderRadius: 28,
   },
   tabContent: {
     alignItems: "center",
     justifyContent: "center",
+    gap: 2,
+  },
+  tabLabel: {
+    fontSize: 10,
+    fontWeight: '600',
+    marginTop: 2,
+    letterSpacing: 0.1,
+  },
+  tabBadge: {
+    position: 'absolute',
+    top: 4,
+    right: '50%',
+    marginRight: -12,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    paddingHorizontal: 4,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+  },
+  tabBadgeText: {
+    fontSize: 9,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    includeFontPadding: false,
   },
 });
 

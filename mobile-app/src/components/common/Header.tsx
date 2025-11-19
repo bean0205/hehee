@@ -36,6 +36,12 @@ export interface HeaderProps {
   blurIntensity?: number;
   backgroundColor?: string;
   style?: ViewStyle;
+  // New props for Instagram-style header
+  variant?: 'default' | 'logo' | 'search';
+  logo?: string; // Logo text or image
+  subtitle?: string;
+  showSearch?: boolean;
+  onSearchPress?: () => void;
 }
 
 // Animated Button Component
@@ -96,6 +102,11 @@ export const Header: React.FC<HeaderProps> = ({
   blurIntensity = 20,
   backgroundColor,
   style,
+  variant = 'default',
+  logo,
+  subtitle,
+  showSearch = false,
+  onSearchPress,
 }) => {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
@@ -127,10 +138,85 @@ export const Header: React.FC<HeaderProps> = ({
 
   // Apply reduced padding only for headers with back button (no gradient/blur)
   const hasBackButtonOnly = showBackButton && !gradient && !blur;
-  
-  const headerContent = (
+
+  // Render Logo Header (Instagram style)
+  const renderLogoHeader = () => (
+    <View style={[styles.header, styles.logoHeader]}>
+      <View style={styles.headerLeft}>
+        {showBackButton && (
+          <AnimatedButton
+            onPress={onBackPress || (() => {})}
+            style={styles.backButton}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <MaterialCommunityIcons
+              name="arrow-left"
+              size={26}
+              color={colors.text.primary}
+            />
+          </AnimatedButton>
+        )}
+      </View>
+
+      <View style={styles.logoContainer}>
+        <Text style={styles.logoText} numberOfLines={1}>
+          {logo || title}
+        </Text>
+        {subtitle && (
+          <Text style={styles.logoSubtitle} numberOfLines={1}>
+            {subtitle}
+          </Text>
+        )}
+      </View>
+
+      <View style={styles.headerRight}>
+        {showSearch && (
+          <AnimatedButton
+            onPress={onSearchPress || (() => {})}
+            style={styles.headerButton}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <MaterialCommunityIcons
+              name="magnify"
+              size={24}
+              color={colors.text.primary}
+            />
+          </AnimatedButton>
+        )}
+        {actions.map((action, index) => (
+          <AnimatedButton
+            key={index}
+            onPress={action.onPress}
+            style={[styles.headerButton, { marginLeft: 8 }]}
+            testID={action.testID}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <MaterialCommunityIcons
+              name={action.icon as any}
+              size={24}
+              color={colors.text.primary}
+            />
+            {action.badge !== undefined && (
+              <Animated.View
+                style={[
+                  styles.notificationBadge,
+                  { transform: [{ scale: badgeScale }] }
+                ]}
+              >
+                <Text style={styles.notificationBadgeText}>
+                  {typeof action.badge === 'number' && action.badge > 99 ? '99+' : action.badge}
+                </Text>
+              </Animated.View>
+            )}
+          </AnimatedButton>
+        ))}
+      </View>
+    </View>
+  );
+
+  const headerContent = variant === 'logo' ? renderLogoHeader() : (
     <View style={[
-      styles.header, 
+      styles.header,
       hasBackButtonOnly && styles.headerWithBack,
       style
     ]}>
@@ -191,13 +277,14 @@ export const Header: React.FC<HeaderProps> = ({
               style={[
                 styles.headerButton,
                 (gradient || blur) && styles.headerButtonLight,
+                index > 0 && { marginLeft: 8 },
               ]}
               testID={action.testID}
               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             >
               <MaterialCommunityIcons
                 name={action.icon as any}
-                size={25}
+                size={24}
                 color={gradient || blur ? colors.neutral.white : colors.text.primary}
               />
               {action.badge !== undefined && (
@@ -280,13 +367,13 @@ const createStyles = (colors: any, insets: any) =>
       overflow: 'hidden',
     },
     headerSimple: {
-      paddingTop: insets.top + spacing.lg,
+      paddingTop: insets.top + spacing.md,
       paddingBottom: spacing.sm,
       shadowColor: colors.text.primary,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.08,
-      shadowRadius: 8,
-      elevation: 4,
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.05,
+      shadowRadius: 4,
+      elevation: 2,
       backgroundColor: colors.background.card,
     },
     headerSimpleWithBack: {
@@ -308,6 +395,7 @@ const createStyles = (colors: any, insets: any) =>
       alignItems: 'center',
       gap: spacing.sm,
       flex: 1,
+      minWidth: 40,
     },
     headerLeftWithBack: {
       gap: spacing.sm,
@@ -321,27 +409,25 @@ const createStyles = (colors: any, insets: any) =>
     headerRight: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: spacing.xs,
       minWidth: 40,
       justifyContent: 'flex-end',
     },
     backButton: {
-      width: 44,
-      height: 44,
-      borderRadius: 22,
+      width: 40,
+      height: 40,
+      borderRadius: 20,
       justifyContent: 'center',
       alignItems: 'center',
-      backgroundColor: colors.background.elevated + '40',
+      backgroundColor: 'transparent',
     },
     headerTitle: {
-      fontSize: typography.fontSize['2xl'],
+      fontSize: typography.fontSize.xl,
       fontWeight: typography.fontWeight.bold,
       color: colors.text.primary,
-      letterSpacing: -0.5,
-      lineHeight: typography.fontSize['2xl'] * 1.2,
+      letterSpacing: -0.3,
     },
     headerTitleCentered: {
-      fontSize: typography.fontSize.xl,
+      fontSize: typography.fontSize.lg,
       flex: 0,
       fontWeight: typography.fontWeight.semiBold,
     },
@@ -356,10 +442,10 @@ const createStyles = (colors: any, insets: any) =>
       flex: 1,
     },
     headerButton: {
-      width: 44,
-      height: 44,
-      borderRadius: 22,
-      backgroundColor: colors.background.elevated + '40',
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: 'transparent',
       justifyContent: 'center',
       alignItems: 'center',
       position: 'relative',
@@ -370,29 +456,49 @@ const createStyles = (colors: any, insets: any) =>
     },
     notificationBadge: {
       position: 'absolute',
-      top: 2,
-      right: 2,
+      top: 0,
+      right: 0,
       backgroundColor: colors.error,
-      borderRadius: 12,
-      minWidth: 20,
-      height: 20,
-      paddingHorizontal: 5,
+      borderRadius: 10,
+      minWidth: 18,
+      height: 18,
+      paddingHorizontal: 4,
       justifyContent: 'center',
       alignItems: 'center',
-      borderWidth: 2.5,
+      borderWidth: 2,
       borderColor: colors.background.card,
-      shadowColor: colors.error,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.5,
-      shadowRadius: 4,
-      elevation: 5,
     },
     notificationBadgeText: {
-      fontSize: 10,
+      fontSize: 9,
       fontWeight: typography.fontWeight.bold,
       color: colors.neutral.white,
       includeFontPadding: false,
       textAlign: 'center',
+    },
+    // Logo Header Styles (Instagram style)
+    logoHeader: {
+      paddingHorizontal: spacing.md,
+    },
+    logoContainer: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    logoText: {
+      fontSize: typography.fontSize['2xl'],
+      fontWeight: typography.fontWeight.bold,
+      color: colors.text.primary,
+      fontFamily: Platform.select({
+        ios: 'Cochin',
+        android: 'serif',
+      }),
+      letterSpacing: 0.5,
+    },
+    logoSubtitle: {
+      fontSize: typography.fontSize.xs,
+      fontWeight: typography.fontWeight.medium,
+      color: colors.text.secondary,
+      marginTop: 2,
     },
   });
 
