@@ -7,11 +7,13 @@ import {
   Dimensions,
   StyleSheet,
   Platform,
+  Pressable,
 } from "react-native";
 import { createStackNavigator } from "@react-navigation/stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { useNavigation } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import * as Haptics from "expo-haptics";
 import { useAuth } from "../contexts/AuthContext";
 import { useTheme } from "../contexts/ThemeContext";
 import { useLanguage } from "../i18n/LanguageContext";
@@ -53,25 +55,53 @@ const TabButton = ({
   colors,
 }: any) => {
   const scaleValue = useRef(new Animated.Value(1)).current;
+  const backgroundOpacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    Animated.spring(scaleValue, {
-      toValue: isFocused ? 1.15 : 1,
-      useNativeDriver: true,
-      friction: 6,
-      tension: 80,
-    }).start();
+    Animated.parallel([
+      Animated.spring(scaleValue, {
+        toValue: isFocused ? 1.1 : 1,
+        useNativeDriver: true,
+        friction: 7,
+        tension: 100,
+      }),
+      Animated.timing(backgroundOpacity, {
+        toValue: isFocused ? 1 : 0,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+    ]).start();
   }, [isFocused]);
 
+  const handlePress = () => {
+    if (Platform.OS === 'ios') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    onPress();
+  };
+
   return (
-    <TouchableOpacity
+    <Pressable
       key={route.key}
       accessibilityRole="button"
       accessibilityState={isFocused ? { selected: true } : {}}
-      onPress={onPress}
+      onPress={handlePress}
       style={styles.tabButton}
-      activeOpacity={0.7}
+      android_ripple={{
+        color: colors.primary.main + '20',
+        borderless: true,
+        radius: 32
+      }}
     >
+      <Animated.View
+        style={[
+          styles.tabBackground,
+          {
+            opacity: backgroundOpacity,
+            backgroundColor: colors.primary.main + '15',
+          },
+        ]}
+      />
       <Animated.View
         style={[
           styles.tabContent,
@@ -83,10 +113,10 @@ const TabButton = ({
         {options.tabBarIcon?.({
           focused: isFocused,
           color: isFocused ? colors.primary.main : colors.text.secondary,
-          size: 28,
+          size: 26,
         })}
       </Animated.View>
-    </TouchableOpacity>
+    </Pressable>
   );
 };
 
@@ -98,14 +128,23 @@ const CustomTabBar = ({ state, descriptors, navigation }: any) => {
   const tabBarWidth = screenWidth - 40; // Trừ đi paddingHorizontal (20 * 2)
   const tabWidth = tabBarWidth / state.routes.length;
   const translateX = useRef(new Animated.Value(0)).current;
+  const indicatorWidth = useRef(new Animated.Value(60)).current;
 
   useEffect(() => {
-    Animated.spring(translateX, {
-      toValue: state.index * tabWidth,
-      useNativeDriver: true,
-      friction: 10,
-      tension: 100,
-    }).start();
+    Animated.parallel([
+      Animated.spring(translateX, {
+        toValue: state.index * tabWidth + (tabWidth - 60) / 2,
+        useNativeDriver: true,
+        friction: 8,
+        tension: 120,
+      }),
+      Animated.spring(indicatorWidth, {
+        toValue: 60,
+        useNativeDriver: false,
+        friction: 8,
+        tension: 120,
+      }),
+    ]).start();
   }, [state.index, tabWidth]);
 
   return (
@@ -115,6 +154,7 @@ const CustomTabBar = ({ state, descriptors, navigation }: any) => {
         {
           backgroundColor: colors.background.card,
           paddingBottom: Math.max(insets.bottom, 8),
+          borderTopColor: colors.border.light,
         },
       ]}
     >
@@ -123,7 +163,7 @@ const CustomTabBar = ({ state, descriptors, navigation }: any) => {
         style={[
           styles.activeTabIndicator,
           {
-            width: Math.min(tabWidth, 80), // Giới hạn width của indicator
+            width: indicatorWidth,
             backgroundColor: colors.primary.main,
             transform: [{ translateX }],
           },
@@ -165,31 +205,50 @@ const styles = StyleSheet.create({
   tabBarContainer: {
     flexDirection: "row",
     paddingHorizontal: 20,
+    paddingTop: 4,
     borderTopWidth: 1,
-    borderTopColor: "rgba(0,0,0,0.05)",
-    elevation: 16,
+    elevation: 12,
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
-      height: -4,
+      height: -3,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    ...Platform.select({
+      ios: {
+        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+      },
+      android: {
+        elevation: 8,
+      },
+    }),
   },
   activeTabIndicator: {
     position: "absolute",
     top: 0,
     left: 20,
-    height: 3,
-    borderBottomLeftRadius: 3,
-    borderBottomRightRadius: 3,
+    height: 3.5,
+    borderBottomLeftRadius: 2,
+    borderBottomRightRadius: 2,
+    shadowColor: "currentColor",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.4,
+    shadowRadius: 2,
   },
   tabButton: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    paddingVertical: 8,
+    paddingVertical: 10,
     maxWidth: 80,
+    position: 'relative',
+  },
+  tabBackground: {
+    position: 'absolute',
+    width: 56,
+    height: 56,
+    borderRadius: 28,
   },
   tabContent: {
     alignItems: "center",

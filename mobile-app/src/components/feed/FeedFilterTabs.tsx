@@ -36,6 +36,64 @@ const FILTER_TABS: FilterTab[] = [
 ];
 
 /**
+ * AnimatedFilterTab - Individual filter tab with press animation
+ */
+const AnimatedFilterTab: React.FC<{
+  tab: FilterTab;
+  isActive: boolean;
+  onPress: () => void;
+  colors: any;
+  t: (key: string) => string;
+}> = ({ tab, isActive, onPress, colors, t }) => {
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
+
+  const handlePressIn = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 0.95,
+      useNativeDriver: true,
+      friction: 5,
+      tension: 100,
+    }).start();
+  };
+
+  const handlePressOut = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 1,
+      useNativeDriver: true,
+      friction: 5,
+      tension: 100,
+    }).start();
+  };
+
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+      activeOpacity={1}
+    >
+      <Animated.View
+        style={[
+          styles.tab,
+          isActive && styles.tabActive,
+          { transform: [{ scale: scaleAnim }] },
+        ]}
+      >
+        <MaterialCommunityIcons
+          name={tab.icon}
+          size={20}
+          color={isActive ? colors.primary.main : colors.text.secondary}
+        />
+        <Text style={[styles.tabLabel, isActive && styles.tabLabelActive]}>
+          {t(tab.labelKey)}
+        </Text>
+      </Animated.View>
+    </TouchableOpacity>
+  );
+};
+
+/**
  * FeedFilterTabs - Filter tabs cho Feed
  *
  * Features:
@@ -52,21 +110,10 @@ const FeedFilterTabsComponent: React.FC<FeedFilterTabsProps> = ({
   const { t } = useLanguage();
   const styles = React.useMemo(() => createStyles(colors), [colors]);
 
-  const indicatorPosition = useRef(new Animated.Value(0)).current;
-
-  const handleFilterChange = (filter: FeedFilter, index: number) => {
+  const handleFilterChange = (filter: FeedFilter) => {
     if (Platform.OS === 'ios') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
-
-    // Animate indicator
-    Animated.spring(indicatorPosition, {
-      toValue: index,
-      tension: 80,
-      friction: 10,
-      useNativeDriver: true,
-    }).start();
-
     onFilterChange(filter);
   };
 
@@ -76,31 +123,23 @@ const FeedFilterTabsComponent: React.FC<FeedFilterTabsProps> = ({
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
+        decelerationRate="fast"
+        snapToInterval={110}
+        snapToAlignment="start"
+        bounces={false}
       >
-        {FILTER_TABS.map((tab, index) => {
+        {FILTER_TABS.map((tab) => {
           const isActive = activeFilter === tab.id;
 
           return (
-            <TouchableOpacity
+            <AnimatedFilterTab
               key={tab.id}
-              style={[styles.tab, isActive && styles.tabActive]}
-              onPress={() => handleFilterChange(tab.id, index)}
-              activeOpacity={0.7}
-            >
-              <MaterialCommunityIcons
-                name={tab.icon}
-                size={20}
-                color={isActive ? colors.primary.main : colors.text.secondary}
-              />
-              <Text
-                style={[
-                  styles.tabLabel,
-                  isActive && styles.tabLabelActive,
-                ]}
-              >
-                {t(tab.labelKey)}
-              </Text>
-            </TouchableOpacity>
+              tab={tab}
+              isActive={isActive}
+              onPress={() => handleFilterChange(tab.id)}
+              colors={colors}
+              t={t}
+            />
           );
         })}
       </ScrollView>
@@ -116,32 +155,53 @@ const createStyles = (colors: any) =>
       backgroundColor: colors.background.card,
       borderBottomWidth: 1,
       borderBottomColor: colors.border.light,
-      paddingVertical: spacing.sm,
+      paddingVertical: spacing.md,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.05,
+      shadowRadius: 3,
+      elevation: 2,
     },
     scrollContent: {
       paddingHorizontal: spacing.md,
-      gap: spacing.sm,
+      gap: spacing.sm + 2,
+      alignItems: 'center',
     },
     tab: {
       flexDirection: 'row',
       alignItems: 'center',
-      paddingHorizontal: spacing.md,
-      paddingVertical: spacing.sm,
+      paddingHorizontal: spacing.md + 2,
+      paddingVertical: spacing.sm + 2,
       borderRadius: borderRadius.full,
       backgroundColor: colors.background.elevated,
-      gap: spacing.xs,
-      minWidth: 90,
+      gap: spacing.xs + 2,
+      minWidth: 100,
       justifyContent: 'center',
+      borderWidth: 1.5,
+      borderColor: 'transparent',
+      shadowColor: colors.text.primary,
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.05,
+      shadowRadius: 2,
+      elevation: 1,
     },
     tabActive: {
-      backgroundColor: colors.primary.main + '15',
+      backgroundColor: colors.primary.main + '18',
+      borderColor: colors.primary.main + '30',
+      shadowColor: colors.primary.main,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.2,
+      shadowRadius: 4,
+      elevation: 3,
     },
     tabLabel: {
       fontSize: typography.fontSize.sm,
       fontWeight: typography.fontWeight.semiBold,
       color: colors.text.secondary,
+      letterSpacing: 0.2,
     },
     tabLabelActive: {
       color: colors.primary.main,
+      fontWeight: typography.fontWeight.bold,
     },
   });

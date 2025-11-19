@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,10 +7,13 @@ import {
   ViewStyle,
   StatusBar,
   Platform,
+  Animated,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import * as Haptics from 'expo-haptics';
 import { useTheme } from '../../contexts/ThemeContext';
 import { typography } from '../../theme/typography';
 import { spacing } from '../../theme/spacing';
@@ -35,20 +38,89 @@ export interface HeaderProps {
   style?: ViewStyle;
 }
 
+// Animated Button Component
+const AnimatedButton: React.FC<{
+  onPress: () => void;
+  children: React.ReactNode;
+  style?: any;
+  testID?: string;
+  hitSlop?: any;
+}> = ({ onPress, children, style, testID, hitSlop }) => {
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+
+  const handlePressIn = () => {
+    if (Platform.OS === 'ios') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    Animated.spring(scaleAnim, {
+      toValue: 0.92,
+      useNativeDriver: true,
+      friction: 6,
+      tension: 100,
+    }).start();
+  };
+
+  const handlePressOut = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 1,
+      useNativeDriver: true,
+      friction: 6,
+      tension: 100,
+    }).start();
+  };
+
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+      activeOpacity={1}
+      testID={testID}
+      hitSlop={hitSlop}
+    >
+      <Animated.View style={[style, { transform: [{ scale: scaleAnim }] }]}>
+        {children}
+      </Animated.View>
+    </TouchableOpacity>
+  );
+};
+
 export const Header: React.FC<HeaderProps> = ({
   title,
   actions = [],
   showBackButton = false,
   onBackPress,
   gradient = false,
-  gradientColors = ['#3B82F6', '#60A5FA', '#93C5FD'],
+  gradientColors = ['#667eea', '#764ba2', '#f093fb'],
   blur = false,
   blurIntensity = 20,
   backgroundColor,
   style,
 }) => {
   const { colors } = useTheme();
-  const styles = React.useMemo(() => createStyles(colors), [colors]);
+  const insets = useSafeAreaInsets();
+  const styles = React.useMemo(() => createStyles(colors, insets), [colors, insets]);
+
+  // Badge animation
+  const badgeScale = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    // Subtle pulse animation for badges
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(badgeScale, {
+          toValue: 1.1,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(badgeScale, {
+          toValue: 1,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+  }, []);
 
   // Determine layout style: centered title when back button exists and no gradient/blur
   const isCenteredLayout = showBackButton && !gradient && !blur;
@@ -68,17 +140,17 @@ export const Header: React.FC<HeaderProps> = ({
         hasBackButtonOnly && styles.headerLeftWithBack
       ]}>
         {showBackButton && (
-          <TouchableOpacity
+          <AnimatedButton
+            onPress={onBackPress || (() => {})}
             style={styles.backButton}
-            onPress={onBackPress}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
             <MaterialCommunityIcons
               name="arrow-left"
-              size={isCenteredLayout ? 28 : 24}
+              size={26}
               color={gradient || blur ? colors.neutral.white : colors.text.primary}
             />
-          </TouchableOpacity>
+          </AnimatedButton>
         )}
         {!isCenteredLayout && (
           <Text
@@ -113,13 +185,13 @@ export const Header: React.FC<HeaderProps> = ({
       <View style={styles.headerRight}>
         {actions.length > 0 ? (
           actions.map((action, index) => (
-            <TouchableOpacity
+            <AnimatedButton
               key={index}
+              onPress={action.onPress}
               style={[
                 styles.headerButton,
                 (gradient || blur) && styles.headerButtonLight,
               ]}
-              onPress={action.onPress}
               testID={action.testID}
               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             >
@@ -129,16 +201,21 @@ export const Header: React.FC<HeaderProps> = ({
                 color={gradient || blur ? colors.neutral.white : colors.text.primary}
               />
               {action.badge !== undefined && (
-                <View style={styles.notificationBadge}>
+                <Animated.View
+                  style={[
+                    styles.notificationBadge,
+                    { transform: [{ scale: badgeScale }] }
+                  ]}
+                >
                   <Text style={styles.notificationBadgeText}>
-                    {action.badge}
+                    {typeof action.badge === 'number' && action.badge > 99 ? '99+' : action.badge}
                   </Text>
-                </View>
+                </Animated.View>
               )}
-            </TouchableOpacity>
+            </AnimatedButton>
           ))
         ) : isCenteredLayout ? (
-          <View style={{ width: 30 }} />
+          <View style={{ width: 40 }} />
         ) : null}
       </View>
     </View>
@@ -189,118 +266,133 @@ export const Header: React.FC<HeaderProps> = ({
   );
 };
 
-const createStyles = (colors: any) =>
+const createStyles = (colors: any, insets: any) =>
   StyleSheet.create({
     headerGradient: {
-      paddingTop: spacing.lg + 10,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.15,
-      shadowRadius: 12,
-      elevation: 8,
+      paddingTop: insets.top + spacing.md,
+      shadowColor: colors.primary.main,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.12,
+      shadowRadius: 8,
+      elevation: 6,
     },
     headerBlur: {
       overflow: 'hidden',
     },
     headerSimple: {
-      paddingTop: spacing.lg + 40,
+      paddingTop: insets.top + spacing.lg,
       paddingBottom: spacing.sm,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.15,
-      shadowRadius: 12,
-      elevation: 8,
+      shadowColor: colors.text.primary,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.08,
+      shadowRadius: 8,
+      elevation: 4,
       backgroundColor: colors.background.card,
     },
     headerSimpleWithBack: {
-      // paddingBottom: spacing.sm,
+      paddingTop: insets.top + spacing.md,
     },
     header: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
       paddingHorizontal: spacing.md,
-      // paddingVertical: spacing.md,
-      // minHeight: 45,
+      paddingBottom: spacing.sm,
+      minHeight: 50,
     },
     headerWithBack: {
-      // paddingHorizontal: 0,
-      // paddingVertical: spacing.lg,
-      // paddingBottom: spacing.sm,
+      paddingBottom: spacing.xs,
     },
     headerLeft: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: spacing.sm,
+      flex: 1,
     },
     headerLeftWithBack: {
-      gap: spacing.xs,
+      gap: spacing.sm,
       paddingLeft: 0,
     },
     headerCenter: {
-      flex: 1,
+      flex: 2,
       alignItems: 'center',
       paddingHorizontal: spacing.md,
     },
     headerRight: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: spacing.sm,
-      minWidth: 30,
+      gap: spacing.xs,
+      minWidth: 40,
+      justifyContent: 'flex-end',
     },
     backButton: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
+      width: 44,
+      height: 44,
+      borderRadius: 22,
       justifyContent: 'center',
       alignItems: 'center',
+      backgroundColor: colors.background.elevated + '40',
     },
     headerTitle: {
-      fontSize: typography.fontSize['3xl'],
+      fontSize: typography.fontSize['2xl'],
       fontWeight: typography.fontWeight.bold,
       color: colors.text.primary,
-      letterSpacing: 0.5,
+      letterSpacing: -0.5,
+      lineHeight: typography.fontSize['2xl'] * 1.2,
     },
     headerTitleCentered: {
-      fontSize: typography.fontSize.lg,
+      fontSize: typography.fontSize.xl,
       flex: 0,
+      fontWeight: typography.fontWeight.semiBold,
     },
     headerTitleLight: {
       color: colors.neutral.white,
+      textShadowColor: 'rgba(0, 0, 0, 0.2)',
+      textShadowOffset: { width: 0, height: 1 },
+      textShadowRadius: 3,
     },
     headerTitleWithBack: {
       marginLeft: spacing.xs,
       flex: 1,
     },
     headerButton: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      // backgroundColor: colors.background.secondary,
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      backgroundColor: colors.background.elevated + '40',
       justifyContent: 'center',
       alignItems: 'center',
       position: 'relative',
     },
     headerButtonLight: {
-      // backgroundColor: colors.neutral.white + '33', // 20% opacity
+      backgroundColor: 'rgba(255, 255, 255, 0.25)',
+      backdropFilter: 'blur(10px)',
     },
     notificationBadge: {
       position: 'absolute',
-      top: -2,
-      right: -2,
+      top: 2,
+      right: 2,
       backgroundColor: colors.error,
-      borderRadius: 10,
-      minWidth: 18,
-      height: 18,
+      borderRadius: 12,
+      minWidth: 20,
+      height: 20,
+      paddingHorizontal: 5,
       justifyContent: 'center',
       alignItems: 'center',
-      borderWidth: 2,
-      borderColor: colors.neutral.white,
+      borderWidth: 2.5,
+      borderColor: colors.background.card,
+      shadowColor: colors.error,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.5,
+      shadowRadius: 4,
+      elevation: 5,
     },
     notificationBadgeText: {
       fontSize: 10,
       fontWeight: typography.fontWeight.bold,
       color: colors.neutral.white,
+      includeFontPadding: false,
+      textAlign: 'center',
     },
   });
 
