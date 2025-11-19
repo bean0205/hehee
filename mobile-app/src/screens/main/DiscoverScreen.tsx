@@ -53,6 +53,139 @@ const getMockUsers = (t: any) => [
   },
 ];
 
+// UserCard Component
+interface UserCardProps {
+  item: any;
+  index: number;
+  isFollowing: boolean;
+  cardAnimation: Animated.Value;
+  onPress: (userId: string) => void;
+  onFollowToggle: (userId: string) => void;
+  colors: any;
+  t: any;
+}
+
+const UserCard: React.FC<UserCardProps> = ({
+  item,
+  index,
+  isFollowing,
+  cardAnimation,
+  onPress,
+  onFollowToggle,
+  colors,
+  t,
+}) => {
+  const [pressAnim] = React.useState(new Animated.Value(1));
+
+  const handlePressIn = () => {
+    Animated.spring(pressAnim, {
+      toValue: 0.97,
+      useNativeDriver: true,
+      tension: 300,
+      friction: 20,
+    }).start();
+  };
+
+  const handlePressOut = () => {
+    Animated.spring(pressAnim, {
+      toValue: 1,
+      useNativeDriver: true,
+      tension: 300,
+      friction: 20,
+    }).start();
+  };
+
+  const styles = React.useMemo(() => createCardStyles(colors), [colors]);
+
+  return (
+    <Animated.View
+      style={{
+        opacity: cardAnimation,
+        transform: [
+          {
+            translateY: cardAnimation.interpolate({
+              inputRange: [0, 1],
+              outputRange: [50, 0],
+            }),
+          },
+          { scale: pressAnim },
+        ],
+      }}
+    >
+      <TouchableOpacity
+        style={styles.userCard}
+        onPress={() => onPress(item.id)}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+        activeOpacity={1}
+      >
+        <LinearGradient
+          colors={[colors.background.card, colors.background.card]}
+          style={styles.cardGradient}
+        >
+          <View style={styles.cardContent}>
+            <Avatar size={64} uri={item.avatar} />
+
+            <View style={styles.userInfo}>
+              <View style={styles.userNameRow}>
+                <Text style={styles.userName}>{item.name}</Text>
+                <MaterialCommunityIcons
+                  name="check-decagram"
+                  size={16}
+                  color={colors.primary.main}
+                />
+              </View>
+              <Text style={styles.userUsername}>@{item.username}</Text>
+              {item.bio && (
+                <Text style={styles.userBio} numberOfLines={2}>
+                  {item.bio}
+                </Text>
+              )}
+              <View style={styles.userStatsRow}>
+                <MaterialCommunityIcons
+                  name="account-group"
+                  size={14}
+                  color={colors.text.disabled}
+                />
+                <Text style={styles.userStats}>
+                  {item.followersCount} {t('discover.followers')}
+                </Text>
+              </View>
+            </View>
+
+            <TouchableOpacity
+              style={[
+                styles.followButton,
+                isFollowing && styles.followButtonActive,
+              ]}
+              onPress={(e) => {
+                e.stopPropagation();
+                onFollowToggle(item.id);
+              }}
+            >
+              <MaterialCommunityIcons
+                name={isFollowing ? 'check' : 'plus'}
+                size={18}
+                color={
+                  isFollowing ? colors.text.secondary : colors.neutral.white
+                }
+              />
+              <Text
+                style={[
+                  styles.followButtonText,
+                  isFollowing && styles.followButtonTextActive,
+                ]}
+              >
+                {isFollowing ? t('discover.following') : t('discover.follow')}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </LinearGradient>
+      </TouchableOpacity>
+    </Animated.View>
+  );
+};
+
 export const DiscoverScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const { colors, isDarkMode } = useTheme();
@@ -150,114 +283,17 @@ export const DiscoverScreen: React.FC = () => {
   };
 
   const renderUserCard = ({ item, index }: { item: any; index: number }) => {
-    const isFollowing = followingUsers.has(item.id);
-    const cardScale = cardAnimations[index] || new Animated.Value(1);
-    const [pressAnim] = React.useState(new Animated.Value(1));
-
-    const handlePressIn = () => {
-      Animated.spring(pressAnim, {
-        toValue: 0.97,
-        useNativeDriver: true,
-        tension: 300,
-        friction: 20,
-      }).start();
-    };
-
-    const handlePressOut = () => {
-      Animated.spring(pressAnim, {
-        toValue: 1,
-        useNativeDriver: true,
-        tension: 300,
-        friction: 20,
-      }).start();
-    };
-
     return (
-      <Animated.View
-        style={{
-          opacity: cardScale,
-          transform: [
-            {
-              translateY: cardScale.interpolate({
-                inputRange: [0, 1],
-                outputRange: [50, 0],
-              }),
-            },
-            { scale: pressAnim },
-          ],
-        }}
-      >
-        <TouchableOpacity
-          style={styles.userCard}
-          onPress={() => handleUserPress(item.id)}
-          onPressIn={handlePressIn}
-          onPressOut={handlePressOut}
-          activeOpacity={1}
-        >
-          <LinearGradient
-            colors={[colors.background.card, colors.background.card]}
-            style={styles.cardGradient}
-          >
-            <View style={styles.cardContent}>
-              <Avatar size={64} uri={item.avatar} />
-
-              <View style={styles.userInfo}>
-                <View style={styles.userNameRow}>
-                  <Text style={styles.userName}>{item.name}</Text>
-                  <MaterialCommunityIcons
-                    name="check-decagram"
-                    size={16}
-                    color={colors.primary.main}
-                  />
-                </View>
-                <Text style={styles.userUsername}>@{item.username}</Text>
-                {item.bio && (
-                  <Text style={styles.userBio} numberOfLines={2}>
-                    {item.bio}
-                  </Text>
-                )}
-                <View style={styles.userStatsRow}>
-                  <MaterialCommunityIcons
-                    name="account-group"
-                    size={14}
-                    color={colors.text.disabled}
-                  />
-                  <Text style={styles.userStats}>
-                    {item.followersCount} {t('discover.followers')}
-                  </Text>
-                </View>
-              </View>
-
-              <TouchableOpacity
-                style={[
-                  styles.followButton,
-                  isFollowing && styles.followButtonActive,
-                ]}
-                onPress={(e) => {
-                  e.stopPropagation();
-                  handleFollowToggle(item.id);
-                }}
-              >
-                <MaterialCommunityIcons
-                  name={isFollowing ? 'check' : 'plus'}
-                  size={18}
-                  color={
-                    isFollowing ? colors.text.secondary : colors.neutral.white
-                  }
-                />
-                <Text
-                  style={[
-                    styles.followButtonText,
-                    isFollowing && styles.followButtonTextActive,
-                  ]}
-                >
-                  {isFollowing ? t('discover.following') : t('discover.follow')}
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </LinearGradient>
-        </TouchableOpacity>
-      </Animated.View>
+      <UserCard
+        item={item}
+        index={index}
+        isFollowing={followingUsers.has(item.id)}
+        cardAnimation={cardAnimations[index] || new Animated.Value(1)}
+        onPress={handleUserPress}
+        onFollowToggle={handleFollowToggle}
+        colors={colors}
+        t={t}
+      />
     );
   };
 
@@ -448,6 +484,48 @@ const createStyles = (colors: any, isDarkMode: boolean) =>
       paddingVertical: spacing.sm,
       paddingBottom: 120,
     },
+    emptyState: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingTop: spacing.xl * 2,
+      paddingHorizontal: spacing.xl,
+    },
+    emptyGradient: {
+      width: '100%',
+      alignItems: 'center',
+      paddingVertical: spacing.xl * 2,
+      borderRadius: borderRadius.xl,
+    },
+    emptyIconContainer: {
+      width: 140,
+      height: 140,
+      borderRadius: 70,
+      backgroundColor: colors.background.card,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: spacing.lg,
+      borderWidth: 2,
+      borderColor: colors.border.light,
+    },
+    emptyStateText: {
+      fontSize: typography.fontSize.xl,
+      fontWeight: typography.fontWeight.bold,
+      color: colors.text.primary,
+      marginBottom: spacing.sm,
+      textAlign: 'center',
+    },
+    emptyStateSubtext: {
+      fontSize: typography.fontSize.base,
+      color: colors.text.secondary,
+      textAlign: 'center',
+      lineHeight: 22,
+      maxWidth: 280,
+    },
+  });
+
+// Card styles for UserCard component
+const createCardStyles = (colors: any) =>
+  StyleSheet.create({
     userCard: {
       marginHorizontal: spacing.lg,
       marginBottom: spacing.md,
@@ -455,7 +533,7 @@ const createStyles = (colors: any, isDarkMode: boolean) =>
       overflow: 'hidden',
       shadowColor: colors.neutral.black,
       shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: isDarkMode ? 0.3 : 0.1,
+      shadowOpacity: 0.1,
       shadowRadius: 12,
       elevation: 5,
     },
@@ -534,42 +612,5 @@ const createStyles = (colors: any, isDarkMode: boolean) =>
     },
     followButtonTextActive: {
       color: colors.text.secondary,
-    },
-    emptyState: {
-      alignItems: 'center',
-      justifyContent: 'center',
-      paddingTop: spacing.xl * 2,
-      paddingHorizontal: spacing.xl,
-    },
-    emptyGradient: {
-      width: '100%',
-      alignItems: 'center',
-      paddingVertical: spacing.xl * 2,
-      borderRadius: borderRadius.xl,
-    },
-    emptyIconContainer: {
-      width: 140,
-      height: 140,
-      borderRadius: 70,
-      backgroundColor: colors.background.card,
-      alignItems: 'center',
-      justifyContent: 'center',
-      marginBottom: spacing.lg,
-      borderWidth: 2,
-      borderColor: colors.border.light,
-    },
-    emptyStateText: {
-      fontSize: typography.fontSize.xl,
-      fontWeight: typography.fontWeight.bold,
-      color: colors.text.primary,
-      marginBottom: spacing.sm,
-      textAlign: 'center',
-    },
-    emptyStateSubtext: {
-      fontSize: typography.fontSize.base,
-      color: colors.text.secondary,
-      textAlign: 'center',
-      lineHeight: 22,
-      maxWidth: 280,
     },
   });
