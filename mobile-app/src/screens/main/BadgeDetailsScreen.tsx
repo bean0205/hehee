@@ -249,10 +249,17 @@ export const BadgeDetailsScreen: React.FC = () => {
     <View style={styles.container}>
       <Header
         title={t('badge.ranksAndAchievements')}
-        showBackButton={true}
+        subtitle="Track your milestones"
+        showBackButton
         onBackPress={() => navigation.goBack()}
-        gradient={false}
-        blur={false}
+        centerTitle
+        actions={[
+          {
+            icon: 'trophy-outline',
+            onPress: () => console.log('View achievements'),
+          },
+        ]}
+        elevation={3}
       />
 
       <ScrollView

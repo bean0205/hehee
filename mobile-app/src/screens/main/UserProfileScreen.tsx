@@ -138,11 +138,18 @@ export const UserProfileScreen: React.FC = () => {
       scrollEventThrottle={16}
     >
       <Header
-        title={t("userProfile.title")}
-        showBackButton={true}
+        title={user.name}
+        subtitle={`@${user.username}`}
+        showBackButton
         onBackPress={() => navigation.goBack()}
-        gradient={false}
-        blur={false}
+        centerTitle
+        actions={[
+          {
+            icon: 'share-variant',
+            onPress: () => console.log('Share profile'),
+          },
+        ]}
+        elevation={2}
       />
       {/* Enhanced Cover Image & Avatar */}
       <View style={styles.headerContainer}>

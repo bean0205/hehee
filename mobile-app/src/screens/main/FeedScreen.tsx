@@ -1310,6 +1310,8 @@ export const FeedScreen: React.FC = () => {
     <View style={styles.container}>
       <Header
         title={t('feed.feed')}
+        subtitle="Share your adventures"
+        gradient
         gradientColors={['#1E3A8A', '#3B82F6', '#60A5FA']}
         actions={[
           {
@@ -1322,6 +1324,7 @@ export const FeedScreen: React.FC = () => {
             badge: notifications.filter(n => !n.read).length,
           },
         ]}
+        elevation={6}
       />
 
       {/* Posts Feed */}

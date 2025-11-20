@@ -131,10 +131,11 @@ export const SettingsScreen = ({ navigation }: any) => {
     <View style={styles.container}>
       <Header
         title={t('settings.settings')}
-        showBackButton={true}
+        subtitle={user?.email || 'Manage your preferences'}
+        showBackButton
         onBackPress={() => navigation.goBack()}
-        gradient={false}
-        blur={false}
+        centerTitle
+        elevation={2}
       />
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {/* User Info Section */}

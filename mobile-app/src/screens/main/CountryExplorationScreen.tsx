@@ -213,10 +213,17 @@ export const CountryExplorationScreen: React.FC = () => {
     <View style={styles.container}>
       <Header
         title={t('countryExploration.title')}
-        showBackButton={true}
+        subtitle="Your global journey"
+        showBackButton
         onBackPress={() => navigation.goBack()}
-        gradient={false}
-        blur={false}
+        centerTitle
+        actions={[
+          {
+            icon: 'earth',
+            onPress: () => console.log('View world map'),
+          },
+        ]}
+        elevation={3}
       />
 
       {/* Stats Summary */}

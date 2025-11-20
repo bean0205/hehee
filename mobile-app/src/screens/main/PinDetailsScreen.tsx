@@ -157,17 +157,22 @@ export const PinDetailsScreen: React.FC = () => {
     <View style={styles.container}>
       <Animated.View style={{ flex: 1, opacity: fadeAnim }}>
         <Header
-          title={t("pin.pinDetails")}
-          showBackButton={true}
+          title={pin.placeName}
+          subtitle={currentStatus.label}
+          showBackButton
           onBackPress={() => navigation.goBack()}
-          gradient={false}
-          blur={false}
+          centerTitle
           actions={[
             {
               icon: 'share-variant',
               onPress: handleShare,
             },
+            {
+              icon: 'heart-outline',
+              onPress: () => console.log('Add to favorites'),
+            },
           ]}
+          elevation={2}
         />
         <Animated.ScrollView
           style={styles.scrollView}
